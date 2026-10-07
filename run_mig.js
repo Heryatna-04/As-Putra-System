@@ -1,0 +1,1 @@
+﻿const fs = require('fs'); const { createClient } = require('@supabase/supabase-js'); const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY); const sql = fs.readFileSync('database/migrations/002_category_counts_view.sql', 'utf8'); supabase.rpc('exec_sql', { query: sql }).then(console.log);

@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --red: #E4002B;
+    --red-dark: #CC0025;
+    --navy-dark: #0F172A;
+    --navy-sidebar: #090D16;
+    --black: #020617;
+    --white: #FFFFFF;
+    --surface: #F8FAFC;
+    --surface-card: #FFFFFF;
+    --muted: #64748B;
+    --border: #E2E8F0;
+  }
+}
+
+body {
+  font-family: var(--font-inter), sans-serif;
+}
+
+h1, h2, h3, h4 {
+  font-family: var(--font-inter), sans-serif;
+}
+
+.font-display {
+  font-family: var(--font-syne), sans-serif;
+}
