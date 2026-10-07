@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
-import { Package, PackageX, Archive, RefreshCw, Calendar as CalendarIcon, Clock, ArrowUpRight, ShieldCheck, CalendarDays, Printer } from "lucide-react";
+import { Package, PackageX, Archive, RefreshCw, Calendar as CalendarIcon, Clock, ArrowUpRight, ShieldCheck, CalendarDays } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   PieChart,
@@ -120,7 +119,7 @@ export default function AdminDashboardPage() {
             </p>
           </div>
 
-          {/* REAL-TIME CLOCK & PRINT REPORT BUTTON */}
+          {/* REAL-TIME CLOCK */}
           <div className="flex flex-wrap items-center gap-3 shrink-0">
             <div className="bg-zinc-900 text-white rounded-xl px-4 py-3 shadow-xs flex items-center gap-3.5 shrink-0">
               <div className="w-10 h-10 rounded-lg bg-[#E4002B] flex items-center justify-center text-white shrink-0">
@@ -136,15 +135,6 @@ export default function AdminDashboardPage() {
                 </div>
               </div>
             </div>
-
-            <Link
-              href="/admin/reports/print"
-              className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-bold text-xs shadow-md transition"
-              title="Cetak Laporan Resmi Bulanan Kepala Bengkel AHASS"
-            >
-              <Printer className="w-4 h-4 text-amber-400" />
-              <span>Cetak Laporan AHASS</span>
-            </Link>
           </div>
         </div>
 
