@@ -7,7 +7,7 @@ import {
   RefreshCw, 
   ChevronLeft, 
   ChevronRight,
-  ShieldCheck,
+  RotateCcw,
   Phone,
   Clock,
   FileSpreadsheet,
@@ -21,7 +21,7 @@ interface BookingCRM {
   ticket_no: string;
   nama_customer: string;
   email?: string;
-  no_hp: string; // Masked from backend: 0812****6789
+  no_hp: string;
   no_mesin: string;
   plat_kendaraan: string;
   tanggal_booking: string;
@@ -47,6 +47,17 @@ export default function CrmBookingsPage() {
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+
+  const hasActiveFilters = Boolean(search || debouncedSearch || tanggalFrom || tanggalTo || statusFilter !== "ALL");
+
+  const resetAllFilters = () => {
+    setSearch("");
+    setDebouncedSearch("");
+    setTanggalFrom("");
+    setTanggalTo("");
+    setStatusFilter("ALL");
+    setPage(1);
+  };
 
   useEffect(() => {
     const handler = setTimeout(() => {
@@ -150,16 +161,16 @@ export default function CrmBookingsPage() {
   return (
     <div className="space-y-5">
       {/* Banner CRM */}
-      <div className="bg-white border border-zinc-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-zinc-200 rounded-xl p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-2xs">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Data Monitoring Booking Customer</h1>
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-              <ShieldCheck size={12} /> Privasi Aktif
+              <MessageSquare size={12} /> Follow-up CRM Aktif
             </span>
           </div>
           <p className="text-xs text-zinc-500 mt-1">
-            Data nomor telepon customer dimasking otomatis. Akses read-only khusus keperluan tim CRM.
+            Data kontak dan nomor telepon customer resmi untuk follow-up konfirmasi jadwal dan kepuasan servis via WhatsApp.
           </p>
         </div>
         <div className="flex items-center gap-2.5">
@@ -184,7 +195,7 @@ export default function CrmBookingsPage() {
       </div>
 
       {/* Filter Strip */}
-      <div className="bg-white border border-zinc-200 rounded-xl p-4 flex flex-col md:flex-row items-center gap-3">
+      <div className="bg-white border border-zinc-200 rounded-xl p-4 flex flex-col md:flex-row items-center gap-3 shadow-2xs">
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input
@@ -241,6 +252,17 @@ export default function CrmBookingsPage() {
               <option value="CANCELLED">Batal</option>
             </select>
           </div>
+
+          {hasActiveFilters && (
+            <button
+              onClick={resetAllFilters}
+              className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-500 hover:text-[#E8272A] px-2 py-1.5 rounded-lg hover:bg-red-50 border border-transparent hover:border-red-200 transition"
+              title="Reset Semua Filter"
+            >
+              <RotateCcw size={12} />
+              <span>Reset</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -269,8 +291,24 @@ export default function CrmBookingsPage() {
                 </tr>
               ) : bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-12 text-zinc-400 text-sm">
-                    Belum ada data booking.
+                  <td colSpan={7} className="py-14 text-center">
+                    <div className="flex flex-col items-center justify-center max-w-sm mx-auto text-center px-4">
+                      <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3">
+                        <Search size={20} />
+                      </div>
+                      <h3 className="text-sm font-bold text-zinc-800">Tidak ada data booking ditemukan</h3>
+                      <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+                        Coba sesuaikan kata kunci pencarian, rentang tanggal kalender, atau filter status servis.
+                      </p>
+                      {hasActiveFilters && (
+                        <button
+                          onClick={resetAllFilters}
+                          className="mt-3.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-2xs transition"
+                        >
+                          <RotateCcw size={12} /> Reset Filter
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ) : (

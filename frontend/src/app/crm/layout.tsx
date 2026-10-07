@@ -2,8 +2,9 @@
 
 import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useEffect } from "react";
-import { LogOut, Wrench } from "lucide-react";
+import { LogOut, Wrench, LayoutDashboard } from "lucide-react";
 import { Toaster } from "sonner";
 
 export default function CrmLayout({ children }: { children: React.ReactNode }) {
@@ -24,6 +25,8 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
+  const canAccessAdmin = user?.role === "ADMIN" || user?.role === "KEPALA_BENGKEL";
+
   return (
     <div className="min-h-screen bg-[#F8F9FA] flex flex-col font-sans text-zinc-900">
       <Toaster position="bottom-right" />
@@ -41,11 +44,22 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
                   PORTAL CRM
                 </span>
               </div>
-              <span className="text-[11px] text-zinc-400 mt-0.5 block">Customer Relationship Management (Read-Only)</span>
+              <span className="text-[11px] text-zinc-400 mt-0.5 block">Portal Follow-Up Servis &amp; Layanan Pelanggan</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 sm:gap-4">
+            {canAccessAdmin && (
+              <Link
+                href="/admin"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 text-xs font-semibold text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+                title="Beralih ke Dashboard Admin"
+              >
+                <LayoutDashboard size={14} className="text-[#E8272A]" />
+                <span className="hidden sm:inline">Dashboard Admin</span>
+              </Link>
+            )}
+
             <div className="text-right hidden sm:block">
               <div className="text-xs font-semibold text-zinc-900">{user?.nama || user?.email}</div>
               <div className="text-[11px] text-zinc-400 uppercase font-mono">{user?.role}</div>

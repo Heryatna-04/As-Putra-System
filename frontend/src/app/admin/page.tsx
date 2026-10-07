@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Package, PackageX, Archive, RefreshCw, Calendar as CalendarIcon, Clock, ArrowUpRight, ShieldCheck, CalendarDays } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -112,10 +113,10 @@ export default function AdminDashboardPage() {
               <span className="text-xs font-semibold text-zinc-500">AHASS 10870 — AS Putra Rahmat</span>
             </div>
             <h1 className="text-2xl font-bold text-zinc-900 tracking-tight font-display">
-              Selamat datang, <span className="text-[#B00020]">{user?.nama || "Kepala Bengkel"}</span> 👋
+              Selamat datang, <span className="text-[#B00020]">{user?.nama || (user?.role === "KEPALA_BENGKEL" ? "Kepala Bengkel" : "Administrator")}</span> 👋
             </h1>
             <p className="text-sm text-zinc-600 mt-0.5">
-              Ringkasan operasional inventaris dan status stok suku cadang hari ini.
+              Ringkasan operasional inventaris, status suku cadang, dan pemantauan antrean bengkel hari ini.
             </p>
           </div>
 
@@ -138,14 +139,21 @@ export default function AdminDashboardPage() {
           </div>
         </div>
 
-        {/* METRIC KPI CARDS - TOP HIGHLIGHT */}
+        {/* METRIC KPI CARDS - INTERACTIVE SHORTCUTS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* KPI 1: Ready Stock */}
-          <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-xs relative overflow-hidden flex flex-col justify-between">
+          <Link
+            href="/admin/spare-parts"
+            className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-xs relative overflow-hidden flex flex-col justify-between hover:border-emerald-300 hover:shadow-md transition-all group"
+            title="Buka Katalog Suku Cadang"
+          >
             <div className="w-1.5 h-full bg-emerald-600 absolute left-0 top-0" />
             <div className="flex items-center justify-between mb-4 pl-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Total Part Ready</span>
-              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-800 transition-colors flex items-center gap-1">
+                Total Part Ready
+                <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all text-emerald-600" />
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Package className="w-5 h-5" />
               </div>
             </div>
@@ -157,17 +165,24 @@ export default function AdminDashboardPage() {
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200/60">
                   Ready Stock
                 </span>
-                <span className="text-xs text-zinc-500">Terdaftar di DB</span>
+                <span className="text-xs text-zinc-500">Lihat Katalog &rarr;</span>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* KPI 2: Stok Kosong */}
-          <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-xs relative overflow-hidden flex flex-col justify-between">
+          <Link
+            href="/admin/spare-parts"
+            className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-xs relative overflow-hidden flex flex-col justify-between hover:border-amber-300 hover:shadow-md transition-all group"
+            title="Buka Data Stok untuk Evaluasi Restock"
+          >
             <div className="w-1.5 h-full bg-amber-600 absolute left-0 top-0" />
             <div className="flex items-center justify-between mb-4 pl-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Perlu Restock</span>
-              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-800 transition-colors flex items-center gap-1">
+                Perlu Restock
+                <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all text-amber-600" />
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <PackageX className="w-5 h-5" />
               </div>
             </div>
@@ -182,14 +197,23 @@ export default function AdminDashboardPage() {
                 <span className="text-xs text-zinc-500">Stok Menipis</span>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* KPI 3: Booking Pending Confirmation */}
-          <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-xs relative overflow-hidden flex flex-col justify-between">
+          <Link
+            href="/admin/bookings?status=PENDING"
+            className={`bg-white rounded-2xl p-6 border shadow-xs relative overflow-hidden flex flex-col justify-between hover:shadow-md transition-all group ${
+              pendingBookingsCount > 0 ? "border-blue-300 hover:border-blue-400" : "border-zinc-200 hover:border-zinc-300"
+            }`}
+            title="Buka Antrean Booking Servis Pending"
+          >
             <div className="w-1.5 h-full bg-blue-600 absolute left-0 top-0" />
             <div className="flex items-center justify-between mb-4 pl-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Need Action</span>
-              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-800 transition-colors flex items-center gap-1">
+                Need Action
+                <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all text-blue-600" />
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center group-hover:scale-105 transition-transform">
                 <CalendarDays className="w-5 h-5" />
               </div>
             </div>
@@ -201,17 +225,24 @@ export default function AdminDashboardPage() {
                 <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60">
                   Pending Booking
                 </span>
-                <span className="text-xs text-zinc-500">Butuh Aksi</span>
+                <span className="text-xs text-blue-700 font-medium">Buka Antrean &rarr;</span>
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* KPI 4: Discontinue */}
-          <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-xs relative overflow-hidden flex flex-col justify-between">
+          <Link
+            href="/admin/spare-parts"
+            className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-xs relative overflow-hidden flex flex-col justify-between hover:border-red-300 hover:shadow-md transition-all group"
+            title="Buka Data Suku Cadang Non-Produksi"
+          >
             <div className="w-1.5 h-full bg-[#E4002B] absolute left-0 top-0" />
             <div className="flex items-center justify-between mb-4 pl-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Discontinued</span>
-              <div className="w-10 h-10 rounded-xl bg-red-50 text-[#B00020] flex items-center justify-center">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 group-hover:text-zinc-800 transition-colors flex items-center gap-1">
+                Discontinued
+                <ArrowUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all text-[#B00020]" />
+              </span>
+              <div className="w-10 h-10 rounded-xl bg-red-50 text-[#B00020] flex items-center justify-center group-hover:scale-105 transition-transform">
                 <Archive className="w-5 h-5" />
               </div>
             </div>
@@ -226,7 +257,7 @@ export default function AdminDashboardPage() {
                 <span className="text-xs text-zinc-500">Arsip Part</span>
               </div>
             </div>
-          </div>
+          </Link>
         </div>
 
         {/* MAIN SECTION GRID: DONUT RATIO & TOP CATEGORY BAR CHART */}

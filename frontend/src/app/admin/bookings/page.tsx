@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { 
   Search, 
@@ -10,7 +11,8 @@ import {
   Clock,
   FileSpreadsheet,
   Mail,
-  Bell
+  Bell,
+  RotateCcw
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,14 +33,17 @@ interface Booking {
   created_at: string;
 }
 
-export default function AdminBookingsPage() {
+function AdminBookingsContent() {
   const { token } = useAuth();
+  const searchParams = useSearchParams();
+  const initialStatus = searchParams.get("status") || "ALL";
+
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
-  const [statusFilter, setStatusFilter] = useState("ALL");
+  const [statusFilter, setStatusFilter] = useState(initialStatus);
   const [tanggalFrom, setTanggalFrom] = useState("");
   const [tanggalTo, setTanggalTo] = useState("");
   const [search, setSearch] = useState("");
@@ -46,6 +51,17 @@ export default function AdminBookingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [isExporting, setIsExporting] = useState(false);
+
+  const hasActiveFilters = Boolean(search || debouncedSearch || tanggalFrom || tanggalTo || statusFilter !== "ALL");
+
+  const resetAllFilters = () => {
+    setSearch("");
+    setDebouncedSearch("");
+    setTanggalFrom("");
+    setTanggalTo("");
+    setStatusFilter("ALL");
+    setPage(1);
+  };
 
   const pendingCount = bookings.filter((b) => b.status === "PENDING").length;
 
@@ -307,6 +323,17 @@ export default function AdminBookingsPage() {
                   <option value="CANCELLED">Dibatalkan</option>
                 </select>
               </div>
+
+              {hasActiveFilters && (
+                <button
+                  onClick={resetAllFilters}
+                  className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-500 hover:text-[#E8272A] px-2 py-1.5 rounded-lg hover:bg-red-50 border border-transparent hover:border-red-200 transition"
+                  title="Reset Semua Filter"
+                >
+                  <RotateCcw size={12} />
+                  <span>Reset</span>
+                </button>
+              )}
             </div>
           </div>
 
@@ -334,8 +361,24 @@ export default function AdminBookingsPage() {
                     </tr>
                   ) : bookings.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center py-12 text-zinc-400 text-sm">
-                        Tidak ada antrean booking ditemukan.
+                      <td colSpan={6} className="py-14 text-center">
+                        <div className="flex flex-col items-center justify-center max-w-sm mx-auto text-center px-4">
+                          <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3">
+                            <Search size={20} />
+                          </div>
+                          <h3 className="text-sm font-bold text-zinc-800">Tidak ada booking servis ditemukan</h3>
+                          <p className="text-xs text-zinc-500 mt-1 leading-relaxed">
+                            Coba sesuaikan kata kunci pencarian, rentang tanggal, atau filter status antrean.
+                          </p>
+                          {hasActiveFilters && (
+                            <button
+                              onClick={resetAllFilters}
+                              className="mt-3.5 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 shadow-2xs transition"
+                            >
+                              <RotateCcw size={12} /> Reset Filter
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ) : (
@@ -434,5 +477,19 @@ export default function AdminBookingsPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AdminBookingsPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="h-full flex items-center justify-center text-zinc-400 text-xs">
+          Memuat antrean booking servis...
+        </div>
+      }
+    >
+      <AdminBookingsContent />
+    </Suspense>
   );
 }
