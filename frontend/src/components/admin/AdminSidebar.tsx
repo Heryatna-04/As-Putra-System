@@ -72,7 +72,7 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-[#B00020] bg-red-50 px-2 py-0.5 rounded border border-red-200/60">
+            <span className="text-[10px] font-black uppercase tracking-wider text-white bg-gradient-to-r from-red-600 to-[#E4002B] px-2.5 py-0.5 rounded-full shadow-[0_2px_8px_rgba(228,0,43,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-red-400/40">
               AHASS
             </span>
             {onClose && (
@@ -94,7 +94,7 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
               <div className="px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
                 {sec.title}
               </div>
-              <div className="space-y-1">
+              <div className="space-y-1.5">
                 {sec.items.map((item) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
@@ -103,13 +103,13 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
                       key={item.href}
                       href={item.href}
                       onClick={onClose}
-                      className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-semibold transition-all ${
+                      className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                         isActive
-                          ? "bg-[#E4002B] text-white shadow-xs"
+                          ? "bg-gradient-to-r from-[#E4002B] via-red-600 to-red-700 text-white shadow-[0_6px_16px_rgba(228,0,43,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-red-500/40"
                           : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
                       }`}
                     >
-                      <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? "text-white" : "text-zinc-500"}`} />
+                      <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" : "text-zinc-500"}`} />
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -120,10 +120,10 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
         </nav>
 
       {/* Bottom User Bar */}
-      <div className="p-4 border-t border-zinc-200/80 bg-zinc-50">
+      <div className="p-4 border-t border-zinc-200/80 bg-zinc-50/80 backdrop-blur-xs">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-9 h-9 rounded-lg bg-[#E4002B] text-white font-bold text-sm flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E4002B] via-red-600 to-red-900 text-white font-black text-sm flex items-center justify-center shadow-[0_6px_16px_rgba(228,0,43,0.35),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_-2px_4px_rgba(0,0,0,0.3)] border border-red-400/30 shrink-0">
               {userName ? userName.charAt(0).toUpperCase() : "A"}
             </div>
             <div className="min-w-0 truncate">
@@ -132,15 +132,15 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
               </div>
               <div className="mt-0.5">
                 {userRole === "KEPALA_BENGKEL" ? (
-                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                  <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-[0_2px_8px_rgba(245,158,11,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-amber-300">
                     Kepala Bengkel
                   </span>
                 ) : userRole === "CRM" ? (
-                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-100 text-blue-800 border border-blue-300">
+                  <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-[0_2px_8px_rgba(59,130,246,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-blue-300">
                     CRM Staf
                   </span>
                 ) : (
-                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-zinc-200 text-zinc-800">
+                  <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-zinc-200 text-zinc-800 shadow-2xs border border-zinc-300/60">
                     {userRole || "Administrator"}
                   </span>
                 )}

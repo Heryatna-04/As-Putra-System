@@ -187,39 +187,39 @@ function AdminBookingsContent() {
   const getStatusBadge = (status: Booking["status"]) => {
     switch (status) {
       case "PENDING":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-600 border border-amber-200">Pending</span>;
+        return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-b from-amber-50 to-amber-100/80 text-amber-800 border border-amber-300 shadow-[0_2px_6px_rgba(245,158,11,0.15),inset_0_1px_0_rgba(255,255,255,0.9)]">Pending</span>;
       case "CONFIRMED":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-600 border border-blue-200">Dikonfirmasi</span>;
+        return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-b from-blue-50 to-blue-100/80 text-blue-800 border border-blue-300 shadow-[0_2px_6px_rgba(59,130,246,0.15),inset_0_1px_0_rgba(255,255,255,0.9)]">Dikonfirmasi</span>;
       case "IN_PROGRESS":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-600 border border-purple-200">Dikerjakan</span>;
+        return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-b from-purple-50 to-purple-100/80 text-purple-800 border border-purple-300 shadow-[0_2px_6px_rgba(168,85,247,0.15),inset_0_1px_0_rgba(255,255,255,0.9)]">Dikerjakan</span>;
       case "DONE":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-50 text-green-600 border border-green-200">Selesai</span>;
+        return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-b from-emerald-50 to-emerald-100/80 text-emerald-800 border border-emerald-300 shadow-[0_2px_6px_rgba(16,185,129,0.15),inset_0_1px_0_rgba(255,255,255,0.9)]">Selesai</span>;
       case "CANCELLED":
-        return <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-zinc-100 text-zinc-500 border border-zinc-200">Dibatalkan</span>;
+        return <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-gradient-to-b from-zinc-100 to-zinc-200/80 text-zinc-600 border border-zinc-300 shadow-2xs">Dibatalkan</span>;
     }
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-[#FAFAFA]">
+    <div className="flex flex-col h-full overflow-hidden bg-gradient-to-b from-[#F2F4F8] via-[#F7F9FC] to-[#EEF2F6]">
       {/* Topbar */}
-      <div className="h-[52px] bg-white border-b border-zinc-200 flex items-center justify-between px-6 shrink-0">
-        <div className="flex items-center gap-2 text-sm text-zinc-500">
+      <div className="h-[54px] bg-white/90 backdrop-blur-md border-b border-zinc-200/80 flex items-center justify-between px-6 shrink-0 shadow-2xs">
+        <div className="flex items-center gap-2 text-sm text-zinc-500 font-medium">
           <span>Admin</span>
           <span className="text-zinc-300">/</span>
-          <span className="font-semibold text-zinc-900">Booking Servis</span>
+          <span className="font-bold text-zinc-900">Booking Servis</span>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5">
           <button
             onClick={handleExportExcel}
             disabled={isExporting}
-            className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-emerald-200 transition-colors disabled:opacity-50"
+            className="text-xs font-bold text-emerald-800 bg-gradient-to-b from-emerald-50 to-emerald-100/80 hover:from-emerald-100 hover:to-emerald-200 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-300 shadow-[0_2px_6px_rgba(16,185,129,0.15),inset_0_1px_0_rgba(255,255,255,0.9)] transition disabled:opacity-50"
           >
             <FileSpreadsheet size={13} className={isExporting ? "animate-spin" : ""} />
             {isExporting ? "Mengunduh Excel..." : "Export Excel"}
           </button>
           <button
             onClick={() => fetchBookings()}
-            className="text-xs font-semibold text-zinc-600 hover:text-zinc-900 flex items-center gap-1.5 px-3 py-1.5 rounded-md hover:bg-zinc-100 border border-zinc-200"
+            className="text-xs font-bold text-zinc-700 hover:text-zinc-900 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-zinc-50 border border-zinc-200 shadow-[0_2px_4px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)] transition"
           >
             <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} /> Refresh
           </button>
@@ -227,27 +227,31 @@ function AdminBookingsContent() {
       </div>
 
       {/* Content Body */}
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-7xl mx-auto space-y-5">
+      <div className="flex-1 overflow-y-auto p-6 sm:p-7">
+        <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-zinc-900 tracking-tight">Manajemen Booking Servis Kendaraan</h1>
-              <p className="text-sm text-zinc-500 mt-0.5">Kelola antrean jadwal servis, verifikasi nomor mesin, dan perbarui status servis motor.</p>
+              <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight font-display drop-shadow-[0_1px_1px_rgba(0,0,0,0.04)]">
+                Manajemen Booking Servis Kendaraan
+              </h1>
+              <p className="text-xs sm:text-sm text-zinc-500 font-medium mt-1">
+                Kelola antrean jadwal servis, verifikasi nomor mesin, dan perbarui status servis motor secara real-time.
+              </p>
             </div>
             <div className="flex items-center gap-3">
-              <div className="text-xs font-medium text-zinc-500 bg-white border border-zinc-200 px-3 py-2 rounded-lg">
-                Total Reservasi: <strong className="text-zinc-900">{total}</strong>
+              <div className="text-xs font-bold text-zinc-700 bg-white border border-zinc-200/90 px-3.5 py-2 rounded-xl shadow-2xs">
+                Total Reservasi: <strong className="text-zinc-900 font-black">{total}</strong>
               </div>
             </div>
           </div>
 
-          {/* Notifikasi Booking Baru di Website */}
+          {/* Notifikasi 3D Booking Baru di Website */}
           {pendingCount > 0 && (
-            <div className="bg-amber-50 border border-amber-200 rounded-xl p-3.5 flex items-center justify-between">
-              <div className="flex items-center gap-2.5 text-xs text-amber-900 font-medium">
-                <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center shrink-0">
-                  <Bell size={13} />
+            <div className="relative bg-gradient-to-r from-amber-50 via-amber-100/60 to-orange-50 border border-amber-300/80 rounded-2xl p-4 shadow-[0_8px_20px_-6px_rgba(245,158,11,0.2),inset_0_1px_1px_rgba(255,255,255,0.9)] flex items-center justify-between overflow-hidden">
+              <div className="flex items-center gap-3 text-xs sm:text-sm text-amber-950 font-medium">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shrink-0 shadow-[0_4px_10px_rgba(245,158,11,0.4),inset_0_1px_1px_rgba(255,255,255,0.5)] border border-amber-400/40">
+                  <Bell size={14} className="drop-shadow-2xs" />
                 </div>
                 <span>
                   <strong>Ada {pendingCount} antrean booking baru (Pending)</strong> yang menunggu verifikasi bukti akun customer dan konfirmasi jadwal.
@@ -258,15 +262,15 @@ function AdminBookingsContent() {
                   setStatusFilter("PENDING");
                   setPage(1);
                 }}
-                className="text-xs font-semibold text-amber-800 hover:underline px-2 py-1"
+                className="text-xs font-black text-amber-900 hover:text-amber-950 px-3 py-1.5 rounded-xl bg-amber-200/60 hover:bg-amber-200 border border-amber-300/80 shadow-2xs transition"
               >
                 Lihat Pending &rarr;
               </button>
             </div>
           )}
 
-          {/* Filter Bar */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-4 flex flex-col md:flex-row items-center gap-3">
+          {/* Filter Bar 3D */}
+          <div className="bg-white/90 backdrop-blur-md border border-zinc-200/90 rounded-2xl p-4 flex flex-col md:flex-row items-center gap-3 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.04),inset_0_1px_1px_rgba(255,255,255,1)]">
             <div className="relative flex-1 w-full">
               <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -274,7 +278,7 @@ function AdminBookingsContent() {
                 placeholder="Cari no tiket, nama customer, no mesin, atau plat..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-sm bg-zinc-50/50 border border-zinc-200 rounded-lg text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A]"
+                className="w-full pl-9 pr-4 py-2 text-sm bg-zinc-50/70 border border-zinc-200/80 rounded-xl text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A] shadow-inner"
               />
             </div>
 
@@ -288,7 +292,7 @@ function AdminBookingsContent() {
                     setTanggalFrom(e.target.value);
                     setPage(1);
                   }}
-                  className="text-xs bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A]"
+                  className="text-xs bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A] shadow-2xs"
                 />
               </div>
 
@@ -301,7 +305,7 @@ function AdminBookingsContent() {
                     setTanggalTo(e.target.value);
                     setPage(1);
                   }}
-                  className="text-xs bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A]"
+                  className="text-xs bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A] shadow-2xs"
                 />
               </div>
 
@@ -313,7 +317,7 @@ function AdminBookingsContent() {
                     setStatusFilter(e.target.value);
                     setPage(1);
                   }}
-                  className="text-xs font-medium bg-white border border-zinc-200 rounded-lg px-3 py-2 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A]"
+                  className="text-xs font-semibold bg-white border border-zinc-200 rounded-xl px-3 py-2 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A] shadow-2xs"
                 >
                   <option value="ALL">Semua Status</option>
                   <option value="PENDING">Pending</option>
@@ -327,7 +331,7 @@ function AdminBookingsContent() {
               {hasActiveFilters && (
                 <button
                   onClick={resetAllFilters}
-                  className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-500 hover:text-[#E8272A] px-2 py-1.5 rounded-lg hover:bg-red-50 border border-transparent hover:border-red-200 transition"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-600 hover:text-[#E8272A] px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-red-50 border border-zinc-200 hover:border-red-200 shadow-2xs transition"
                   title="Reset Semua Filter"
                 >
                   <RotateCcw size={12} />
@@ -337,18 +341,18 @@ function AdminBookingsContent() {
             </div>
           </div>
 
-          {/* Table */}
-          <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
+          {/* Table 3D Container */}
+          <div className="bg-white border border-zinc-200/90 rounded-3xl overflow-hidden shadow-[0_14px_36px_-6px_rgba(15,23,42,0.06),inset_0_1px_1px_rgba(255,255,255,1)]">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm border-collapse">
                 <thead>
-                  <tr className="bg-zinc-50/80 border-b border-zinc-200 text-xs font-semibold text-zinc-500 uppercase tracking-wide">
-                    <th className="px-5 py-3.5">Tiket &amp; Customer</th>
-                    <th className="px-4 py-3.5">Identitas Motor</th>
-                    <th className="px-4 py-3.5">Jadwal Servis</th>
-                    <th className="px-4 py-3.5">Layanan / Servis</th>
-                    <th className="px-4 py-3.5">Status</th>
-                    <th className="px-5 py-3.5 text-right">Ubah Status</th>
+                  <tr className="bg-gradient-to-r from-zinc-50 via-zinc-100/60 to-zinc-50 border-b border-zinc-200 text-xs font-bold text-zinc-500 uppercase tracking-wide">
+                    <th className="px-5 py-4">Tiket &amp; Customer</th>
+                    <th className="px-4 py-4">Identitas Motor</th>
+                    <th className="px-4 py-4">Jadwal Servis</th>
+                    <th className="px-4 py-4">Layanan / Servis</th>
+                    <th className="px-4 py-4">Status</th>
+                    <th className="px-5 py-4 text-right">Ubah Status</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200/70">
@@ -383,9 +387,9 @@ function AdminBookingsContent() {
                     </tr>
                   ) : (
                     bookings.map((item) => (
-                      <tr key={item.id} className="hover:bg-zinc-50/60 transition-colors">
+                      <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
                         <td className="px-5 py-4">
-                          <span className="font-bold font-mono text-xs text-[#E4002B] bg-red-50 border border-red-200/60 px-2 py-0.5 rounded inline-block mb-1">
+                          <span className="font-bold font-mono text-xs text-[#E4002B] bg-gradient-to-r from-red-50 to-red-100/60 border border-red-200/80 px-2.5 py-1 rounded-lg inline-block shadow-2xs mb-1">
                             {item.ticket_no}
                           </span>
                           <div className="font-bold text-sm text-zinc-900">{item.nama_customer}</div>
@@ -400,10 +404,10 @@ function AdminBookingsContent() {
                           <div className="text-xs text-zinc-600 font-mono font-semibold mt-1">{item.no_hp}</div>
                         </td>
                         <td className="px-4 py-4">
-                          <div className="font-bold text-zinc-900 text-xs px-2.5 py-1 rounded bg-zinc-100 border border-zinc-200/80 inline-block font-mono">
+                          <div className="font-bold text-zinc-900 text-xs px-2.5 py-1 rounded-lg bg-zinc-100 border border-zinc-200/80 inline-block font-mono shadow-2xs">
                             {item.plat_kendaraan}
                           </div>
-                          <div className="text-xs text-zinc-600 mt-1 font-mono">
+                          <div className="text-xs text-zinc-500 font-mono mt-1">
                             Mesin: <span className="font-bold text-zinc-800">{item.no_mesin}</span>
                           </div>
                         </td>
@@ -416,7 +420,7 @@ function AdminBookingsContent() {
                           </div>
                         </td>
                         <td className="px-4 py-4 max-w-xs">
-                          <span className="inline-block text-xs font-semibold px-2 py-0.5 rounded bg-red-50 text-[#E8272A] border border-red-200/60">
+                          <span className="inline-block text-xs font-bold px-2.5 py-0.5 rounded-lg bg-zinc-100 text-zinc-800 border border-zinc-200 shadow-2xs">
                             {item.jenis_servis}
                           </span>
                           {item.detail_lainnya && (
@@ -433,7 +437,7 @@ function AdminBookingsContent() {
                             disabled={updatingId === item.id}
                             value={item.status}
                             onChange={(e) => handleUpdateStatus(item.id, e.target.value)}
-                            className="text-xs font-medium border border-zinc-200 rounded-lg px-2.5 py-1.5 bg-white text-zinc-700 hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 disabled:opacity-50"
+                            className="text-xs font-bold border border-zinc-200 rounded-xl px-3 py-1.5 bg-white text-zinc-800 hover:border-zinc-300 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 shadow-2xs disabled:opacity-50"
                           >
                             <option value="PENDING">Pending</option>
                             <option value="CONFIRMED">Konfirmasi</option>
