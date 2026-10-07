@@ -9,7 +9,10 @@
 - `[08:50]`: Audit statis & linting: Memperbaiki seluruh tipe `any` di frontend (`admin/import`, `admin/bookings`, `admin/spare-parts`, `crm`, `katalog`) menjadi interface terstruktur.
 - `[08:55]`: Membersihkan unused imports di modul admin, layout, crm, dan komponen navbar/footer.
 - `[09:00]`: Verifikasi build: Backend `tsc` (PASS), Frontend ESLint 0 errors 0 warnings (PASS), Frontend production build Next.js (PASS).
-- `[09:02]`: Menyusun dokumen laporan verifikasi lengkap di `docs/qa/booking.qa.md`.
+- `[09:25]`: Menambahkan Section Lokasi & Google Maps interaktif di Homepage ([`page.tsx`](file:///D:/Kerja%20Praktik/Web%20Bengkel%20As%20Putra/as-putra-system/frontend/src/app/page.tsx#L326-L365)) dan Widget Lokasi di Sidebar Booking ([`booking/page.tsx`](file:///D:/Kerja%20Praktik/Web%20Bengkel%20As%20Putra/as-putra-system/frontend/src/app/booking/page.tsx#L537-L565)).
+- `[09:35]`: Menambahkan KPI metric *Need Action (Pending Booking)* & badge role khusus `KEPALA_BENGKEL` pada Admin Workspace ([`admin/page.tsx`](file:///D:/Kerja%20Praktik/Web%20Bengkel%20As%20Putra/as-putra-system/frontend/src/app/admin/page.tsx) & [`AdminSidebar.tsx`](file:///D:/Kerja%20Praktik/Web%20Bengkel%20As%20Putra/as-putra-system/frontend/src/components/admin/AdminSidebar.tsx)).
+- `[09:40]`: Peningkatan CRM Portal: Menambahkan filter rentang tanggal (`tanggal_from` & `tanggal_to`) serta tombol aksi **"Chat WA"** untuk follow-up customer ([`crm/page.tsx`](file:///D:/Kerja%20Praktik/Web%20Bengkel%20As%20Putra/as-putra-system/frontend/src/app/crm/page.tsx)).
+- `[09:44]`: Verifikasi ulang: Backend test 25/25 PASS, Frontend ESLint 0 error 0 warning, & Next.js production build PASS. Commit lokal `e68bf62`.
 
 ## Blockers & Solutions
 - **Masalah**: Dependency bloat jika memasang Jest/Mocha untuk testing Express.

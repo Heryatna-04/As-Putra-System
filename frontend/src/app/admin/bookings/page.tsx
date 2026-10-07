@@ -39,6 +39,8 @@ export default function AdminBookingsPage() {
   const [limit] = useState(10);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [tanggalFrom, setTanggalFrom] = useState("");
+  const [tanggalTo, setTanggalTo] = useState("");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +69,8 @@ export default function AdminBookingsPage() {
 
       if (statusFilter !== "ALL") params.append("status", statusFilter);
       if (debouncedSearch) params.append("q", debouncedSearch);
+      if (tanggalFrom) params.append("tanggal_from", tanggalFrom);
+      if (tanggalTo) params.append("tanggal_to", tanggalTo);
 
       const res = await fetch(`${baseUrl}/admin/bookings?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -87,7 +91,7 @@ export default function AdminBookingsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, page, limit, statusFilter, debouncedSearch]);
+  }, [token, page, limit, statusFilter, debouncedSearch, tanggalFrom, tanggalTo]);
 
   useEffect(() => {
     fetchBookings();
@@ -109,6 +113,8 @@ export default function AdminBookingsPage() {
       const params = new URLSearchParams();
       if (statusFilter !== "ALL") params.append("status", statusFilter);
       if (debouncedSearch) params.append("q", debouncedSearch);
+      if (tanggalFrom) params.append("tanggal_from", tanggalFrom);
+      if (tanggalTo) params.append("tanggal_to", tanggalTo);
 
       const res = await fetch(`${baseUrl}/admin/bookings/export?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -256,23 +262,51 @@ export default function AdminBookingsPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2 w-full md:w-auto">
-              <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Status:</span>
-              <select
-                value={statusFilter}
-                onChange={(e) => {
-                  setStatusFilter(e.target.value);
-                  setPage(1);
-                }}
-                className="text-xs font-medium bg-white border border-zinc-200 rounded-lg px-3 py-2 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A]"
-              >
-                <option value="ALL">Semua Status</option>
-                <option value="PENDING">Pending</option>
-                <option value="CONFIRMED">Dikonfirmasi</option>
-                <option value="IN_PROGRESS">Dikerjakan</option>
-                <option value="DONE">Selesai</option>
-                <option value="CANCELLED">Dibatalkan</option>
-              </select>
+            <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+              <div className="flex items-center gap-1.5 text-xs text-zinc-600">
+                <span className="font-semibold text-zinc-500 uppercase">Dari:</span>
+                <input
+                  type="date"
+                  value={tanggalFrom}
+                  onChange={(e) => {
+                    setTanggalFrom(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-xs bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A]"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 text-xs text-zinc-600">
+                <span className="font-semibold text-zinc-500 uppercase">Sampai:</span>
+                <input
+                  type="date"
+                  value={tanggalTo}
+                  onChange={(e) => {
+                    setTanggalTo(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-xs bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A]"
+                />
+              </div>
+
+              <div className="flex items-center gap-1.5 text-xs text-zinc-600">
+                <span className="font-semibold text-zinc-500 uppercase">Status:</span>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => {
+                    setStatusFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="text-xs font-medium bg-white border border-zinc-200 rounded-lg px-3 py-2 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A]"
+                >
+                  <option value="ALL">Semua Status</option>
+                  <option value="PENDING">Pending</option>
+                  <option value="CONFIRMED">Dikonfirmasi</option>
+                  <option value="IN_PROGRESS">Dikerjakan</option>
+                  <option value="DONE">Selesai</option>
+                  <option value="CANCELLED">Dibatalkan</option>
+                </select>
+              </div>
             </div>
           </div>
 
