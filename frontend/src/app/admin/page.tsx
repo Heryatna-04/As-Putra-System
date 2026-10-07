@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Package, PackageX, Archive, RefreshCw, Calendar as CalendarIcon, Clock, ArrowUpRight, ShieldCheck } from "lucide-react";
+import { Package, PackageX, Archive, RefreshCw, Calendar as CalendarIcon, Clock, ArrowUpRight, ShieldCheck, CalendarDays } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
   PieChart,
@@ -36,6 +36,8 @@ export default function AdminDashboardPage() {
     return () => clearInterval(timer);
   }, []);
 
+  const [pendingBookingsCount, setPendingBookingsCount] = useState(0);
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       if (!token) return;
@@ -54,6 +56,16 @@ export default function AdminDashboardPage() {
         const dataCategories = await resCategories.json();
         if (resCategories.ok && dataCategories.success) {
           setCategories(dataCategories.data.categories.slice(0, 5));
+        }
+
+        // Fetch Pending Bookings count for Executive KPI
+        const resPendingBookings = await fetch(`${baseUrl}/admin/bookings?limit=1&status=PENDING`, {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        });
+        const dataPendingBookings = await resPendingBookings.json();
+        if (resPendingBookings.ok && dataPendingBookings.success) {
+          setPendingBookingsCount(dataPendingBookings.data.total || 0);
         }
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -125,7 +137,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* METRIC KPI CARDS - TOP HIGHLIGHT */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* KPI 1: Ready Stock */}
           <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-xs relative overflow-hidden flex flex-col justify-between">
             <div className="w-1.5 h-full bg-emerald-600 absolute left-0 top-0" />
@@ -170,7 +182,29 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* KPI 3: Discontinue */}
+          {/* KPI 3: Booking Pending Confirmation */}
+          <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-xs relative overflow-hidden flex flex-col justify-between">
+            <div className="w-1.5 h-full bg-blue-600 absolute left-0 top-0" />
+            <div className="flex items-center justify-between mb-4 pl-2">
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">Need Action</span>
+              <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+                <CalendarDays className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="pl-2">
+              <div className="text-3xl font-extrabold text-blue-800 tracking-tight font-display">
+                {pendingBookingsCount}
+              </div>
+              <div className="flex items-center gap-2 mt-2">
+                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60">
+                  Pending Booking
+                </span>
+                <span className="text-xs text-zinc-500">Butuh Aksi</span>
+              </div>
+            </div>
+          </div>
+
+          {/* KPI 4: Discontinue */}
           <div className="bg-white rounded-2xl p-6 border border-zinc-200 shadow-xs relative overflow-hidden flex flex-col justify-between">
             <div className="w-1.5 h-full bg-[#E4002B] absolute left-0 top-0" />
             <div className="flex items-center justify-between mb-4 pl-2">

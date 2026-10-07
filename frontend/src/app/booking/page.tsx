@@ -2,7 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, AlertCircle, Loader2, Copy, Check, Clock } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, Copy, Check, Clock, MapPin, Navigation } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
@@ -537,6 +537,35 @@ export default function BookingPage() {
                   <Clock size={16} className="mt-0.5 shrink-0" />
                   Mohon hadir 10 menit lebih awal dari jadwal.
                 </p>
+
+                {/* Location & Map Card */}
+                <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                  <div className="flex items-center gap-2 mb-1.5 font-bold text-xs text-zinc-900">
+                    <MapPin className="w-4 h-4 text-[#E4002B]" />
+                    <span>Lokasi AHASS 10870</span>
+                  </div>
+                  <p className="text-[11px] text-zinc-600 mb-2.5 leading-snug">
+                    Jl. Raya Kuningan, Kab. Kuningan, Jawa Barat
+                  </p>
+                  <div className="h-32 rounded-lg overflow-hidden border border-zinc-200 relative mb-3">
+                    <iframe
+                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d319.7268610197772!2d108.48832525312899!3d-6.9516689375066765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6f16edc0e25e75%3A0x5a4162116590d82d!2sDealer%20Honda%20AS%20Putra%20Motor%20Kuningan!5e1!3m2!1sen!2sid!4v1790916002596!5m2!1sen!2sid"
+                      className="w-full h-full border-0"
+                      allowFullScreen
+                      loading="lazy"
+                      title="Peta Lokasi AHASS"
+                    />
+                  </div>
+                  <a
+                    href="https://maps.google.com/?q=Dealer+Honda+AS+Putra+Motor+Kuningan"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-2 text-xs font-semibold text-white hover:bg-zinc-800 transition"
+                  >
+                    <Navigation className="w-3.5 h-3.5" />
+                    Buka Rute di Google Maps
+                  </a>
+                </div>
               </aside>
             </div>
           </>

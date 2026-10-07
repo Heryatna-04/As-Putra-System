@@ -97,10 +97,22 @@ export default function AdminSidebar({ userRole, userName }: AdminSidebarProps) 
             </div>
             <div className="min-w-0 truncate">
               <div className="text-sm font-semibold text-zinc-900 truncate">
-                {userName || "Kepala Bengkel"}
+                {userName || "Staf Bengkel"}
               </div>
-              <div className="text-xs text-zinc-500 truncate">
-                {userRole || "Administrator"}
+              <div className="mt-0.5">
+                {userRole === "KEPALA_BENGKEL" ? (
+                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-100 text-amber-800 border border-amber-300">
+                    Kepala Bengkel
+                  </span>
+                ) : userRole === "CRM" ? (
+                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-100 text-blue-800 border border-blue-300">
+                    CRM Staf
+                  </span>
+                ) : (
+                  <span className="inline-block px-2 py-0.5 text-[10px] font-bold rounded-full bg-zinc-200 text-zinc-800">
+                    {userRole || "Administrator"}
+                  </span>
+                )}
               </div>
             </div>
           </div>

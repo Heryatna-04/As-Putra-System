@@ -11,7 +11,8 @@ import {
   Phone,
   Clock,
   FileSpreadsheet,
-  Mail
+  Mail,
+  MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -40,6 +41,8 @@ export default function CrmBookingsPage() {
   const [limit] = useState(15);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [tanggalFrom, setTanggalFrom] = useState("");
+  const [tanggalTo, setTanggalTo] = useState("");
   const [search, setSearch] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
@@ -65,6 +68,8 @@ export default function CrmBookingsPage() {
 
       if (statusFilter !== "ALL") params.append("status", statusFilter);
       if (debouncedSearch) params.append("q", debouncedSearch);
+      if (tanggalFrom) params.append("tanggal_from", tanggalFrom);
+      if (tanggalTo) params.append("tanggal_to", tanggalTo);
 
       const res = await fetch(`${baseUrl}/crm/bookings?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -85,7 +90,7 @@ export default function CrmBookingsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, page, limit, statusFilter, debouncedSearch]);
+  }, [token, page, limit, statusFilter, debouncedSearch, tanggalFrom, tanggalTo]);
 
   useEffect(() => {
     fetchCrmBookings();
@@ -99,6 +104,8 @@ export default function CrmBookingsPage() {
       const params = new URLSearchParams();
       if (statusFilter !== "ALL") params.append("status", statusFilter);
       if (debouncedSearch) params.append("q", debouncedSearch);
+      if (tanggalFrom) params.append("tanggal_from", tanggalFrom);
+      if (tanggalTo) params.append("tanggal_to", tanggalTo);
 
       const res = await fetch(`${baseUrl}/crm/bookings/export?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -189,23 +196,51 @@ export default function CrmBookingsPage() {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full md:w-auto">
-          <span className="text-xs font-semibold text-zinc-500 uppercase tracking-wide">Status:</span>
-          <select
-            value={statusFilter}
-            onChange={(e) => {
-              setStatusFilter(e.target.value);
-              setPage(1);
-            }}
-            className="text-xs font-medium bg-white border border-zinc-200 rounded-lg px-3 py-2 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A]"
-          >
-            <option value="ALL">Semua Status</option>
-            <option value="PENDING">Pending</option>
-            <option value="CONFIRMED">Dikonfirmasi</option>
-            <option value="IN_PROGRESS">Dikerjakan</option>
-            <option value="DONE">Selesai</option>
-            <option value="CANCELLED">Batal</option>
-          </select>
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+          <div className="flex items-center gap-1.5 text-xs text-zinc-600">
+            <span className="font-semibold text-zinc-500 uppercase">Dari:</span>
+            <input
+              type="date"
+              value={tanggalFrom}
+              onChange={(e) => {
+                setTanggalFrom(e.target.value);
+                setPage(1);
+              }}
+              className="text-xs bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A]"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 text-xs text-zinc-600">
+            <span className="font-semibold text-zinc-500 uppercase">Sampai:</span>
+            <input
+              type="date"
+              value={tanggalTo}
+              onChange={(e) => {
+                setTanggalTo(e.target.value);
+                setPage(1);
+              }}
+              className="text-xs bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A]"
+            />
+          </div>
+
+          <div className="flex items-center gap-1.5 text-xs text-zinc-600">
+            <span className="font-semibold text-zinc-500 uppercase">Status:</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => {
+                setStatusFilter(e.target.value);
+                setPage(1);
+              }}
+              className="text-xs font-medium bg-white border border-zinc-200 rounded-lg px-3 py-2 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A]"
+            >
+              <option value="ALL">Semua Status</option>
+              <option value="PENDING">Pending</option>
+              <option value="CONFIRMED">Dikonfirmasi</option>
+              <option value="IN_PROGRESS">Dikerjakan</option>
+              <option value="DONE">Selesai</option>
+              <option value="CANCELLED">Batal</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -220,20 +255,21 @@ export default function CrmBookingsPage() {
                 <th className="px-4 py-3.5">No. Mesin &amp; Plat</th>
                 <th className="px-4 py-3.5">Jadwal Servis</th>
                 <th className="px-4 py-3.5">Jenis Servis</th>
-                <th className="px-5 py-3.5 text-center">Status</th>
+                <th className="px-4 py-3.5 text-center">Status</th>
+                <th className="px-4 py-3.5 text-center">Aksi WA</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200/70">
               {isLoading ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-zinc-400">
+                  <td colSpan={7} className="text-center py-12 text-zinc-400">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-zinc-400" />
                     Memuat data CRM...
                   </td>
                 </tr>
               ) : bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-zinc-400 text-sm">
+                  <td colSpan={7} className="text-center py-12 text-zinc-400 text-sm">
                     Belum ada data booking.
                   </td>
                 </tr>
@@ -287,6 +323,18 @@ export default function CrmBookingsPage() {
                     </td>
                     <td className="px-5 py-4 text-center whitespace-nowrap">
                       {getStatusBadge(item.status)}
+                    </td>
+                    <td className="px-4 py-4 text-center whitespace-nowrap">
+                      <a
+                        href={`https://wa.me/6281234567890?text=${encodeURIComponent(`Halo ${item.nama_customer}, kami dari CRM AHASS Honda AS Putra Motor Kuningan mengonfirmasi tiket booking servis Anda (${item.ticket_no}) jadwal ${item.tanggal_booking} jam ${item.jam_booking}.`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition"
+                        title="Follow up customer via WA CS"
+                      >
+                        <MessageSquare size={12} />
+                        <span>Chat WA</span>
+                      </a>
                     </td>
                   </tr>
                 ))
