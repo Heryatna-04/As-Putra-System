@@ -137,10 +137,10 @@ export class BookingService {
       throw new Error(`Gagal memuat booking: ${error.message}`);
     }
 
-    // Mask phone number for CRM role
+    // Return full data for CRM/Admin role
     const sanitizedData = (data || []).map((row: any) => ({
       ...row,
-      no_hp: isCrm ? this.maskPhone(row.no_hp) : row.no_hp,
+      no_hp: row.no_hp,
     }));
 
     return {
@@ -168,7 +168,7 @@ export class BookingService {
 
     return {
       ...data,
-      no_hp: isCrm ? this.maskPhone(data.no_hp) : data.no_hp,
+      no_hp: data.no_hp,
     };
   }
 
@@ -232,7 +232,7 @@ export class BookingService {
           'No. Tiket': b.ticket_no,
           'Nama Customer': b.nama_customer,
           'Email / Gmail': b.email || '-',
-          'No. Telepon / WA (Masked)': this.maskPhone(b.no_hp),
+          'No. Telepon / WA': b.no_hp,
           'No. Mesin': b.no_mesin,
           'Plat Kendaraan': b.plat_kendaraan,
           'Tanggal Servis': b.tanggal_booking,

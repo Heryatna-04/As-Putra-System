@@ -325,16 +325,22 @@ export default function CrmBookingsPage() {
                       {getStatusBadge(item.status)}
                     </td>
                     <td className="px-4 py-4 text-center whitespace-nowrap">
-                      <a
-                        href={`https://wa.me/6281234567890?text=${encodeURIComponent(`Halo ${item.nama_customer}, kami dari CRM AHASS Honda AS Putra Motor Kuningan mengonfirmasi tiket booking servis Anda (${item.ticket_no}) jadwal ${item.tanggal_booking} jam ${item.jam_booking}.`)}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition"
-                        title="Follow up customer via WA CS"
-                      >
-                        <MessageSquare size={12} />
-                        <span>Chat WA</span>
-                      </a>
+                      {(() => {
+                        const cleanPhone = item.no_hp.replace(/\D/g, "");
+                        const waNum = cleanPhone.startsWith("0") ? "62" + cleanPhone.slice(1) : cleanPhone;
+                        return (
+                          <a
+                            href={`https://wa.me/${waNum}?text=${encodeURIComponent(`Halo ${item.nama_customer}, kami dari CRM AHASS Honda AS Putra Motor Kuningan mengonfirmasi tiket booking servis Anda (${item.ticket_no}) jadwal ${item.tanggal_booking} jam ${item.jam_booking}.`)}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition"
+                            title={`Follow up ${item.nama_customer} (${item.no_hp}) via WA`}
+                          >
+                            <MessageSquare size={12} />
+                            <span>Chat WA</span>
+                          </a>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))
