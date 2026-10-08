@@ -16,20 +16,33 @@ const CATEGORY_CACHE_TTL = 10 * 60 * 1000; // 10 Minutes Cache
 /** Helper format gambar URL */
 function formatPartImage(part: SparePart): SparePart {
   let gambar_url: string | null = null;
+  let gambar_urls: string[] = [];
 
   if (part.gambar_path) {
     if (part.gambar_path.startsWith('http://') || part.gambar_path.startsWith('https://')) {
       gambar_url = part.gambar_path;
+      gambar_urls = [gambar_url];
     } else {
       const cleanPath = part.gambar_path.replace(/^\/+/, '').replace(/^images\/parts\//, '');
-      gambar_url = `${SUPABASE_STORAGE_PUBLIC_URL}/${cleanPath}`;
+      const match = cleanPath.match(/^(.*?)-\d+(\.[a-zA-Z0-9]+)$/);
+
+      if (match) {
+        const stem = match[1];
+        const ext = match[2];
+        const primaryFileName = `${stem}-1${ext}`;
+        gambar_url = `${SUPABASE_STORAGE_PUBLIC_URL}/${primaryFileName}`;
+        gambar_urls = [1, 2, 3, 4, 5].map((i) => `${SUPABASE_STORAGE_PUBLIC_URL}/${stem}-${i}${ext}`);
+      } else {
+        gambar_url = `${SUPABASE_STORAGE_PUBLIC_URL}/${cleanPath}`;
+        gambar_urls = [gambar_url];
+      }
     }
   }
 
   return {
     ...part,
     gambar_url,
-    gambar_urls: gambar_url ? [gambar_url] : [],
+    gambar_urls,
   };
 }
 

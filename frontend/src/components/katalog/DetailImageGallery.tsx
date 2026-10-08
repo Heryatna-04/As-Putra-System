@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, ZoomIn, X, Wrench, ShieldCheck } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, X, Wrench } from "lucide-react";
 
 interface DetailImageGalleryProps {
   images: string[];
@@ -19,17 +19,28 @@ export default function DetailImageGallery({
 }: DetailImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
+
+  const handleImageError = (url: string) => {
+    setFailedUrls((prev) => {
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
+  };
+
+  const validImages = images.filter((img) => !failedUrls.has(img));
+  const activeIndex = currentIndex >= validImages.length ? 0 : currentIndex;
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? validImages.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev === validImages.length - 1 ? 0 : prev + 1));
   };
 
-  if (images.length === 0 || imageError) {
+  if (validImages.length === 0) {
     return (
       <div className="bg-gradient-to-b from-zinc-50 to-red-50/20 rounded-3xl p-8 flex flex-col items-center justify-center relative aspect-square border border-dashed border-zinc-200 text-center">
         <div className="w-16 h-16 rounded-full bg-red-100/80 text-[#E4002B] flex items-center justify-center mb-3 shadow-xs">
@@ -53,12 +64,12 @@ export default function DetailImageGallery({
       {/* Main Image Display */}
       <div className="bg-slate-100/80 rounded-3xl p-6 flex items-center justify-center relative aspect-square overflow-hidden group border border-slate-200">
         <Image
-          src={images[currentIndex]}
+          src={validImages[activeIndex]}
           alt={partName}
           width={450}
           height={450}
           priority
-          onError={() => setImageError(true)}
+          onError={() => handleImageError(validImages[activeIndex])}
           className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105 ${
             !isAvailable ? "grayscale opacity-60" : ""
           }`}
@@ -68,26 +79,26 @@ export default function DetailImageGallery({
         <button
           onClick={() => setIsZoomOpen(true)}
           type="button"
-          className="absolute top-4 right-4 z-20 bg-white/90 backdrop-blur-md hover:bg-[#FF1E27] hover:text-white text-slate-800 p-2.5 rounded-2xl shadow-md border border-slate-200 transition-all flex items-center gap-1.5 text-xs font-bold"
+          className="absolute top-4 right-4 z-20 bg-white/90 backdrop-blur-md hover:bg-[#FF1E27] hover:text-white text-slate-800 p-2.5 rounded-2xl shadow-md border border-slate-200 transition-all flex items-center gap-1.5 text-xs font-bold cursor-pointer"
         >
           <ZoomIn className="w-4 h-4" />
           <span>Zoom</span>
         </button>
 
         {/* Slider Controls */}
-        {images.length > 1 && (
+        {validImages.length > 1 && (
           <>
             <button
               onClick={handlePrev}
               type="button"
-              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 border border-slate-200 text-slate-800 flex items-center justify-center shadow-lg hover:bg-[#FF1E27] hover:text-white transition-all"
+              className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 border border-slate-200 text-slate-800 flex items-center justify-center shadow-lg hover:bg-[#FF1E27] hover:text-white transition-all cursor-pointer"
             >
               <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={handleNext}
               type="button"
-              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 border border-slate-200 text-slate-800 flex items-center justify-center shadow-lg hover:bg-[#FF1E27] hover:text-white transition-all"
+              className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/90 border border-slate-200 text-slate-800 flex items-center justify-center shadow-lg hover:bg-[#FF1E27] hover:text-white transition-all cursor-pointer"
             >
               <ChevronRight className="w-5 h-5" />
             </button>
@@ -96,23 +107,24 @@ export default function DetailImageGallery({
       </div>
 
       {/* Thumbnails Row */}
-      {images.length > 1 && (
+      {validImages.length > 1 && (
         <div className="flex items-center gap-3 overflow-x-auto pb-2 px-1">
-          {images.map((img, idx) => (
+          {validImages.map((img, idx) => (
             <button
               key={idx}
               onClick={() => setCurrentIndex(idx)}
               type="button"
-              className={`relative w-20 h-20 rounded-2xl border-2 overflow-hidden shrink-0 transition-all bg-slate-50 ${
-                idx === currentIndex
+              className={`relative w-20 h-20 rounded-2xl border-2 overflow-hidden shrink-0 transition-all bg-slate-50 cursor-pointer ${
+                idx === activeIndex
                   ? "border-[#FF1E27] ring-2 ring-red-500/20 scale-105"
                   : "border-slate-200 opacity-60 hover:opacity-100"
               }`}
             >
               <Image
                 src={img}
-                alt="thumbnail"
+                alt={`Thumbnail ${idx + 1}`}
                 fill
+                onError={() => handleImageError(img)}
                 className="object-contain p-2 mix-blend-multiply"
               />
             </button>
@@ -132,7 +144,7 @@ export default function DetailImageGallery({
           >
             <button
               onClick={() => setIsZoomOpen(false)}
-              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-slate-100 text-slate-800 hover:bg-[#FF1E27] hover:text-white transition-all flex items-center justify-center shadow-sm"
+              className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-slate-100 text-slate-800 hover:bg-[#FF1E27] hover:text-white transition-all flex items-center justify-center shadow-sm cursor-pointer"
             >
               <X className="w-5 h-5" />
             </button>
@@ -146,23 +158,23 @@ export default function DetailImageGallery({
 
             <div className="relative w-full aspect-square max-h-[65vh] bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden p-6">
               <Image
-                src={images[currentIndex]}
+                src={validImages[activeIndex]}
                 alt={partName}
                 fill
                 className="object-contain p-6"
               />
 
-              {images.length > 1 && (
+              {validImages.length > 1 && (
                 <>
                   <button
                     onClick={handlePrev}
-                    className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/90 border border-slate-200 text-slate-900 flex items-center justify-center shadow-xl hover:bg-[#FF1E27] hover:text-white transition-all"
+                    className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/90 border border-slate-200 text-slate-900 flex items-center justify-center shadow-xl hover:bg-[#FF1E27] hover:text-white transition-all cursor-pointer"
                   >
                     <ChevronLeft className="w-6 h-6" />
                   </button>
                   <button
                     onClick={handleNext}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/90 border border-slate-200 text-slate-900 flex items-center justify-center shadow-xl hover:bg-[#FF1E27] hover:text-white transition-all"
+                    className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full bg-white/90 border border-slate-200 text-slate-900 flex items-center justify-center shadow-xl hover:bg-[#FF1E27] hover:text-white transition-all cursor-pointer"
                   >
                     <ChevronRight className="w-6 h-6" />
                   </button>
@@ -170,14 +182,14 @@ export default function DetailImageGallery({
               )}
             </div>
 
-            {images.length > 1 && (
+            {validImages.length > 1 && (
               <div className="flex items-center gap-2 mt-4 overflow-x-auto p-1">
-                {images.map((img, idx) => (
+                {validImages.map((img, idx) => (
                   <button
                     key={idx}
                     onClick={() => setCurrentIndex(idx)}
-                    className={`relative w-16 h-16 rounded-xl border-2 overflow-hidden transition-all ${
-                      idx === currentIndex
+                    className={`relative w-16 h-16 rounded-xl border-2 overflow-hidden transition-all cursor-pointer ${
+                      idx === activeIndex
                         ? "border-[#FF1E27] scale-105"
                         : "border-slate-200 opacity-60 hover:opacity-100"
                     }`}
