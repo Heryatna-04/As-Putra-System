@@ -367,7 +367,7 @@ export default function BookingPage() {
     <div className="flex min-h-screen flex-col bg-zinc-50 font-sans text-zinc-900">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-[110px] sm:px-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-[125px] sm:pt-[110px] sm:px-6">
         {successData ? (
           <div className="mx-auto max-w-xl rounded-2xl border border-zinc-200 bg-white p-6 text-center md:p-10">
             <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">

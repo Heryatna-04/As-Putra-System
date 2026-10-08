@@ -132,7 +132,7 @@ export default async function Home() {
     <div className="flex flex-col min-h-screen bg-white text-zinc-900">
       <Navbar />
 
-      <main className="flex-1 pt-[105px]">
+      <main className="flex-1 pt-[125px] sm:pt-[105px]">
         {/* ── Hero ─────────────────────────────────────────────────── */}
         <section className="relative isolate overflow-hidden bg-[#E4002B] text-white">
           {/* Foto dealer: terlihat jelas di sisi kanan, memudar ke merah di sisi teks */}

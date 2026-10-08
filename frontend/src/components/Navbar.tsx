@@ -68,11 +68,11 @@ function NavbarContent() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-zinc-200/80 shadow-xs font-sans">
       {/* Top Header Row */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        {/* Left: Brand Logos */}
-        <div className="flex items-center gap-3">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 sm:gap-4">
+        {/* Brand Logo & Tagline */}
+        <div className="flex items-center justify-between w-full sm:w-auto gap-3">
           <Link href="/" className="flex items-center gap-2">
-            <div className="relative h-8 w-32 shrink-0">
+            <div className="relative h-7 sm:h-8 w-28 sm:w-32 shrink-0">
               <Image
                 src="/logo.png"
                 alt="AS Putra Motor Logo"
@@ -82,15 +82,36 @@ function NavbarContent() {
               />
             </div>
           </Link>
+
           <div className="hidden md:block h-4 w-px bg-zinc-200" />
           <span className="hidden md:inline-flex items-center gap-1.5 text-xs font-medium text-[#B00020] bg-red-50 border border-red-200/60 px-2.5 py-1 rounded-md">
             <span className="w-1.5 h-1.5 rounded-full bg-[#E4002B]" />
             Dealer & Bengkel Resmi Honda
           </span>
+
+          {/* Mobile Right Buttons (WA & Staff) */}
+          <div className="flex sm:hidden items-center gap-1.5">
+            <Link
+              href="/admin/login"
+              className="p-1.5 text-zinc-600 hover:text-zinc-900 border border-zinc-200 rounded-lg"
+              title="Staff Login"
+            >
+              <User className="w-4 h-4" />
+            </Link>
+            <a
+              href={buildWaUrl("BENGKEL", "Informasi Spare Part & Servis")}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"
+            >
+              <MessageSquare className="w-3.5 h-3.5 fill-current" />
+              <span>WA</span>
+            </a>
+          </div>
         </div>
 
-        {/* Center: Search Bar with Live Dropdown */}
-        <form onSubmit={handleSearch} className="flex-1 max-w-md relative">
+        {/* Center: Search Bar with Live Dropdown (Full width on mobile) */}
+        <form onSubmit={handleSearch} className="w-full sm:w-auto sm:flex-1 sm:max-w-md relative order-last sm:order-none">
           <div className="flex items-center border border-zinc-200 rounded-lg bg-zinc-50 hover:bg-white focus-within:bg-white focus-within:border-[#E4002B] focus-within:ring-2 focus-within:ring-[#E4002B]/20 transition-all overflow-hidden">
             <input
               type="text"
@@ -98,11 +119,11 @@ function NavbarContent() {
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => searchTerm.trim().length >= 2 && setShowDropdown(true)}
               placeholder="Cari suku cadang, kode part..."
-              className="w-full py-2 px-3.5 text-sm bg-transparent text-zinc-900 outline-none placeholder:text-zinc-400"
+              className="w-full py-1.5 sm:py-2 px-3 text-xs sm:text-sm bg-transparent text-zinc-900 outline-none placeholder:text-zinc-400"
             />
             <button
               type="submit"
-              className="px-3.5 py-2 text-zinc-400 hover:text-[#E4002B] transition-colors"
+              className="px-3 py-1.5 sm:py-2 text-zinc-400 hover:text-[#E4002B] transition-colors"
               title="Cari"
             >
               <Search className="w-4 h-4" />
@@ -111,7 +132,7 @@ function NavbarContent() {
 
           {/* Live Search Dropdown */}
           {showDropdown && (
-            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl border border-zinc-200 shadow-lg overflow-hidden z-50">
+            <div className="absolute top-full left-0 right-0 mt-1.5 bg-white rounded-xl border border-zinc-200 shadow-lg overflow-hidden z-50 max-h-[70vh] overflow-y-auto">
               {isSearching ? (
                 <div className="p-4 text-xs text-zinc-400 text-center">Mencari...</div>
               ) : searchResults.length > 0 ? (
@@ -124,18 +145,18 @@ function NavbarContent() {
                       className="w-full p-3 text-left hover:bg-zinc-50 flex items-center justify-between gap-3 transition-colors"
                     >
                       <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-zinc-900 truncate">
+                        <div className="text-xs sm:text-sm font-semibold text-zinc-900 truncate">
                           {part.nama_umum || part.part_name}
                         </div>
-                        <div className="text-xs font-mono font-medium text-[#B00020]">
+                        <div className="text-[11px] font-mono font-medium text-[#B00020]">
                           {part.part_no}
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <div className="text-sm font-bold text-zinc-900">
+                        <div className="text-xs sm:text-sm font-bold text-zinc-900">
                           {formatIDR(part.het)}
                         </div>
-                        <span className={`text-xs font-medium ${part.stok > 0 ? 'text-emerald-600' : 'text-zinc-400'}`}>
+                        <span className={`text-[10px] sm:text-xs font-medium ${part.stok > 0 ? 'text-emerald-600' : 'text-zinc-400'}`}>
                           {part.stok > 0 ? `Stok: ${part.stok}` : 'Indent'}
                         </span>
                       </div>
@@ -157,11 +178,11 @@ function NavbarContent() {
           )}
         </form>
 
-        {/* Right: Location, Login, WA */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        {/* Desktop Right: Login & WA */}
+        <div className="hidden sm:flex items-center gap-2 sm:gap-3">
           <Link
             href="/admin/login"
-            className="hidden sm:flex items-center gap-1.5 border border-zinc-200 hover:border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all"
+            className="flex items-center gap-1.5 border border-zinc-200 hover:border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg text-xs font-semibold transition-all"
           >
             <User className="w-3.5 h-3.5 text-zinc-500" />
             <span>Staff Login</span>
@@ -171,7 +192,7 @@ function NavbarContent() {
             href={buildWaUrl("BENGKEL", "Informasi Spare Part & Servis")}
             target="_blank"
             rel="noopener noreferrer"
-            className="bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
+            className="bg-emerald-700 hover:bg-emerald-800 text-white px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all shadow-xs"
           >
             <MessageSquare className="w-3.5 h-3.5 fill-current" />
             <span>WhatsApp</span>
@@ -179,12 +200,12 @@ function NavbarContent() {
         </div>
       </div>
 
-      {/* Bottom Navigation Menu Bar */}
-      <div className="border-t border-zinc-100 bg-zinc-50/70 px-4 sm:px-6">
-        <div className="max-w-7xl mx-auto flex items-center justify-center gap-6 sm:gap-8 text-sm font-semibold">
+      {/* Bottom Navigation Menu Bar (Scrollable on mobile) */}
+      <div className="border-t border-zinc-100 bg-zinc-50/70 px-4 sm:px-6 overflow-x-auto no-scrollbar">
+        <div className="max-w-7xl mx-auto flex items-center justify-start sm:justify-center gap-5 sm:gap-8 text-xs sm:text-sm font-semibold whitespace-nowrap min-w-max">
           <Link
             href="/"
-            className={`py-2.5 transition-colors border-b-2 ${
+            className={`py-2 sm:py-2.5 transition-colors border-b-2 ${
               pathname === "/"
                 ? "text-[#E4002B] border-[#E4002B]"
                 : "text-zinc-600 border-transparent hover:text-zinc-900"
@@ -194,7 +215,7 @@ function NavbarContent() {
           </Link>
           <Link
             href="/katalog"
-            className={`py-2.5 transition-colors border-b-2 ${
+            className={`py-2 sm:py-2.5 transition-colors border-b-2 ${
               pathname.startsWith("/katalog")
                 ? "text-[#E4002B] border-[#E4002B]"
                 : "text-zinc-600 border-transparent hover:text-zinc-900"
@@ -204,20 +225,20 @@ function NavbarContent() {
           </Link>
           <Link
             href="/booking"
-            className={`py-2.5 transition-colors border-b-2 flex items-center gap-1.5 ${
+            className={`py-2 sm:py-2.5 transition-colors border-b-2 flex items-center gap-1.5 ${
               pathname.startsWith("/booking")
                 ? "text-[#E4002B] border-[#E4002B]"
                 : "text-zinc-600 border-transparent hover:text-zinc-900"
             }`}
           >
-            <CalendarDays className="w-4 h-4 text-[#E4002B]" />
+            <CalendarDays className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-[#E4002B]" />
             <span>Booking Servis</span>
           </Link>
           <a
             href={buildWaUrl("BENGKEL", "Konsultasi Spare Part")}
             target="_blank"
             rel="noopener noreferrer"
-            className="py-2.5 text-zinc-600 hover:text-zinc-900 transition-colors hidden md:inline border-b-2 border-transparent"
+            className="py-2 sm:py-2.5 text-zinc-600 hover:text-zinc-900 transition-colors border-b-2 border-transparent"
           >
             Konsultasi Mekanik
           </a>
