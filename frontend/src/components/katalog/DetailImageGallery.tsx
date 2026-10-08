@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
-import { ChevronLeft, ChevronRight, ZoomIn, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, ZoomIn, X, Wrench, ShieldCheck } from "lucide-react";
 
 interface DetailImageGalleryProps {
   images: string[];
@@ -19,6 +19,7 @@ export default function DetailImageGallery({
 }: DetailImageGalleryProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handlePrev = () => {
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
@@ -28,10 +29,21 @@ export default function DetailImageGallery({
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
   };
 
-  if (images.length === 0) {
+  if (images.length === 0 || imageError) {
     return (
-      <div className="bg-slate-100/80 rounded-3xl p-8 flex items-center justify-center relative aspect-square border border-slate-200">
-        <div className="text-6xl text-slate-300 font-bold">⚙️</div>
+      <div className="bg-gradient-to-b from-zinc-50 to-red-50/20 rounded-3xl p-8 flex flex-col items-center justify-center relative aspect-square border border-dashed border-zinc-200 text-center">
+        <div className="w-16 h-16 rounded-full bg-red-100/80 text-[#E4002B] flex items-center justify-center mb-3 shadow-xs">
+          <Wrench className="w-8 h-8" />
+        </div>
+        <span className="text-xs font-extrabold uppercase tracking-wider text-[#B00020] bg-red-50 border border-red-200/80 px-3 py-1 rounded-md mb-2">
+          AHM Genuine Parts 100% Original
+        </span>
+        <span className="text-sm font-mono font-bold text-zinc-700 mb-1">
+          NO. PART: {partNo}
+        </span>
+        <span className="text-xs text-zinc-500 font-medium max-w-xs">
+          {partName}
+        </span>
       </div>
     );
   }
@@ -46,6 +58,7 @@ export default function DetailImageGallery({
           width={450}
           height={450}
           priority
+          onError={() => setImageError(true)}
           className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105 ${
             !isAvailable ? "grayscale opacity-60" : ""
           }`}

@@ -23,6 +23,7 @@ export default function ProductCard({ part }: ProductCardProps) {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   const handlePrev = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -139,23 +140,28 @@ export default function ProductCard({ part }: ProductCardProps) {
             href={`/katalog/${encodeURIComponent(part.part_no)}`}
             className="w-full h-full flex items-center justify-center"
           >
-            {images.length > 0 ? (
+            {images.length > 0 && !imageError ? (
               <Image
                 src={images[currentIndex]}
                 alt={part.part_name}
                 width={200}
                 height={200}
+                onError={() => setImageError(true)}
                 className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-103 ${
                   !isAvailable ? "grayscale opacity-50" : ""
                 }`}
               />
             ) : (
-              <div
-                className={`w-full h-full flex items-center justify-center ${
-                  !isAvailable ? "opacity-30" : "text-slate-300"
-                }`}
-              >
-                <Wrench className="w-10 h-10" />
+              <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-zinc-50 to-red-50/20 p-4 text-center rounded-lg border border-dashed border-zinc-200 group-hover:border-red-200 transition-colors">
+                <div className="w-10 h-10 rounded-full bg-red-100/80 text-[#E4002B] flex items-center justify-center mb-2 shadow-2xs">
+                  <Wrench className="w-5 h-5" />
+                </div>
+                <span className="text-[10px] font-extrabold uppercase tracking-wider text-[#B00020] bg-red-50 border border-red-200/80 px-2 py-0.5 rounded-md mb-1">
+                  AHM Genuine Parts
+                </span>
+                <span className="text-[11px] font-mono font-bold text-zinc-600 line-clamp-1">
+                  {part.part_no}
+                </span>
               </div>
             )}
           </Link>
