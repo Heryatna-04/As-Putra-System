@@ -41,3 +41,7 @@ scratch/
 frontend/public/images/parts/*
 !frontend/public/images/parts/.gitkeep
 
+# Local Backend & Database scripts
+backend/
+database/
+
