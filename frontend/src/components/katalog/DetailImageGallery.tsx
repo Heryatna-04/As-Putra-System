@@ -30,14 +30,14 @@ export default function DetailImageGallery({
   };
 
   const validImages = images.filter((img) => !failedUrls.has(img));
-  const activeIndex = currentIndex >= validImages.length ? 0 : currentIndex;
+  const activeIndex = validImages.length === 0 ? 0 : Math.min(currentIndex, validImages.length - 1);
 
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? validImages.length - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev <= 0 ? validImages.length - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === validImages.length - 1 ? 0 : prev + 1));
+    setCurrentIndex((prev) => (prev >= validImages.length - 1 ? 0 : prev + 1));
   };
 
   if (validImages.length === 0) {
@@ -111,7 +111,7 @@ export default function DetailImageGallery({
         <div className="flex items-center gap-3 overflow-x-auto pb-2 px-1">
           {validImages.map((img, idx) => (
             <button
-              key={idx}
+              key={img}
               onClick={() => setCurrentIndex(idx)}
               type="button"
               className={`relative w-20 h-20 rounded-2xl border-2 overflow-hidden shrink-0 transition-all bg-slate-50 cursor-pointer ${
@@ -186,7 +186,7 @@ export default function DetailImageGallery({
               <div className="flex items-center gap-2 mt-4 overflow-x-auto p-1">
                 {validImages.map((img, idx) => (
                   <button
-                    key={idx}
+                    key={img}
                     onClick={() => setCurrentIndex(idx)}
                     className={`relative w-16 h-16 rounded-xl border-2 overflow-hidden transition-all cursor-pointer ${
                       idx === activeIndex
