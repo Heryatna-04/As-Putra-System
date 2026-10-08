@@ -5,7 +5,15 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://esvwatrnlq
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzdndhdHJubHFnY252anRlYm1yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDI0NzYyMiwiZXhwIjoyMTA1ODIzNjIyfQ.NzXJzhBRyE0XWwh7_ypZDAXs2ZV0KUk4m8ndx9qOSQ4';
 const SUPABASE_STORAGE_PUBLIC_URL = `${SUPABASE_URL}/storage/v1/object/public/spare-parts`;
 
-/** Helper format gambar URL (Point directly to Supabase Storage Public CDN) */
+// In-Memory Category Cache to prevent downloading 44k category rows on every page click
+let categoryCache: {
+  success: boolean;
+  data: { total: number; categories: { name: string; count: number }[] };
+} | null = null;
+let lastCategoryFetch = 0;
+const CATEGORY_CACHE_TTL = 10 * 60 * 1000; // 10 Minutes Cache
+
+/** Helper format gambar URL */
 function formatPartImage(part: SparePart): SparePart {
   let gambar_url: string | null = null;
 
@@ -25,7 +33,7 @@ function formatPartImage(part: SparePart): SparePart {
   };
 }
 
-/** Fallback fetch langsung ke Supabase PostgREST API (Cloud Native) */
+/** Fallback fetch langsung ke Supabase PostgREST API (Cloud Native & Ultra Fast) */
 async function fetchCatalogFromSupabase(params: Record<string, string>): Promise<CatalogResponse> {
   const page = parseInt(params.page || '1', 10);
   const limit = parseInt(params.limit || '12', 10);
@@ -62,22 +70,25 @@ async function fetchCatalogFromSupabase(params: Record<string, string>): Promise
   url.searchParams.append('offset', offset.toString());
   url.searchParams.append('limit', limit.toString());
 
+  // Use count=planned to avoid slow PostgreSQL exact table scan on 44k rows
   const res = await fetch(url.toString(), {
     headers: {
       'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Prefer': 'count=exact',
+      'Prefer': 'count=planned',
     },
-    next: { revalidate: 60 },
+    next: { revalidate: 300 }, // Cache 5 min
   });
 
   if (!res.ok) throw new Error('Gagal mengambil data dari Supabase');
 
   const contentRange = res.headers.get('content-range');
-  let total = 0;
+  let total = 44234; // Fallback total items
   if (contentRange) {
     const parts = contentRange.split('/');
-    if (parts[1]) total = parseInt(parts[1], 10);
+    if (parts[1] && !isNaN(parseInt(parts[1], 10))) {
+      total = parseInt(parts[1], 10);
+    }
   }
 
   const rawData: SparePart[] = await res.json();
@@ -90,14 +101,14 @@ async function fetchCatalogFromSupabase(params: Record<string, string>): Promise
     meta: {
       page,
       limit,
-      total: total || data.length,
+      total: total || 44234,
     },
   };
 }
 
 export async function fetchCatalog(
   params: Record<string, string>,
-  revalidate = 60
+  revalidate = 300
 ): Promise<CatalogResponse> {
   const isVercel = Boolean(process.env.VERCEL || process.env.NEXT_PUBLIC_VERCEL_ENV);
   const isLocalhost = BASE_URL.includes('localhost');
@@ -106,7 +117,7 @@ export async function fetchCatalog(
     try {
       return await fetchCatalogFromSupabase(params);
     } catch {
-      // jika gagal, coba backend API
+      // Fallback
     }
   }
 
@@ -127,7 +138,7 @@ export async function fetchCatalog(
       };
     }
   } catch {
-    // Fallback ke Supabase jika Express backend lokal mati
+    // Fallback ke Supabase
   }
 
   return await fetchCatalogFromSupabase(params);
@@ -140,6 +151,11 @@ export async function fetchCategories(): Promise<{
     categories: { name: string; count: number }[];
   };
 }> {
+  const now = Date.now();
+  if (categoryCache && now - lastCategoryFetch < CATEGORY_CACHE_TTL) {
+    return categoryCache;
+  }
+
   const isVercel = Boolean(process.env.VERCEL || process.env.NEXT_PUBLIC_VERCEL_ENV);
   const isLocalhost = BASE_URL.includes('localhost');
 
@@ -148,13 +164,18 @@ export async function fetchCategories(): Promise<{
       const res = await fetch(`${BASE_URL}/spare-parts/categories`, {
         next: { revalidate: 3600 },
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const json = await res.json();
+        categoryCache = json;
+        lastCategoryFetch = now;
+        return json;
+      }
     } catch {
       // Fallback
     }
   }
 
-  // Supabase fallback query
+  // Supabase fallback query with 1-hour cache
   const url = `${SUPABASE_URL}/rest/v1/spare_parts?select=category_detail&status=eq.ACTIVE&limit=10000`;
   const res = await fetch(url, {
     headers: {
@@ -181,13 +202,17 @@ export async function fetchCategories(): Promise<{
     .map((name) => ({ name, count: categoryCounts[name] }))
     .sort((a, b) => b.count - a.count);
 
-  return {
+  const result = {
     success: true,
     data: {
       total,
       categories,
     },
   };
+
+  categoryCache = result;
+  lastCategoryFetch = now;
+  return result;
 }
 
 export async function fetchSparePartDetail(
@@ -199,7 +224,7 @@ export async function fetchSparePartDetail(
   if (!isVercel && !isLocalhost) {
     try {
       const res = await fetch(`${BASE_URL}/spare-parts/${encodeURIComponent(partNo)}`, {
-        next: { revalidate: 60 },
+        next: { revalidate: 300 },
       });
       if (res.ok) {
         const json: SparePartDetailResponse = await res.json();
@@ -220,7 +245,7 @@ export async function fetchSparePartDetail(
       'apikey': SUPABASE_KEY,
       'Authorization': `Bearer ${SUPABASE_KEY}`,
     },
-    next: { revalidate: 60 },
+    next: { revalidate: 300 },
   });
 
   if (!res.ok) throw new Error('Gagal mengambil detail spare part');
