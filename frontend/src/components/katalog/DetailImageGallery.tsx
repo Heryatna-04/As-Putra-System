@@ -69,6 +69,7 @@ export default function DetailImageGallery({
           width={450}
           height={450}
           priority
+          unoptimized
           onError={() => handleImageError(validImages[activeIndex])}
           className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-105 ${
             !isAvailable ? "grayscale opacity-60" : ""
@@ -124,6 +125,7 @@ export default function DetailImageGallery({
                 src={img}
                 alt={`Thumbnail ${idx + 1}`}
                 fill
+                unoptimized
                 onError={() => handleImageError(img)}
                 className="object-contain p-2 mix-blend-multiply"
               />

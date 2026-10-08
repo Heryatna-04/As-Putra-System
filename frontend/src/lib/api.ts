@@ -31,7 +31,7 @@ function formatPartImage(part: SparePart): SparePart {
         const ext = match[2];
         const primaryFileName = `${stem}-1${ext}`;
         gambar_url = `${SUPABASE_STORAGE_PUBLIC_URL}/${primaryFileName}`;
-        gambar_urls = [1, 2, 3, 4, 5].map((i) => `${SUPABASE_STORAGE_PUBLIC_URL}/${stem}-${i}${ext}`);
+        gambar_urls = [1, 2, 3].map((i) => `${SUPABASE_STORAGE_PUBLIC_URL}/${stem}-${i}${ext}`);
       } else {
         gambar_url = `${SUPABASE_STORAGE_PUBLIC_URL}/${cleanPath}`;
         gambar_urls = [gambar_url];
