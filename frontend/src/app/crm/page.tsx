@@ -160,17 +160,14 @@ export default function CrmBookingsPage() {
 
   return (
     <div className="space-y-6">
-      {/* 3D Elevated Banner CRM */}
-      <div className="relative bg-gradient-to-br from-white via-white to-zinc-50/80 border border-zinc-200/90 rounded-3xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-[0_14px_36px_-6px_rgba(15,23,42,0.06),inset_0_1px_1px_rgba(255,255,255,1)] overflow-hidden">
-        {/* Top 3D Highlight Specular Line */}
-        <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-[#E8272A] to-transparent opacity-75" />
-
+      {/* Header Banner CRM */}
+      <div className="relative bg-white border border-zinc-200 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-5 shadow-sm overflow-hidden">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-extrabold text-zinc-900 tracking-tight font-display drop-shadow-[0_1px_1px_rgba(0,0,0,0.05)]">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-zinc-900 tracking-tight font-display">
               Data Monitoring Booking Customer
             </h1>
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-black text-white bg-gradient-to-r from-emerald-600 to-emerald-500 border border-emerald-400/40 px-3 py-1 rounded-full shadow-[0_3px_10px_rgba(16,185,129,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)]">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-white bg-emerald-600 border border-emerald-500 px-3 py-1 rounded-full">
               <MessageSquare size={12} /> Follow-up CRM Aktif
             </span>
           </div>
@@ -179,28 +176,28 @@ export default function CrmBookingsPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="text-xs text-zinc-500 font-medium bg-zinc-100/80 border border-zinc-200 px-3.5 py-2 rounded-xl shadow-2xs">
+          <div className="text-xs text-zinc-500 font-medium bg-zinc-50 border border-zinc-200 px-3.5 py-2 rounded-lg">
             Total Reservasi: <strong className="text-zinc-900 font-bold">{total}</strong>
           </div>
           <button
             onClick={handleExportExcelCrm}
             disabled={isExporting}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-emerald-300 bg-gradient-to-b from-emerald-50 to-emerald-100 hover:from-emerald-100 hover:to-emerald-200 text-xs font-bold text-emerald-800 shadow-[0_2px_8px_rgba(16,185,129,0.15),inset_0_1px_0_rgba(255,255,255,0.9)] transition disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-xs font-bold text-emerald-800 transition disabled:opacity-50"
           >
             <FileSpreadsheet size={13} className={isExporting ? "animate-spin" : ""} />
             {isExporting ? "Mengunduh..." : "Export Excel"}
           </button>
           <button
             onClick={() => fetchCrmBookings()}
-            className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-700 shadow-[0_2px_6px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)] transition"
+            className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-700 transition"
           >
             <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} /> Refresh
           </button>
         </div>
       </div>
 
-      {/* Filter Strip 3D */}
-      <div className="bg-white/90 backdrop-blur-md border border-zinc-200/90 rounded-2xl p-4 flex flex-col md:flex-row items-center gap-3 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.04),inset_0_1px_1px_rgba(255,255,255,1)]">
+      {/* Filter Bar */}
+      <div className="bg-white border border-zinc-200 rounded-xl p-4 flex flex-col md:flex-row items-center gap-3 shadow-sm">
         <div className="relative flex-1 w-full">
           <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
           <input

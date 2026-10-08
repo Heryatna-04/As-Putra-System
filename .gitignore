@@ -36,3 +36,8 @@ Thumbs.db
 # CodeGraph & Scratch
 .codegraph/
 scratch/
+
+# Large local media assets
+frontend/public/images/parts/*
+!frontend/public/images/parts/.gitkeep
+

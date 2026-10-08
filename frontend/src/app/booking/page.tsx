@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import Link from "next/link";
 import { CheckCircle2, AlertCircle, Loader2, Copy, Check, Clock, MapPin, Navigation } from "lucide-react";
 import Navbar from "@/components/Navbar";
-import Footer from "@/components/Footer";
 
 interface ServicePackage {
   id: string;
@@ -20,7 +19,7 @@ interface SuccessData {
   tanggal_booking: string;
 }
 
-const SERVICE_PACKAGES: ServicePackage[] = [
+const REGULAR_PACKAGES: ServicePackage[] = [
   {
     id: "ganti-oli-saja",
     title: "Ganti Oli Mesin Saja",
@@ -60,7 +59,122 @@ const SERVICE_PACKAGES: ServicePackage[] = [
   },
 ];
 
+const KPB_STANDARD_PACKAGES: ServicePackage[] = [
+  {
+    id: "kpb-1-std",
+    title: "KPB 1 (1.000 km / 2 Bulan)",
+    badge: "Gratis Oli & Jasa Servis",
+    points: [
+      "Kupon Perawatan Berkala 1",
+      "Gratis Oli Mesin AHM & Jasa Servis Gratis",
+      "1.000 km atau 2 bulan pertama (mana tercapai lebih dulu)",
+      "Wajib membawa Buku Servis / Garansi & STNK",
+    ],
+  },
+  {
+    id: "kpb-2-std",
+    title: "KPB 2 (4.000 km / 4 Bulan)",
+    badge: "Gratis Jasa Servis",
+    points: [
+      "Kupon Perawatan Berkala 2",
+      "Jasa Servis Gratis (Oli/Sparepart berbayar bila ada penggantian)",
+      "4.000 km atau 4 bulan berikutnya dari KPB 1",
+      "Wajib membawa Buku Servis / Garansi & STNK",
+    ],
+  },
+  {
+    id: "kpb-3-std",
+    title: "KPB 3 (8.000 km / 8 Bulan)",
+    badge: "Gratis Jasa Servis",
+    points: [
+      "Kupon Perawatan Berkala 3",
+      "Jasa Servis Gratis",
+      "8.000 km atau 8 bulan berikutnya dari KPB 2",
+      "Wajib membawa Buku Servis / Garansi & STNK",
+    ],
+  },
+  {
+    id: "kpb-4-std",
+    title: "KPB 4 (12.000 km / 12 Bulan)",
+    badge: "Gratis Jasa Servis",
+    points: [
+      "Kupon Perawatan Berkala 4",
+      "Jasa Servis Gratis",
+      "12.000 km atau 12 bulan berikutnya dari KPB 3",
+      "Wajib membawa Buku Servis / Garansi & STNK",
+    ],
+  },
+];
+
+const KPB_PREMIUM_PACKAGES: ServicePackage[] = [
+  {
+    id: "kpb-1-prem",
+    title: "KPB 1 (160cc+) (1.000 km / 2 Bulan)",
+    badge: "Gratis Oli & Jasa Servis",
+    points: [
+      "Kupon Perawatan Berkala 1 (PCX 160, ADV 160, Vario 160, Stylo 160, CBR, dll)",
+      "Gratis Oli Mesin AHM & Jasa Servis Gratis",
+      "1.000 km atau 2 bulan pertama (mana tercapai lebih dulu)",
+      "Wajib membawa Buku Servis / Garansi & STNK",
+    ],
+  },
+  {
+    id: "kpb-2-prem",
+    title: "KPB 2 (160cc+) (6.000 km / 6 Bulan)",
+    badge: "Gratis Jasa Servis",
+    points: [
+      "Kupon Perawatan Berkala 2 (Tipe 160cc+)",
+      "Jasa Servis Gratis (Oli/Sparepart berbayar bila ada penggantian)",
+      "6.000 km atau 6 bulan berikutnya dari KPB 1",
+      "Wajib membawa Buku Servis / Garansi & STNK",
+    ],
+  },
+  {
+    id: "kpb-3-prem",
+    title: "KPB 3 (160cc+) (12.000 km / 12 Bulan)",
+    badge: "Gratis Jasa Servis",
+    points: [
+      "Kupon Perawatan Berkala 3 (Tipe 160cc+)",
+      "Jasa Servis Gratis",
+      "12.000 km atau 12 bulan berikutnya dari KPB 2 (total 12.000 km)",
+      "Wajib membawa Buku Servis / Garansi & STNK",
+    ],
+  },
+];
+
 const ALL_SLOTS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"];
+
+const HONDA_MOTOR_GROUPS = [
+  {
+    group: "Skuter Matic (110cc & 125cc)",
+    items: ["Honda Beat & Beat Street", "Honda Scoopy", "Honda Genio", "Honda Vario 125"],
+  },
+  {
+    group: "Motor Bebek & Sport 150cc (4x KPB)",
+    items: [
+      "Honda Revo Series (Revo Fit, Revo X)",
+      "Honda Supra X 125",
+      "Honda Sonic 150R",
+      "Honda CB150 Verza",
+      "Honda CRF150L",
+      "Honda CB150R StreetFire",
+    ],
+  },
+  {
+    group: "Matic & Sport (160cc+ / Premium 3x KPB)",
+    items: [
+      "Honda Vario 160",
+      "Honda PCX 160",
+      "Honda ADV 160",
+      "Honda Stylo 160",
+      "Honda CBR150R / CBR 250RR",
+    ],
+  },
+  {
+    group: "Tipe Lainnya",
+    items: ["Motor Honda Tipe Lainnya"],
+  },
+];
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -134,16 +248,26 @@ export default function BookingPage() {
     no_hp: "",
     no_mesin: "",
     plat_kendaraan: "",
+    tipe_motor: "",
     tanggal_booking: "",
     jam_booking: "",
     jenis_servis: [] as string[],
     detail_lainnya: "",
   });
+  const [serviceCategory, setServiceCategory] = useState<"reguler" | "kpb">("reguler");
+  const [kpbCategory, setKpbCategory] = useState<"standard" | "premium">("standard");
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successData, setSuccessData] = useState<SuccessData | null>(null);
   const [copied, setCopied] = useState(false);
   const errorRef = useRef<HTMLDivElement>(null);
+
+  const activePackages =
+    serviceCategory === "reguler"
+      ? REGULAR_PACKAGES
+      : kpbCategory === "standard"
+      ? KPB_STANDARD_PACKAGES
+      : KPB_PREMIUM_PACKAGES;
 
   const now = new Date();
   const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
@@ -151,11 +275,10 @@ export default function BookingPage() {
 
   const availableSlots = getAvailableTimeSlots(formData.tanggal_booking);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     if (name === "tanggal_booking") {
       const validSlots = getAvailableTimeSlots(value);
-      // Auto select first available slot or clear if none available today
       const firstAvailable = validSlots.find((s) => !s.disabled)?.slot || "";
       setFormData((prev) => ({
         ...prev,
@@ -232,6 +355,7 @@ export default function BookingPage() {
       no_hp: "",
       no_mesin: "",
       plat_kendaraan: "",
+      tipe_motor: "",
       tanggal_booking: "",
       jam_booking: "",
       jenis_servis: [],
@@ -323,10 +447,109 @@ export default function BookingPage() {
                 )}
 
                 <Step n={1} title="Pilih paket servis">
+                  {/* Category Switcher Tabs */}
+                  <div className="grid grid-cols-2 gap-2 p-1.5 bg-zinc-100 rounded-xl mb-6">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setServiceCategory("reguler");
+                        setFormData((p) => ({ ...p, jenis_servis: [] }));
+                      }}
+                      className={`py-2.5 px-3 text-sm font-semibold rounded-lg transition-all ${
+                        serviceCategory === "reguler"
+                          ? "bg-white text-zinc-900 shadow-sm border border-zinc-200"
+                          : "text-zinc-600 hover:text-zinc-900"
+                      }`}
+                    >
+                      Servis Reguler
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setServiceCategory("kpb");
+                        setFormData((p) => ({ ...p, jenis_servis: [] }));
+                      }}
+                      className={`py-2.5 px-3 text-sm font-semibold rounded-lg transition-all flex items-center justify-center gap-1.5 ${
+                        serviceCategory === "kpb"
+                          ? "bg-white text-[#E4002B] shadow-sm border border-zinc-200"
+                          : "text-zinc-600 hover:text-zinc-900"
+                      }`}
+                    >
+                      <span>Perawatan Berkala (KPB)</span>
+                    </button>
+                  </div>
+
+                  {/* KPB Sub-Selector and Notice */}
+                  {serviceCategory === "kpb" && (
+                    <div className="mb-6 rounded-xl border border-red-100 bg-red-50/40 p-4 space-y-4">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-2">Pilih Kapasitas Mesin Motor:</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <label
+                            className={`flex items-center gap-2.5 p-3 rounded-lg border cursor-pointer transition-all ${
+                              kpbCategory === "standard"
+                                ? "border-[#E4002B] bg-white ring-2 ring-[#E4002B]/20 shadow-sm"
+                                : "border-zinc-200 bg-white hover:border-zinc-300"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="kpb_type"
+                              checked={kpbCategory === "standard"}
+                              onChange={() => {
+                                setKpbCategory("standard");
+                                setFormData((p) => ({ ...p, jenis_servis: [] }));
+                              }}
+                              className="accent-[#E4002B]"
+                            />
+                            <div>
+                              <p className="text-sm font-semibold text-zinc-900">Tipe Standard / 110-150cc (4x Servis KPB)</p>
+                              <p className="text-xs text-zinc-500">Beat, Scoopy, Genio, Vario 125, Revo, Supra X 125, Sonic 150R, CB150 Verza, CRF150L</p>
+                            </div>
+                          </label>
+                          <label
+                            className={`flex items-center gap-2.5 p-3 rounded-lg border cursor-pointer transition-all ${
+                              kpbCategory === "premium"
+                                ? "border-[#E4002B] bg-white ring-2 ring-[#E4002B]/20 shadow-sm"
+                                : "border-zinc-200 bg-white hover:border-zinc-300"
+                            }`}
+                          >
+                            <input
+                              type="radio"
+                              name="kpb_type"
+                              checked={kpbCategory === "premium"}
+                              onChange={() => {
+                                setKpbCategory("premium");
+                                setFormData((p) => ({ ...p, jenis_servis: [] }));
+                              }}
+                              className="accent-[#E4002B]"
+                            />
+                            <div>
+                              <p className="text-sm font-semibold text-zinc-900">Tipe Premium (160cc+)</p>
+                              <p className="text-xs text-zinc-500">Vario 160, PCX 160, ADV 160, Stylo 160, CBR 250RR, dll.</p>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+
+                      <div className="rounded-lg bg-white p-3.5 border border-zinc-200 text-xs text-zinc-700 space-y-1.5">
+                        <p className="font-bold text-zinc-900 flex items-center gap-1.5">
+                          <AlertCircle size={14} className="text-[#E4002B] shrink-0" />
+                          Ketentuan &amp; Tips KPB (Kupon Perawatan Berkala) Honda:
+                        </p>
+                        <ul className="list-disc pl-4 space-y-1 text-zinc-600">
+                          <li><strong>Bawa STNK &amp; Buku Servis/Garansi Resmi</strong> saat datang ke bengkel.</li>
+                          <li>Acuan batas dihitung dari <strong>tanggal penyerahan motor (Delivery/Faktur Pembelian)</strong> di buku servis.</li>
+                          <li>Lakukan servis tepat waktu sebelum batas km/bulan habis agar garansi tidak gugur.</li>
+                        </ul>
+                      </div>
+                    </div>
+                  )}
+
                   <fieldset>
                     <legend className="sr-only">Paket servis</legend>
                     <div className="divide-y divide-zinc-200 rounded-xl border border-zinc-200">
-                      {SERVICE_PACKAGES.map((pkg) => {
+                      {activePackages.map((pkg) => {
                         const active = selectedService === pkg.title;
                         return (
                           <label
@@ -347,7 +570,9 @@ export default function BookingPage() {
                             <span className="min-w-0 flex-1">
                               <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                 <span className="text-base font-semibold text-zinc-900">{pkg.title}</span>
-                                <span className="text-sm text-zinc-600">{pkg.badge}</span>
+                                <span className="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-red-100 text-[#B00020]">
+                                  {pkg.badge}
+                                </span>
                               </span>
                               {active && (
                                 <ul className="mt-2 space-y-1 text-sm text-zinc-700">
@@ -366,14 +591,14 @@ export default function BookingPage() {
                     </div>
                   </fieldset>
                   <div className="mt-5">
-                    <Field id="detail_lainnya" label="Keluhan atau catatan (opsional)">
+                    <Field id="detail_lainnya" label="Keluhan atau catatan tambahan (opsional)">
                       <textarea
                         id="detail_lainnya"
                         name="detail_lainnya"
                         rows={3}
                         value={formData.detail_lainnya}
                         onChange={handleChange}
-                        placeholder="Contoh: bunyi kasar saat gas ditarik"
+                        placeholder="Contoh: bunyi kasar saat gas ditarik atau kilometer motor saat ini"
                         className={INPUT_CLASS}
                       />
                     </Field>
@@ -432,6 +657,29 @@ export default function BookingPage() {
 
                 <Step n={3} title="Data kendaraan">
                   <div className="grid gap-5 sm:grid-cols-2">
+                    <div className="sm:col-span-2">
+                      <Field id="tipe_motor" label="Model / Tipe Motor Honda" hint="Pilih tipe motor yang akan diservis">
+                        <select
+                          id="tipe_motor"
+                          name="tipe_motor"
+                          required
+                          value={formData.tipe_motor}
+                          onChange={handleChange}
+                          className={INPUT_CLASS}
+                        >
+                          <option value="">-- Pilih Model Motor --</option>
+                          {HONDA_MOTOR_GROUPS.map((g) => (
+                            <optgroup key={g.group} label={g.group}>
+                              {g.items.map((item) => (
+                                <option key={item} value={item}>
+                                  {item}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                      </Field>
+                    </div>
                     <Field id="plat_kendaraan" label="Plat nomor">
                       <input
                         id="plat_kendaraan"
@@ -571,8 +819,6 @@ export default function BookingPage() {
           </>
         )}
       </main>
-
-      <Footer />
     </div>
   );
 }

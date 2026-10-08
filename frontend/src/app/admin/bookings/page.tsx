@@ -246,12 +246,12 @@ function AdminBookingsContent() {
             </div>
           </div>
 
-          {/* Notifikasi 3D Booking Baru di Website */}
+          {/* Notifikasi Booking Baru */}
           {pendingCount > 0 && (
-            <div className="relative bg-gradient-to-r from-amber-50 via-amber-100/60 to-orange-50 border border-amber-300/80 rounded-2xl p-4 shadow-[0_8px_20px_-6px_rgba(245,158,11,0.2),inset_0_1px_1px_rgba(255,255,255,0.9)] flex items-center justify-between overflow-hidden">
+            <div className="relative bg-amber-50 border border-amber-200 rounded-xl p-4 shadow-sm flex items-center justify-between overflow-hidden">
               <div className="flex items-center gap-3 text-xs sm:text-sm text-amber-950 font-medium">
-                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-amber-700 text-white flex items-center justify-center shrink-0 shadow-[0_4px_10px_rgba(245,158,11,0.4),inset_0_1px_1px_rgba(255,255,255,0.5)] border border-amber-400/40">
-                  <Bell size={14} className="drop-shadow-2xs" />
+                <div className="w-8 h-8 rounded-lg bg-amber-500 text-white flex items-center justify-center shrink-0 border border-amber-400">
+                  <Bell size={14} />
                 </div>
                 <span>
                   <strong>Ada {pendingCount} antrean booking baru (Pending)</strong> yang menunggu verifikasi bukti akun customer dan konfirmasi jadwal.
@@ -262,15 +262,15 @@ function AdminBookingsContent() {
                   setStatusFilter("PENDING");
                   setPage(1);
                 }}
-                className="text-xs font-black text-amber-900 hover:text-amber-950 px-3 py-1.5 rounded-xl bg-amber-200/60 hover:bg-amber-200 border border-amber-300/80 shadow-2xs transition"
+                className="text-xs font-bold text-amber-900 hover:text-amber-950 px-3 py-1.5 rounded-lg bg-amber-200/70 hover:bg-amber-200 border border-amber-300 shadow-xs transition"
               >
                 Lihat Pending &rarr;
               </button>
             </div>
           )}
 
-          {/* Filter Bar 3D */}
-          <div className="bg-white/90 backdrop-blur-md border border-zinc-200/90 rounded-2xl p-4 flex flex-col md:flex-row items-center gap-3 shadow-[0_8px_24px_-6px_rgba(15,23,42,0.04),inset_0_1px_1px_rgba(255,255,255,1)]">
+          {/* Filter Bar */}
+          <div className="bg-white border border-zinc-200 rounded-xl p-4 flex flex-col md:flex-row items-center gap-3 shadow-sm">
             <div className="relative flex-1 w-full">
               <Search className="w-4 h-4 text-zinc-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <input
@@ -278,7 +278,7 @@ function AdminBookingsContent() {
                 placeholder="Cari no tiket, nama customer, no mesin, atau plat..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-4 py-2 text-sm bg-zinc-50/70 border border-zinc-200/80 rounded-xl text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A] shadow-inner"
+                className="w-full pl-9 pr-4 py-2 text-sm bg-zinc-50 border border-zinc-200 rounded-lg text-zinc-900 placeholder:text-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A]"
               />
             </div>
 
@@ -292,7 +292,7 @@ function AdminBookingsContent() {
                     setTanggalFrom(e.target.value);
                     setPage(1);
                   }}
-                  className="text-xs bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A] shadow-2xs"
+                  className="text-xs bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A]"
                 />
               </div>
 
@@ -305,7 +305,7 @@ function AdminBookingsContent() {
                     setTanggalTo(e.target.value);
                     setPage(1);
                   }}
-                  className="text-xs bg-white border border-zinc-200 rounded-xl px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A] shadow-2xs"
+                  className="text-xs bg-white border border-zinc-200 rounded-lg px-2.5 py-1.5 text-zinc-700 focus:outline-none focus:border-[#E8272A]"
                 />
               </div>
 
@@ -317,7 +317,7 @@ function AdminBookingsContent() {
                     setStatusFilter(e.target.value);
                     setPage(1);
                   }}
-                  className="text-xs font-semibold bg-white border border-zinc-200 rounded-xl px-3 py-2 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A] shadow-2xs"
+                  className="text-xs font-semibold bg-white border border-zinc-200 rounded-lg px-3 py-2 text-zinc-700 focus:outline-none focus:ring-2 focus:ring-[#E8272A]/20 focus:border-[#E8272A]"
                 >
                   <option value="ALL">Semua Status</option>
                   <option value="PENDING">Pending</option>
@@ -331,7 +331,7 @@ function AdminBookingsContent() {
               {hasActiveFilters && (
                 <button
                   onClick={resetAllFilters}
-                  className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-600 hover:text-[#E8272A] px-3 py-1.5 rounded-xl bg-zinc-100 hover:bg-red-50 border border-zinc-200 hover:border-red-200 shadow-2xs transition"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-zinc-600 hover:text-[#E8272A] px-3 py-1.5 rounded-lg bg-zinc-100 hover:bg-red-50 border border-zinc-200 hover:border-red-200 transition"
                   title="Reset Semua Filter"
                 >
                   <RotateCcw size={12} />
@@ -341,7 +341,7 @@ function AdminBookingsContent() {
             </div>
           </div>
 
-          {/* Table 3D Container */}
+          {/* Table Container */}
           <div className="bg-white border border-zinc-200/90 rounded-3xl overflow-hidden shadow-[0_14px_36px_-6px_rgba(15,23,42,0.06),inset_0_1px_1px_rgba(255,255,255,1)]">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-sm border-collapse">

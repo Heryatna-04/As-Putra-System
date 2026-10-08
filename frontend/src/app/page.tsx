@@ -6,11 +6,7 @@ import {
   CalendarDays,
   CheckCircle,
   ChevronRight,
-  Clock,
-  MapPin,
   MessageSquare,
-  Navigation,
-  Phone,
   Search,
   ShieldCheck,
   Star,
@@ -40,9 +36,6 @@ async function getTotalParts(): Promise<number> {
     return 0;
   }
 }
-
-/** Model motor populer untuk pintasan pencarian di hero */
-const POPULAR_MODELS = ["Vario", "BeAT", "PCX", "Scoopy", "Supra"] as const;
 
 /** Keunggulan toko — 4 poin, tanpa kartu */
 const STRENGTHS = [
@@ -139,7 +132,7 @@ export default async function Home() {
     <div className="flex flex-col min-h-screen bg-white text-zinc-900">
       <Navbar />
 
-      <main className="flex-1 pt-[68px]">
+      <main className="flex-1 pt-[105px]">
         {/* ── Hero ─────────────────────────────────────────────────── */}
         <section className="relative isolate overflow-hidden bg-[#E4002B] text-white">
           {/* Foto dealer: terlihat jelas di sisi kanan, memudar ke merah di sisi teks */}
@@ -199,20 +192,6 @@ export default async function Home() {
                   </button>
                 </div>
               </form>
-
-              {/* Pintasan model motor */}
-              <div className="mt-4 flex flex-wrap items-center gap-2">
-                <span className="text-sm text-white">Part untuk:</span>
-                {POPULAR_MODELS.map((model) => (
-                  <Link
-                    key={model}
-                    href={`/katalog?search=${encodeURIComponent(model)}`}
-                    className="rounded-full border border-white/50 px-3.5 py-1.5 text-sm font-medium text-white transition-colors hover:bg-white hover:text-[#E4002B] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
-                  >
-                    {model}
-                  </Link>
-                ))}
-              </div>
 
               <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-white">
                 <Link
@@ -322,86 +301,6 @@ export default async function Home() {
                 Booking servis
                 <ArrowRight className="w-4 h-4" aria-hidden />
               </Link>
-            </div>
-          </div>
-        </section>
-
-        {/* ── Lokasi & Peta Bengkel ───────────────────────────── */}
-        <section className="bg-zinc-900 px-6 sm:px-10 py-20 text-white">
-          <div className="mx-auto max-w-6xl grid gap-12 lg:grid-cols-12 items-center">
-            <div className="lg:col-span-5 space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full bg-[#E4002B]/20 border border-[#E4002B]/40 px-3.5 py-1 text-xs font-bold text-[#FF4D6D]">
-                <MapPin className="w-3.5 h-3.5" />
-                <span>Bengkel Resmi AHASS 10870</span>
-              </div>
-              <h2 className="font-display text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-                Lokasi Bengkel & Dealer AS Putra Rahmat
-              </h2>
-              <p className="text-zinc-300 leading-relaxed text-sm sm:text-base">
-                Kunjungi bengkel resmi kami di Kuningan untuk perawatan motor Honda Anda dengan suku cadang 100% Asli AHM dan teknisi tersertifikasi.
-              </p>
-
-              <div className="space-y-4 pt-2">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-white/10 shrink-0 text-[#FF4D6D]">
-                    <MapPin className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-white text-sm">Alamat Lengkap</h4>
-                    <p className="text-xs text-zinc-300 mt-0.5">Dealer & AHASS Honda AS Putra Motor, Jl. Raya Kuningan, Kabupaten Kuningan, Jawa Barat</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-white/10 shrink-0 text-[#FF4D6D]">
-                    <Clock className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-white text-sm">Jam Operasional Servis</h4>
-                    <p className="text-xs text-zinc-300 mt-0.5">Senin – Sabtu: 08.00 – 16.30 WIB | Minggu: 08.00 – 14.00 WIB</p>
-                  </div>
-                </div>
-
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-white/10 shrink-0 text-[#FF4D6D]">
-                    <Phone className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h4 className="font-bold text-white text-sm">Kontak & Reservasi</h4>
-                    <p className="text-xs text-zinc-300 mt-0.5">WhatsApp CS: 0812-3456-7890 | Telp: (0232) 871234</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 flex flex-wrap gap-4">
-                <a
-                  href="https://maps.google.com/?q=Dealer+Honda+AS+Putra+Motor+Kuningan"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 rounded-xl bg-[#E4002B] px-5 py-3 text-sm font-bold text-white shadow-lg transition hover:bg-[#C20026]"
-                >
-                  <Navigation className="w-4 h-4" />
-                  Petunjuk Arah Google Maps
-                </a>
-                <Link
-                  href="/booking"
-                  className="inline-flex items-center gap-2 rounded-xl bg-white/10 border border-white/20 px-5 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
-                >
-                  <CalendarDays className="w-4 h-4" />
-                  Booking Servis Sekarang
-                </Link>
-              </div>
-            </div>
-
-            <div className="lg:col-span-7 h-[380px] rounded-2xl overflow-hidden border border-zinc-800 shadow-2xl relative bg-zinc-800">
-              <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d319.7268610197772!2d108.48832525312899!3d-6.9516689375066765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6f16edc0e25e75%3A0x5a4162116590d82d!2sDealer%20Honda%20AS%20Putra%20Motor%20Kuningan!5e1!3m2!1sen!2sid!4v1790916002596!5m2!1sen!2sid"
-                className="w-full h-full border-0"
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="strict-origin-when-cross-origin"
-                title="Google Maps Dealer & AHASS Honda AS Putra Motor Kuningan"
-              />
             </div>
           </div>
         </section>
