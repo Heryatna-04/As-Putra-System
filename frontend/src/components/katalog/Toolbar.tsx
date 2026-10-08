@@ -12,7 +12,7 @@ interface ToolbarProps {
 function ToolbarContent({ totalItems }: ToolbarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const currentSort = searchParams.get("sort") || "relevance";
+  const currentSort = searchParams.get("sort") || "name_asc";
   const searchTerm = searchParams.get("search") || "";
 
   const handleSortChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -61,7 +61,8 @@ function ToolbarContent({ totalItems }: ToolbarProps) {
           onChange={handleSortChange}
           className="cursor-pointer rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm font-medium text-zinc-900 outline-none transition-colors hover:border-zinc-500 focus-visible:border-[#E4002B] focus-visible:ring-2 focus-visible:ring-[#E4002B]/30"
         >
-          <option value="relevance">Paling relevan</option>
+          <option value="name_asc">Nama (A - Z)</option>
+          <option value="name_desc">Nama (Z - A)</option>
           <option value="price_asc">Harga termurah</option>
           <option value="price_desc">Harga termahal</option>
           <option value="newest">Terbaru</option>

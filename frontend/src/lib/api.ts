@@ -62,8 +62,13 @@ async function fetchCatalogFromSupabase(params: Record<string, string>): Promise
     url.searchParams.append('order', 'het.asc');
   } else if (params.sort === 'price_desc') {
     url.searchParams.append('order', 'het.desc');
+  } else if (params.sort === 'name_desc' || params.sort === 'z_a') {
+    url.searchParams.append('order', 'part_name.desc');
+  } else if (params.sort === 'newest') {
+    url.searchParams.append('order', 'created_at.desc.nullslast,id.desc');
   } else {
-    url.searchParams.append('order', 'id.asc');
+    // Default: Sort A to Z by part_name
+    url.searchParams.append('order', 'part_name.asc');
   }
 
   // Range limit offset
