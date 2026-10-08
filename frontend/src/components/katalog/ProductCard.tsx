@@ -23,24 +23,37 @@ export default function ProductCard({ part }: ProductCardProps) {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isZoomOpen, setIsZoomOpen] = useState(false);
-  const [imageError, setImageError] = useState(false);
+  const [failedUrls, setFailedUrls] = useState<Set<string>>(new Set());
+
+  const handleImageError = (url: string) => {
+    setFailedUrls((prev) => {
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
+  };
+
+  const validImages = images.filter((img) => !failedUrls.has(img));
+  const activeIndex = validImages.length === 0 ? 0 : Math.min(currentIndex, validImages.length - 1);
 
   const handlePrev = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1));
+    if (validImages.length <= 1) return;
+    setCurrentIndex((prev) => (prev <= 0 ? validImages.length - 1 : prev - 1));
   };
 
   const handleNext = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1));
+    if (validImages.length <= 1) return;
+    setCurrentIndex((prev) => (prev >= validImages.length - 1 ? 0 : prev + 1));
   };
 
   const handleZoom = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    if (images.length > 0) setIsZoomOpen(true);
+    if (validImages.length > 0) setIsZoomOpen(true);
   };
 
   return (
@@ -70,9 +83,9 @@ export default function ProductCard({ part }: ProductCardProps) {
             )}
           </div>
 
-          {/* Aksi cepat: selalu terlihat di layar sentuh, muncul saat hover/fokus di desktop */}
+          {/* Aksi cepat */}
           <div className="absolute top-3 right-3 z-20 flex items-center gap-1.5 md:opacity-0 md:group-hover:opacity-100 md:group-focus-within:opacity-100 transition-opacity motion-reduce:transition-none">
-            {images.length > 0 && (
+            {validImages.length > 0 && (
               <button
                 onClick={handleZoom}
                 type="button"
@@ -95,8 +108,8 @@ export default function ProductCard({ part }: ProductCardProps) {
             </a>
           </div>
 
-          {/* Slider Arrow Controls (If > 1 Image) */}
-          {images.length > 1 && (
+          {/* Slider Arrow Controls (If > 1 Valid Image) */}
+          {validImages.length > 1 && (
             <>
               <button
                 onClick={handlePrev}
@@ -117,9 +130,9 @@ export default function ProductCard({ part }: ProductCardProps) {
 
               {/* Slider Dots */}
               <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1 bg-black/40 px-2 py-1 rounded-full backdrop-blur-sm">
-                {images.map((_, idx) => (
+                {validImages.map((img, idx) => (
                   <button
-                    key={idx}
+                    key={img}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -127,7 +140,7 @@ export default function ProductCard({ part }: ProductCardProps) {
                     }}
                     type="button"
                     className={`h-1.5 rounded-full transition-all ${
-                      idx === currentIndex ? "w-4 bg-[#FFE600]" : "w-1.5 bg-white/60"
+                      idx === activeIndex ? "w-4 bg-[#FFE600]" : "w-1.5 bg-white/60"
                     }`}
                   />
                 ))}
@@ -140,13 +153,15 @@ export default function ProductCard({ part }: ProductCardProps) {
             href={`/katalog/${encodeURIComponent(part.part_no)}`}
             className="w-full h-full flex items-center justify-center"
           >
-            {images.length > 0 && !imageError ? (
+            {validImages.length > 0 ? (
               <Image
-                src={images[currentIndex]}
+                key={validImages[activeIndex]}
+                src={validImages[activeIndex]}
                 alt={part.part_name}
                 width={200}
                 height={200}
-                onError={() => setImageError(true)}
+                unoptimized
+                onError={() => handleImageError(validImages[activeIndex])}
                 className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-103 ${
                   !isAvailable ? "grayscale opacity-50" : ""
                 }`}
@@ -241,13 +256,14 @@ export default function ProductCard({ part }: ProductCardProps) {
 
             <div className="relative w-full aspect-square max-h-[60vh] bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden p-4">
               <Image
-                src={images[currentIndex]}
+                src={validImages[activeIndex]}
                 alt={part.part_name}
                 fill
+                unoptimized
                 className="object-contain p-4"
               />
 
-              {images.length > 1 && (
+              {validImages.length > 1 && (
                 <>
                   <button
                     onClick={handlePrev}
@@ -266,17 +282,17 @@ export default function ProductCard({ part }: ProductCardProps) {
             </div>
 
             {/* Modal Thumbnails */}
-            {images.length > 1 && (
+            {validImages.length > 1 && (
               <div className="flex items-center gap-2 mt-4 overflow-x-auto p-1">
-                {images.map((img, idx) => (
+                {validImages.map((img, idx) => (
                   <button
-                    key={idx}
+                    key={img}
                     onClick={() => setCurrentIndex(idx)}
                     className={`relative w-14 h-14 rounded-xl border-2 overflow-hidden transition-all ${
-                      idx === currentIndex ? "border-[#FF1E27] scale-105" : "border-slate-200 opacity-60 hover:opacity-100"
+                      idx === activeIndex ? "border-[#FF1E27] scale-105" : "border-slate-200 opacity-60 hover:opacity-100"
                     }`}
                   >
-                    <Image src={img} alt="thumb" fill className="object-cover" />
+                    <Image src={img} alt="thumb" fill unoptimized className="object-cover" />
                   </button>
                 ))}
               </div>
