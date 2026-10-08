@@ -3,18 +3,18 @@ import type { CatalogResponse, SparePartDetailResponse, SparePart } from '@/type
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api/v1';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://esvwatrnlqgcnvjtebmr.supabase.co';
 const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzdndhdHJubHFnY252anRlYm1yIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDI0NzYyMiwiZXhwIjoyMTA1ODIzNjIyfQ.NzXJzhBRyE0XWwh7_ypZDAXs2ZV0KUk4m8ndx9qOSQ4';
+const SUPABASE_STORAGE_PUBLIC_URL = `${SUPABASE_URL}/storage/v1/object/public/spare-parts`;
 
-/** Helper format gambar URL */
+/** Helper format gambar URL (Point directly to Supabase Storage Public CDN) */
 function formatPartImage(part: SparePart): SparePart {
   let gambar_url: string | null = null;
 
   if (part.gambar_path) {
     if (part.gambar_path.startsWith('http://') || part.gambar_path.startsWith('https://')) {
       gambar_url = part.gambar_path;
-    } else if (part.gambar_path.startsWith('/images/parts/')) {
-      gambar_url = part.gambar_path;
     } else {
-      gambar_url = `/images/parts/${part.gambar_path}`;
+      const cleanPath = part.gambar_path.replace(/^\/+/, '').replace(/^images\/parts\//, '');
+      gambar_url = `${SUPABASE_STORAGE_PUBLIC_URL}/${cleanPath}`;
     }
   }
 
@@ -119,7 +119,13 @@ export async function fetchCatalog(
       next: { revalidate },
     });
 
-    if (res.ok) return await res.json();
+    if (res.ok) {
+      const json: CatalogResponse = await res.json();
+      return {
+        ...json,
+        data: json.data.map(formatPartImage),
+      };
+    }
   } catch {
     // Fallback ke Supabase jika Express backend lokal mati
   }
@@ -195,7 +201,13 @@ export async function fetchSparePartDetail(
       const res = await fetch(`${BASE_URL}/spare-parts/${encodeURIComponent(partNo)}`, {
         next: { revalidate: 60 },
       });
-      if (res.ok) return await res.json();
+      if (res.ok) {
+        const json: SparePartDetailResponse = await res.json();
+        return {
+          ...json,
+          data: formatPartImage(json.data),
+        };
+      }
     } catch {
       // Fallback
     }
