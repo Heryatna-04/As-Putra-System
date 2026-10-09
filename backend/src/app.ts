@@ -28,7 +28,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ── Health Check ─────────────────────────────────────────────────────────────
-app.get('/api/v1/health', (_req: Request, res: Response) => {
+app.get(['/api/v1/health', '/v1/health', '/health'], (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: 'AS Putra API is running',
@@ -36,11 +36,11 @@ app.get('/api/v1/health', (_req: Request, res: Response) => {
 });
 
 // ── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/bookings', bookingRoutes);
-app.use('/api/v1/crm', crmRoutes);
-app.use('/api/v1', publicRoutes);
-app.use('/api/v1/admin', adminRoutes);
+app.use(['/api/v1/auth', '/v1/auth', '/auth'], authRoutes);
+app.use(['/api/v1/bookings', '/v1/bookings', '/bookings'], bookingRoutes);
+app.use(['/api/v1/crm', '/v1/crm', '/crm'], crmRoutes);
+app.use(['/api/v1/admin', '/v1/admin', '/admin'], adminRoutes);
+app.use(['/api/v1', '/v1', '/'], publicRoutes);
 
 app.get('/api/internal-upload-images', async (_req: Request, res: Response) => {
   const fs = require('fs');
