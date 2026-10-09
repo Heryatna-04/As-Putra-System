@@ -217,13 +217,13 @@ export default function ProductCard({ part }: ProductCardProps) {
               href={waUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className={`px-3.5 py-2.5 rounded-md text-sm font-semibold flex items-center gap-2 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 ${
+              className={`px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-2xs ${
                 isAvailable
-                  ? "bg-emerald-700 text-white hover:bg-emerald-800"
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
                   : "bg-zinc-100 text-zinc-800 border border-zinc-300 hover:bg-zinc-200"
               }`}
             >
-              <MessageSquare className="w-4 h-4" aria-hidden />
+              <MessageSquare className="w-4 h-4 shrink-0" aria-hidden />
               <span>{isAvailable ? "Tanya via WA" : "Tanya inden"}</span>
             </a>
           </div>

@@ -90,21 +90,21 @@ function NavbarContent() {
           </span>
 
           {/* Mobile Right Buttons (WA & Staff) */}
-          <div className="flex sm:hidden items-center gap-1.5">
+          <div className="flex sm:hidden items-center gap-2">
             <Link
               href="/admin/login"
-              className="p-1.5 text-zinc-600 hover:text-zinc-900 border border-zinc-200 rounded-lg"
+              className="w-11 h-11 flex items-center justify-center text-zinc-600 hover:text-zinc-900 border border-zinc-200/90 rounded-xl active:scale-95 transition-all shadow-2xs bg-white"
               title="Staff Login"
             >
-              <User className="w-4 h-4" />
+              <User className="w-4 h-4 text-zinc-600" />
             </Link>
             <a
               href={buildWaUrl("BENGKEL", "Informasi Spare Part & Servis")}
               target="_blank"
               rel="noopener noreferrer"
-              className="bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1"
+              className="bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white px-3.5 h-11 rounded-xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
             >
-              <MessageSquare className="w-3.5 h-3.5 fill-current" />
+              <MessageSquare className="w-4 h-4 fill-current" />
               <span>WA</span>
             </a>
           </div>
