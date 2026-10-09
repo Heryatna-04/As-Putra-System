@@ -1,0 +1,1 @@
+﻿require('dotenv').config(); const { createClient } = require('@supabase/supabase-js'); const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY); supabase.from('spare_parts').select('part_name, category_detail').ilike('part_name', '%muffler%').then(res => console.log(res.data.length, res.data.slice(0, 5)));

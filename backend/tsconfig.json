@@ -1,0 +1,29 @@
+{
+  "compilerOptions": {
+    // ── Output ──────────────────────────────────────────────────────────────
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    // ── Module System ────────────────────────────────────────────────────────
+    "module": "commonjs",
+    "target": "ES2020",
+    "lib": ["ES2020"],
+    "types": ["node"],
+
+    // ── Interop ──────────────────────────────────────────────────────────────
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "resolveJsonModule": true,
+
+    // ── Output Extras ────────────────────────────────────────────────────────
+    "sourceMap": true,
+    "declaration": true,
+
+    // ── Strict Checks ────────────────────────────────────────────────────────
+    "strict": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
+}
