@@ -12,7 +12,8 @@ import {
   FileSpreadsheet,
   Mail,
   Bell,
-  RotateCcw
+  RotateCcw,
+  MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,6 +32,23 @@ interface Booking {
   status: "PENDING" | "CONFIRMED" | "IN_PROGRESS" | "DONE" | "CANCELLED";
   catatan_admin?: string;
   created_at: string;
+}
+
+function getWhatsAppLink(item: Booking) {
+  let cleanPhone = item.no_hp.replace(/\D/g, "");
+  if (cleanPhone.startsWith("0")) {
+    cleanPhone = "62" + cleanPhone.slice(1);
+  }
+
+  let statusText = "DIKONFIRMASI";
+  if (item.status === "DONE") statusText = "SELESAI";
+  if (item.status === "IN_PROGRESS") statusText = "SEDANG DIKERJAKAN";
+  if (item.status === "CANCELLED") statusText = "DIBATALKAN";
+  if (item.status === "PENDING") statusText = "MENUNGGU VERIFIKASI";
+
+  const message = `Halo Kak *${item.nama_customer}*,\n\nInformasi reservasi servis motor Honda Anda di *AHASS AS Putra Rahmat Kuningan*:\n• *No Tiket:* ${item.ticket_no}\n• *Jadwal:* ${item.tanggal_booking} (Jam ${item.jam_booking} WIB)\n• *Plat Kendaraan:* ${item.plat_kendaraan}\n• *Paket Servis:* ${item.jenis_servis}\n• *Status Reservasi:* *${statusText}*\n\nTerima kasih telah mempercayakan perawatan motor Honda Anda di AHASS AS Putra Rahmat! 🙏`;
+
+  return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
 
 function AdminBookingsContent() {
@@ -401,7 +419,19 @@ function AdminBookingsContent() {
                           ) : (
                             <div className="text-xs text-zinc-400 italic mt-0.5">Email tidak tercatat</div>
                           )}
-                          <div className="text-xs text-zinc-600 font-mono font-semibold mt-1">{item.no_hp}</div>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-xs text-zinc-600 font-mono font-semibold">{item.no_hp}</span>
+                            <a
+                              href={getWhatsAppLink(item)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-300 hover:bg-emerald-100 transition shadow-2xs"
+                              title="Kirim pesan konfirmasi/notifikasi WhatsApp ke pelanggan"
+                            >
+                              <MessageSquare size={11} className="text-emerald-600 shrink-0" />
+                              <span>Chat WA</span>
+                            </a>
+                          </div>
                         </td>
                         <td className="px-4 py-4">
                           <div className="font-bold text-zinc-900 text-xs px-2.5 py-1 rounded-lg bg-zinc-100 border border-zinc-200/80 inline-block font-mono shadow-2xs">

@@ -144,30 +144,59 @@ const KPB_PREMIUM_PACKAGES: ServicePackage[] = [
 
 const ALL_SLOTS = ["08:00", "09:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00"];
 
+const PREMIUM_HONDA_MODELS = [
+  "Honda Vario 160",
+  "Honda PCX 160",
+  "Honda ADV 160",
+  "Honda Stylo 160",
+  "Honda CBR150R",
+  "Honda CBR 250RR / CBR250R",
+  "Honda CB150X",
+  "Honda CRF250 Rally / L",
+  "Honda EM1 e: (Listrik)",
+  "Honda Monkey / Super Cub C125",
+];
+
 const HONDA_MOTOR_GROUPS = [
   {
-    group: "Skuter Matic (110cc & 125cc)",
-    items: ["Honda Beat & Beat Street", "Honda Scoopy", "Honda Genio", "Honda Vario 125"],
-  },
-  {
-    group: "Motor Bebek & Sport 150cc (4x KPB)",
+    group: "Skuter Matic Standard 110cc & 125cc (4x KPB)",
     items: [
-      "Honda Revo Series (Revo Fit, Revo X)",
-      "Honda Supra X 125",
-      "Honda Sonic 150R",
-      "Honda CB150 Verza",
-      "Honda CRF150L",
-      "Honda CB150R StreetFire",
+      "Honda Beat & Beat Street",
+      "Honda Scoopy",
+      "Honda Genio",
+      "Honda Vario 125",
     ],
   },
   {
-    group: "Matic & Sport (160cc+ / Premium 3x KPB)",
+    group: "Matic Premium 160cc+ & EV (3x KPB)",
     items: [
       "Honda Vario 160",
       "Honda PCX 160",
       "Honda ADV 160",
       "Honda Stylo 160",
-      "Honda CBR150R / CBR 250RR",
+      "Honda EM1 e: (Listrik)",
+    ],
+  },
+  {
+    group: "Motor Bebek / Cub (4x KPB)",
+    items: [
+      "Honda Revo Series (Revo Fit, Revo X)",
+      "Honda Supra X 125",
+      "Honda Supra GTR 150",
+      "Honda Monkey / Super Cub C125",
+    ],
+  },
+  {
+    group: "Sport Series 150cc - 250cc+",
+    items: [
+      "Honda CB150 Verza",
+      "Honda Sonic 150R",
+      "Honda CB150R StreetFire",
+      "Honda CB150X",
+      "Honda CRF150L",
+      "Honda CBR150R",
+      "Honda CBR 250RR / CBR250R",
+      "Honda CRF250 Rally / L",
     ],
   },
   {
@@ -285,6 +314,12 @@ export default function BookingPage() {
         tanggal_booking: value,
         jam_booking: firstAvailable,
       }));
+      return;
+    }
+    if (name === "tipe_motor") {
+      const isPremium = PREMIUM_HONDA_MODELS.includes(value);
+      setKpbCategory(isPremium ? "premium" : "standard");
+      setFormData((prev) => ({ ...prev, tipe_motor: value, jenis_servis: [] }));
       return;
     }
     setFormData((prev) => ({ ...prev, [name]: value }));
