@@ -10,6 +10,7 @@ import crmRoutes from './routes/crm.routes';
 
 
 const app: Application = express();
+app.set('trust proxy', 1);
 
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(helmet({

@@ -5,10 +5,10 @@ import { authMiddleware } from '../middleware/auth.middleware';
 
 const router = Router();
 
-// Rate limiter for login: Max 10 failed/successful attempts per 15 minutes per IP
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
+  max: 100, // Allow up to 100 attempts per IP window on Vercel Edge Proxy
+  skipSuccessfulRequests: true,
   message: {
     success: false,
     message: 'Terlalu banyak percobaan login dari IP ini. Silakan coba lagi setelah 15 menit.',
