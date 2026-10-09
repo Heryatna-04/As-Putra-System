@@ -66,7 +66,7 @@ export const metadata: Metadata = {
     description: DEFAULT_DESC,
     images: [
       {
-        url: "/og-image.png",
+        url: `${SITE_URL}/logo.png`,
         width: 1200,
         height: 630,
         alt: "AS Putra Rahmat Motor - AHASS Honda Kuningan",
@@ -77,7 +77,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: SITE_NAME,
     description: DEFAULT_DESC,
-    images: ["/og-image.png"],
+    images: [`${SITE_URL}/logo.png`],
   },
 };
 
