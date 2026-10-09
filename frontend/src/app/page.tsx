@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -16,17 +17,121 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { buildWaUrl } from "@/lib/utils";
 
-/** Fetch jumlah total part aktif (public endpoint, no auth) */
+// ── SEO Metadata ─────────────────────────────────────────────────────────────
+export const metadata: Metadata = {
+  title: "Bengkel & Spare Part Honda Kuningan | AHASS AS Putra Rahmat",
+  description:
+    "AHASS resmi Honda di Kuningan (kode 10870). Cek stok & harga HET suku cadang asli AHM secara online. Booking servis motor tanpa antre. Mekanik bersertifikat Honda.",
+  alternates: {
+    canonical: "https://asputra.vercel.app",
+  },
+};
+
+// ── JSON-LD Structured Data (LocalBusiness + AutoRepair) ──────────────────────
+const LOCAL_BUSINESS_JSONLD = {
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "AutoRepair",
+      "@id": "https://asputra.vercel.app/#business",
+      name: "AS Putra Rahmat Motor - AHASS 10870",
+      alternateName: "AHASS AS Putra Kuningan",
+      url: "https://asputra.vercel.app",
+      telephone: "+6281111116408",
+      image: "https://asputra.vercel.app/as-putra-dealer.png",
+      logo: {
+        "@type": "ImageObject",
+        url: "https://asputra.vercel.app/logo.png",
+      },
+      description:
+        "Dealer dan bengkel resmi Honda (AHASS kode 10870) di Kabupaten Kuningan, Jawa Barat. Menyediakan suku cadang asli AHM, booking servis online, mekanik bersertifikat Honda.",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "Jl. Raya Kuningan",
+        addressLocality: "Kuningan",
+        addressRegion: "Jawa Barat",
+        addressCountry: "ID",
+      },
+      geo: {
+        "@type": "GeoCoordinates",
+        latitude: -6.9516689,
+        longitude: 108.4883253,
+      },
+      hasMap: "https://www.google.com/maps/place/Dealer+Honda+AS+Putra+Motor+Kuningan",
+      openingHoursSpecification: [
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+          opens: "08:00",
+          closes: "15:00",
+        },
+        {
+          "@type": "OpeningHoursSpecification",
+          dayOfWeek: ["Sunday"],
+          opens: "08:00",
+          closes: "14:00",
+        },
+      ],
+      priceRange: "IDR",
+      currenciesAccepted: "IDR",
+      paymentAccepted: "Cash, Transfer Bank",
+      areaServed: {
+        "@type": "AdministrativeArea",
+        name: "Kabupaten Kuningan, Jawa Barat",
+      },
+    },
+    {
+      "@type": "FAQPage",
+      mainEntity: [
+        {
+          "@type": "Question",
+          name: "Apakah semua spare part di sini asli Honda?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Ya. Seluruh suku cadang di AHASS AS Putra Rahmat (kode AHASS 10870) adalah Honda Genuine Parts dari Astra Honda Motor, dengan garansi resmi.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Apakah harganya sesuai HET resmi AHM?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Ya. Harga mengacu pada Harga Eceran Tertinggi resmi PT Astra Honda Motor, tanpa biaya tersembunyi.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Bagaimana menghindari antrean saat servis?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Buat reservasi lewat menu Booking Servis di website, pilih tanggal dan jam datang, lalu tunjukkan kode tiket (format ASP-YYYYMMDD-XXXX) ke petugas pendaftaran.",
+          },
+        },
+        {
+          "@type": "Question",
+          name: "Apakah ada layanan servis ke lokasi atau instansi?",
+          acceptedAnswer: {
+            "@type": "Answer",
+            text: "Ada. Kami melayani Service Visit (servis keliling) untuk rombongan instansi atau perusahaan di Kabupaten Kuningan dan sekitarnya.",
+          },
+        },
+      ],
+    },
+  ],
+};
+
+// ── Data statis ───────────────────────────────────────────────────────────────
+/** Fetch jumlah total part aktif */
 async function getTotalParts(): Promise<number> {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+    const baseUrl =
+      process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
     const res = await fetch(`${baseUrl}/spare-parts/categories`, {
-      next: { revalidate: 3600 }, // cache 1 jam
+      next: { revalidate: 3600 },
     });
     if (!res.ok) return 0;
     const data = await res.json();
     if (!data.success) return 0;
-    // Sum semua count dari semua kategori
     const total = (data.data.categories as { count: number }[]).reduce(
       (acc, cat) => acc + cat.count,
       0
@@ -37,7 +142,7 @@ async function getTotalParts(): Promise<number> {
   }
 }
 
-/** Keunggulan toko — 4 poin, tanpa kartu */
+/** Keunggulan toko */
 const STRENGTHS = [
   {
     icon: ShieldCheck,
@@ -96,7 +201,7 @@ const SERVICE_PACKAGES = [
   },
 ] as const;
 
-/** Pertanyaan umum pelanggan */
+/** FAQ */
 const FAQS = [
   {
     q: "Apakah semua spare part di sini asli Honda?",
@@ -124,18 +229,24 @@ const FAQS = [
   },
 ] as const;
 
+// ── Page Component ────────────────────────────────────────────────────────────
 export default async function Home() {
   const totalParts = await getTotalParts();
   const waAskUrl = buildWaUrl("BENGKEL", "Konsultasi Spare Part");
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-zinc-900">
+      {/* JSON-LD Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(LOCAL_BUSINESS_JSONLD) }}
+      />
+
       <Navbar />
 
       <main className="flex-1 pt-[125px] sm:pt-[105px]">
         {/* ── Hero ─────────────────────────────────────────────────── */}
         <section className="relative isolate overflow-hidden bg-[#E4002B] text-white">
-          {/* Foto dealer: terlihat jelas di sisi kanan, memudar ke merah di sisi teks */}
           <Image
             src="/as-putra-dealer.png"
             alt="Gedung dealer dan bengkel resmi Honda AS Putra Motor di Kuningan"
@@ -167,10 +278,10 @@ export default async function Home() {
                 genuine AHM dengan harga HET resmi. Ketik kode part atau nama barang.
               </p>
 
-              {/* Pencarian utama: GET ke /katalog, tanpa JS */}
+              {/* Pencarian utama: GET ke /katalog */}
               <form action="/katalog" method="get" role="search" className="mt-8">
                 <label htmlFor="hero-search" className="sr-only">
-                  Cari spare part
+                  Cari spare part Honda di Kuningan
                 </label>
                 <div className="flex items-stretch rounded-lg bg-white shadow-lg shadow-black/10 focus-within:ring-4 focus-within:ring-white/40">
                   <div className="flex items-center pl-4 text-zinc-500">
@@ -258,7 +369,6 @@ export default async function Home() {
                   Pilih paket saat booking. Pekerjaan tambahan baru dikerjakan setelah Anda setuju.
                 </p>
               </div>
-             
             </div>
 
             <ul className="mt-8 divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white">

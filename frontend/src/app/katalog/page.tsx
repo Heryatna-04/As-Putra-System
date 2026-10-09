@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { SearchX } from "lucide-react";
 import { fetchCatalog, fetchCategories } from "@/lib/api";
@@ -8,6 +9,16 @@ import HeroBanner from "@/components/katalog/HeroBanner";
 import Toolbar from "@/components/katalog/Toolbar";
 import ProductCard from "@/components/katalog/ProductCard";
 import Pagination from "@/components/katalog/Pagination";
+
+export const metadata: Metadata = {
+  title: "Katalog Spare Part Honda Asli | Harga HET AHM",
+  description:
+    "Cari suku cadang asli Honda dengan harga HET resmi AHM. Lebih dari 44.000 part tersedia: oli, kampas rem, filter, busi, ban, dan lainnya. AHASS AS Putra Kuningan.",
+  alternates: {
+    canonical: "https://asputra.vercel.app/katalog",
+  },
+};
+
 
 interface KatalogPageProps {
   searchParams: Promise<{
