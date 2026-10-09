@@ -156,6 +156,9 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
             <LogOut className="w-4 h-4" />
           </button>
         </div>
+        <div className="mt-3 pt-2.5 text-[10px] text-center text-zinc-400 border-t border-zinc-200/70 font-medium">
+          System Developed by <span className="font-bold text-zinc-600">Kelompok 37 KP FKOM UNIKU</span>
+        </div>
       </div>
     </aside>
     </>

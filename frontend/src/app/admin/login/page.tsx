@@ -164,8 +164,9 @@ export default function AdminLoginPage() {
       </main>
 
       {/* Footer */}
-      <footer className="max-w-4xl w-full mx-auto text-center text-xs text-zinc-500">
-        &copy; 2026 AS Putra Rahmat Kuningan. Honda Official Authorized System.
+      <footer className="max-w-4xl w-full mx-auto text-center text-xs text-zinc-500 space-y-1">
+        <div>&copy; 2026 AS Putra Rahmat Kuningan. Honda Official Authorized System.</div>
+        <div className="text-zinc-400 font-medium">System Managed & Developed by <span className="font-semibold text-zinc-700">Kelompok 37 KP FKOM UNIKU</span></div>
       </footer>
     </div>
   );

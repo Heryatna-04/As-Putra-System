@@ -43,11 +43,11 @@ export default function Footer() {
                   <div className="mt-1 space-y-1 text-zinc-600">
                     <div className="flex gap-4">
                       <span className="w-28 font-medium text-zinc-500">Senin – Sabtu</span>
-                      <span className="font-semibold text-zinc-800">08:00 – 15:00 WIB</span>
+                      <span className="font-semibold text-zinc-800">08:00 – 16:00 WIB</span>
                     </div>
                     <div className="flex gap-4">
                       <span className="w-28 font-medium text-zinc-500">Minggu</span>
-                      <span className="font-semibold text-zinc-800">08:00 – 14:00 WIB</span>
+                      <span className="font-semibold text-zinc-800">08:00 – 15:00 WIB</span>
                     </div>
                   </div>
                 </div>
@@ -94,13 +94,17 @@ export default function Footer() {
 
       {/* Bottom Footer: Copyright */}
       <div className="bg-white px-4 py-5 sm:px-6 lg:px-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-sm text-zinc-500 sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-xs text-zinc-500 sm:flex-row">
           <div className="flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-[#E4002B]" />
             <span className="font-semibold text-zinc-800">AS Putra Rahmat</span>
             <span>— Dealer & Bengkel Resmi Honda</span>
           </div>
-          <span className="text-zinc-400">© 2026 AHASS 10870</span>
+          <div className="flex items-center gap-2.5 text-zinc-400 flex-wrap justify-center">
+            <span>© 2026 AHASS 10870</span>
+            <span>•</span>
+            <span>Dikembangkan oleh <strong className="font-semibold text-zinc-700">Kelompok 37 KP FKOM UNIKU</strong></span>
+          </div>
         </div>
       </div>
     </footer>
