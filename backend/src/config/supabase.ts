@@ -1,15 +1,11 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 /**
  * Factory function for admin operations (bypass RLS, system ops)
  */
-export const getSupabaseAdmin = () => {
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseServiceRoleKey) {
-    throw new Error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set in environment variables');
-  }
+export const getSupabaseAdmin = (): SupabaseClient => {
+  const supabaseUrl = process.env.SUPABASE_URL || '';
+  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
   return createClient(supabaseUrl, supabaseServiceRoleKey, {
     auth: {
@@ -20,16 +16,12 @@ export const getSupabaseAdmin = () => {
 };
 
 /**
- * Lazy getter for shared instance
+ * Lazy proxy instance typed explicitly as SupabaseClient to prevent TS4094 errors during tsc build
  */
-export const supabase = {
-  get from() {
-    return getSupabaseAdmin().from.bind(getSupabaseAdmin());
+export const supabase: SupabaseClient = new Proxy({} as SupabaseClient, {
+  get(_target, prop: keyof SupabaseClient) {
+    const client = getSupabaseAdmin();
+    const value = client[prop];
+    return typeof value === 'function' ? value.bind(client) : value;
   },
-  get storage() {
-    return getSupabaseAdmin().storage;
-  },
-  get auth() {
-    return getSupabaseAdmin().auth;
-  }
-};
+});
