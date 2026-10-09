@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (currentToken) {
       try {
         const baseUrl =
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+          process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
         await fetch(`${baseUrl}/auth/logout`, {
           method: "POST",
           headers: { Authorization: `Bearer ${currentToken}` },
