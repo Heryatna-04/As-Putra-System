@@ -95,31 +95,33 @@ export default async function KatalogPage({ searchParams }: KatalogPageProps) {
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-zinc-200 bg-white px-6 py-14 text-center">
-            <SearchX className="mx-auto h-10 w-10 text-zinc-400" aria-hidden />
-            <h2 className="mt-4 text-lg font-semibold text-zinc-900">
-              Spare part tidak ditemukan
+          <div className="rounded-2xl border border-zinc-200 bg-white p-8 sm:p-12 text-center shadow-xs my-4">
+            <div className="mx-auto w-14 h-14 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-4">
+              <SearchX className="h-7 w-7" aria-hidden />
+            </div>
+            <h2 className="text-xl font-bold text-zinc-900 font-display">
+              Suku cadang tidak ditemukan
             </h2>
-            <p className="mx-auto mt-2 max-w-md text-base text-zinc-600">
-              Coba kata kunci yang lebih pendek, periksa kode part, atau hapus filter yang aktif.
-              Bisa juga tanya langsung ke tim kami.
+            <p className="mx-auto mt-2 max-w-md text-sm text-zinc-600 leading-relaxed">
+              Suku cadang yang Anda cari mungkin tidak ada di daftar online atau kata kunci kurang sesuai.
+              Tim petugas AHASS kami dapat mengecek ketersediaan fisik stok di gudang bengkel.
             </p>
             <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
               {hasActiveFilter && (
                 <Link
                   href="/katalog"
-                  className="rounded-md border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-800 transition-colors hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
+                  className="rounded-xl border border-zinc-300 bg-white px-5 py-2.5 text-sm font-semibold text-zinc-800 transition-all hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900 shadow-2xs"
                 >
-                  Hapus semua filter
+                  Hapus Semua Filter
                 </Link>
               )}
               <a
-                href={buildWaUrl("BENGKEL", params.search ? `Cari part: ${params.search}` : "Cari spare part")}
+                href={buildWaUrl("BENGKEL", params.search ? `Halo AHASS AS Putra, saya ingin menanyakan ketersediaan suku cadang: "${params.search}". Apakah ready stok?` : "Halo AHASS AS Putra, saya ingin menanyakan ketersediaan suku cadang motor Honda.")}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-md bg-zinc-900 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
+                className="rounded-xl bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 px-5 py-2.5 text-sm font-bold text-white transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)] inline-flex items-center gap-2"
               >
-                Tanya via WhatsApp
+                <span>Tanyakan Suku Cadang via WhatsApp</span>
               </a>
             </div>
           </div>
