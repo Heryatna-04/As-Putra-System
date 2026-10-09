@@ -12,7 +12,9 @@ import crmRoutes from './routes/crm.routes';
 const app: Application = express();
 
 // ── Middleware ───────────────────────────────────────────────────────────────
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+}));
 app.use(cors({
   origin: (origin, callback) => {
     const frontendUrl = process.env.FRONTEND_URL;
