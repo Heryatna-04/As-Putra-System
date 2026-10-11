@@ -93,7 +93,25 @@ function FilterSidebarContent({ categories = [], totalParts = 0 }: FilterSidebar
       {/* Content Container (Collapsible on mobile, always visible on desktop) */}
       <div className={`mt-4 lg:mt-0 ${isMobileOpen ? "block" : "hidden lg:block"}`}>
         {/* Kategori */}
-        <h2 className="mb-3 text-base font-semibold text-zinc-900">Kategori</h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-base font-semibold text-zinc-900">Kategori</h2>
+          {Boolean(currentCategory || stockOnly) && (
+            <button
+              type="button"
+              onClick={() => {
+                const params = new URLSearchParams(searchParams.toString());
+                params.delete("category");
+                params.delete("stock_only");
+                params.set("page", "1");
+                router.push(`/katalog?${params.toString()}`);
+                setIsMobileOpen(false);
+              }}
+              className="text-xs font-semibold text-[#E4002B] hover:underline cursor-pointer"
+            >
+              Reset
+            </button>
+          )}
+        </div>
         <div className="flex max-h-56 flex-col gap-0.5 overflow-y-auto pr-1 lg:max-h-[480px]">
           <CategoryButton
             label="Semua spare part"
