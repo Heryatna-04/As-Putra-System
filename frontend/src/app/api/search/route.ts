@@ -1,0 +1,39 @@
+import { NextResponse } from "next/server";
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const q = searchParams.get("q")?.trim() || "";
+
+  if (q.length < 2) {
+    return NextResponse.json({ success: true, data: [] });
+  }
+
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://esvwatrnlqgcnvjtebmr.supabase.co";
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+
+  const cleanNoSpace = q.replace(/\s+/g, "");
+  const url = new URL(`${supabaseUrl}/rest/v1/spare_parts`);
+  url.searchParams.append("select", "id,part_no,part_name,nama_umum,het,stok");
+  url.searchParams.append("status", "eq.ACTIVE");
+  url.searchParams.append("or", `(part_no.ilike.%${cleanNoSpace}%,part_name.ilike.%${q}%,nama_umum.ilike.%${q}%)`);
+  url.searchParams.append("limit", "5");
+
+  try {
+    const res = await fetch(url.toString(), {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`,
+      },
+      next: { revalidate: 60 },
+    });
+
+    if (!res.ok) {
+      return NextResponse.json({ success: false, data: [] }, { status: 500 });
+    }
+
+    const data = await res.json();
+    return NextResponse.json({ success: true, data });
+  } catch {
+    return NextResponse.json({ success: false, data: [] }, { status: 500 });
+  }
+}

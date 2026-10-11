@@ -7,7 +7,6 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Search, MessageSquare, User, CalendarDays } from "lucide-react";
 import { buildWaUrl } from "@/lib/utils";
 
-import { fetchCatalog } from "@/lib/api";
 import { formatIDR } from "@/lib/utils";
 import { SparePart } from "@/types/spare-part";
 
@@ -31,10 +30,13 @@ function NavbarContent() {
     const timer = setTimeout(async () => {
       setIsSearching(true);
       try {
-        const res = await fetchCatalog({ search: searchTerm.trim(), limit: "5" });
-        if (res.success && res.data) {
-          setSearchResults(res.data);
-          setShowDropdown(true);
+        const res = await fetch(`/api/search?q=${encodeURIComponent(searchTerm.trim())}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success && json.data) {
+            setSearchResults(json.data);
+            setShowDropdown(true);
+          }
         }
       } catch {
         setSearchResults([]);
