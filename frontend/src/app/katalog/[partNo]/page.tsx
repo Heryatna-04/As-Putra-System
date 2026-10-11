@@ -14,7 +14,8 @@ import {
   Sparkles,
   HelpCircle,
   Award,
-  ChevronDown
+  ChevronDown,
+  Share2
 } from "lucide-react";
 import { fetchSparePartDetail, fetchCatalog } from "@/lib/api";
 import { formatIDR, buildWaUrl } from "@/lib/utils";
@@ -30,13 +31,44 @@ interface DetailPageProps {
 
 export async function generateMetadata({ params }: DetailPageProps): Promise<Metadata> {
   const { partNo } = await params;
+  const siteUrl = "https://asputra.vercel.app";
+
   try {
     const res = await fetchSparePartDetail(partNo);
     if (res.success && res.data) {
       const part = res.data;
+      const title = `${part.nama_umum || part.part_name} (${part.part_no}) | AS Putra Rahmat`;
+      const description = `Harga HET ${formatIDR(part.het)} • Stok: ${part.stok > 0 ? `${part.stok} Ready` : "Indent"}. 100% Suku Cadang Asli Honda AHM di AHASS AS Putra Kuningan.`;
+      const imageUrl = part.gambar_url || `${siteUrl}/logo.png`;
+      const pageUrl = `${siteUrl}/katalog/${encodeURIComponent(part.part_no)}`;
+
       return {
-        title: `${part.nama_umum || part.part_name} (${part.part_no}) | AS Putra Rahmat`,
-        description: `Beli ${part.part_name} (${part.nama_umum || "Suku Cadang Resmi"}) harga HET ${formatIDR(part.het)}. 100% Original AHM di AHASS AS Putra Rahmat Kuningan.`,
+        title,
+        description,
+        alternates: {
+          canonical: pageUrl,
+        },
+        openGraph: {
+          title,
+          description,
+          url: pageUrl,
+          siteName: "AHASS AS Putra Rahmat Motor Kuningan",
+          type: "website",
+          images: [
+            {
+              url: imageUrl,
+              width: 800,
+              height: 800,
+              alt: part.nama_umum || part.part_name,
+            },
+          ],
+        },
+        twitter: {
+          card: "summary_large_image",
+          title,
+          description,
+          images: [imageUrl],
+        },
       };
     }
   } catch {
@@ -44,7 +76,7 @@ export async function generateMetadata({ params }: DetailPageProps): Promise<Met
   }
   return {
     title: "Detail Suku Cadang | AS Putra Rahmat",
-    description: "Katalog suku cadang motor Honda resmi AHM.",
+    description: "Katalog suku cadang motor Honda resmi AHM Kuningan.",
   };
 }
 
@@ -187,7 +219,7 @@ export default async function SparePartDetailPage({ params }: DetailPageProps) {
             </div>
           </div>
 
-          {/* Action CTAs: WA & Booking */}
+          {/* Action CTAs: WA & Booking & Share */}
           <div className="flex flex-col sm:flex-row gap-3 pt-2">
             <a
               href={waUrl}
@@ -196,7 +228,7 @@ export default async function SparePartDetailPage({ params }: DetailPageProps) {
               className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white py-3.5 px-5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
             >
               <MessageSquare className="w-4 h-4 fill-current" />
-              <span>Tanya & Pesan via WhatsApp</span>
+              <span>Tanya &amp; Pesan via WhatsApp</span>
             </a>
             <Link
               href={`/booking?partNo=${encodeURIComponent(part.part_no)}`}
@@ -205,6 +237,16 @@ export default async function SparePartDetailPage({ params }: DetailPageProps) {
               <CalendarDays className="w-4 h-4 text-[#E4002B]" />
               <span>Booking Servis Pasang</span>
             </Link>
+            <a
+              href={`https://wa.me/?text=${encodeURIComponent(`Cek ketersediaan suku cadang asli Honda: ${part.nama_umum || part.part_name} (${part.part_no}) - Harga HET ${formatIDR(part.het)} di AHASS AS Putra Kuningan: https://asputra.vercel.app/katalog/${encodeURIComponent(part.part_no)}`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sm:w-14 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center transition-all border border-zinc-200"
+              title="Bagikan ke WhatsApp"
+            >
+              <Share2 className="w-4 h-4" />
+              <span className="sm:hidden ml-2">Bagikan</span>
+            </a>
           </div>
         </div>
       </div>
