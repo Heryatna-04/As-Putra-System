@@ -8,8 +8,28 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, data: [] });
   }
 
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
+
+  try {
+    const res = await fetch(`${baseUrl}/spare-parts?search=${encodeURIComponent(q)}&limit=5`, {
+      next: { revalidate: 60 },
+    });
+    if (res.ok) {
+      const json = await res.json();
+      if (json.success && json.data) {
+        return NextResponse.json({ success: true, data: json.data });
+      }
+    }
+  } catch {
+    // Fallback
+  }
+
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://esvwatrnlqgcnvjtebmr.supabase.co";
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+
+  if (!supabaseKey) {
+    return NextResponse.json({ success: true, data: [] });
+  }
 
   const cleanNoSpace = q.replace(/\s+/g, "");
   const url = new URL(`${supabaseUrl}/rest/v1/spare_parts`);
@@ -28,12 +48,12 @@ export async function GET(request: Request) {
     });
 
     if (!res.ok) {
-      return NextResponse.json({ success: false, data: [] }, { status: 500 });
+      return NextResponse.json({ success: false, data: [] });
     }
 
     const data = await res.json();
     return NextResponse.json({ success: true, data });
   } catch {
-    return NextResponse.json({ success: false, data: [] }, { status: 500 });
+    return NextResponse.json({ success: false, data: [] });
   }
 }
