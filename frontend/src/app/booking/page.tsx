@@ -2,8 +2,9 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, AlertCircle, Loader2, Copy, Check, Clock, MapPin, Navigation } from "lucide-react";
+import { CheckCircle2, AlertCircle, Loader2, Copy, Check, Clock, MapPin, Navigation, MessageSquare } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import { buildBookingWaUrl } from "@/lib/utils";
 
 interface ServicePackage {
   id: string;
@@ -404,59 +405,107 @@ export default function BookingPage() {
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-[125px] sm:pt-[110px] sm:px-6">
         {successData ? (
-          <div className="mx-auto max-w-xl rounded-2xl border border-zinc-200 bg-white p-6 text-center md:p-10">
-            <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-50 text-emerald-700">
-              <CheckCircle2 size={30} />
-            </div>
-            <h1 className="font-display text-2xl font-bold [text-wrap:balance]">Booking berhasil</h1>
-            <p className="mt-2 text-base text-zinc-600">
-              Simpan nomor tiket ini dan tunjukkan ke petugas saat tiba di bengkel.
-            </p>
-
-            <div className="mt-6 rounded-xl bg-zinc-100 p-5">
-              <p className="text-sm text-zinc-600">Nomor tiket</p>
-              <p className="mt-1 break-all font-mono text-3xl font-bold text-zinc-900">{successData.ticket_no}</p>
-              <button
-                type="button"
-                onClick={copyTicket}
-                className="mt-3 inline-flex items-center gap-2 rounded-lg border border-zinc-300 bg-white px-3.5 py-2 text-sm font-semibold text-zinc-800 hover:bg-zinc-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E4002B]"
-              >
-                {copied ? <Check size={16} /> : <Copy size={16} />}
-                {copied ? "Tersalin" : "Salin nomor"}
-              </button>
+          <div className="mx-auto max-w-xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl transition-all">
+            {/* Ticket Header Banner */}
+            <div className="bg-gradient-to-r from-[#E4002B] to-[#99001C] p-6 text-white text-center relative">
+              <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white">
+                <CheckCircle2 size={28} />
+              </div>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest bg-white/20 px-2.5 py-1 rounded-full text-white inline-block mb-1">
+                AHASS AS Putra Motor
+              </span>
+              <h1 className="font-display text-2xl font-black">Booking Berhasil!</h1>
+              <p className="mt-1 text-xs text-red-100">Simpan atau tunjukkan tiket ini saat tiba di bengkel.</p>
             </div>
 
-            <dl className="mt-6 divide-y divide-zinc-200 text-left text-base">
-              <div className="flex justify-between gap-4 py-3">
-                <dt className="text-zinc-600">Nama</dt>
-                <dd className="text-right font-semibold">{successData.nama_customer}</dd>
+            {/* Ticket Cutout Line */}
+            <div className="relative border-b-2 border-dashed border-zinc-200 bg-zinc-50 py-4 px-6 text-center">
+              <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-zinc-50 border-r border-zinc-200"></div>
+              <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-zinc-50 border-l border-zinc-200"></div>
+              
+              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nomor Tiket Reservasi</p>
+              <div className="mt-1 flex items-center justify-center gap-3">
+                <span className="font-mono text-3xl font-black tracking-wider text-zinc-900">{successData.ticket_no}</span>
+                <button
+                  type="button"
+                  onClick={copyTicket}
+                  className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-2.5 py-1 text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition shadow-sm"
+                  title="Salin Nomor Tiket"
+                >
+                  {copied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                  {copied ? "Tersalin" : "Salin"}
+                </button>
               </div>
-              <div className="flex justify-between gap-4 py-3">
-                <dt className="text-zinc-600">Jadwal</dt>
-                <dd className="text-right font-semibold">{formatDate(successData.tanggal_booking)} ({formData.jam_booking})</dd>
-              </div>
-              <div className="flex justify-between gap-4 py-3">
-                <dt className="text-zinc-600">Email tiket</dt>
-                <dd className="break-all text-right font-semibold">{successData.email}</dd>
-              </div>
-            </dl>
+            </div>
 
-            <p className="mt-4 text-sm text-zinc-600">Mohon hadir 10 menit lebih awal dari jadwal.</p>
+            {/* Ticket Details */}
+            <div className="p-6 space-y-4 text-sm text-zinc-800">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-zinc-50 p-4 rounded-xl border border-zinc-200/80">
+                <div>
+                  <span className="text-xs text-zinc-500 block">Nama Pemilik</span>
+                  <span className="font-bold text-zinc-900">{successData.nama_customer}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-zinc-500 block">Motor &amp; Plat</span>
+                  <span className="font-bold text-zinc-900">{formData.tipe_motor || "-"} ({formData.plat_kendaraan ? formData.plat_kendaraan.toUpperCase() : "-"})</span>
+                </div>
+                <div>
+                  <span className="text-xs text-zinc-500 block">Paket Servis</span>
+                  <span className="font-bold text-[#E4002B]">{selectedService || "-"}</span>
+                </div>
+                <div>
+                  <span className="text-xs text-zinc-500 block">Jadwal Kedatangan</span>
+                  <span className="font-bold text-zinc-900">{formatDate(successData.tanggal_booking)} ({formData.jam_booking})</span>
+                </div>
+              </div>
 
-            <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <button
-                type="button"
-                onClick={resetForm}
-                className="rounded-lg bg-[#E4002B] px-5 py-3 text-base font-semibold text-white hover:bg-[#C20026] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E4002B]"
+              <div className="flex items-center justify-between text-xs text-zinc-500 px-1 pt-1">
+                <span>Email Tiket: <strong className="text-zinc-700">{successData.email}</strong></span>
+                <span className="inline-flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                  Terdaftar
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons Footer */}
+            <div className="p-6 pt-0 space-y-3">
+              <a
+                href={buildBookingWaUrl({
+                  ticketNo: successData.ticket_no,
+                  nama: successData.nama_customer,
+                  noHp: formData.no_hp,
+                  tipeMotor: formData.tipe_motor,
+                  plat: formData.plat_kendaraan,
+                  noMesin: formData.no_mesin,
+                  paketServis: selectedService,
+                  tanggal: formatDate(successData.tanggal_booking),
+                  jam: formData.jam_booking,
+                  catatan: formData.detail_lainnya,
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3.5 text-base font-bold text-white hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20 active:scale-[0.99]"
               >
-                Buat booking baru
-              </button>
-              <Link
-                href="/"
-                className="rounded-lg border border-zinc-300 px-5 py-3 text-base font-semibold text-zinc-800 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E4002B]"
-              >
-                Kembali ke beranda
-              </Link>
+                <MessageSquare size={20} />
+                Kirim Tiket ke WhatsApp Admin
+              </a>
+
+              <div className="grid grid-cols-2 gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="w-full rounded-xl border border-zinc-300 bg-white py-2.5 text-xs font-bold text-zinc-800 hover:bg-zinc-50 transition"
+                >
+                  Buat Booking Baru
+                </button>
+                <Link
+                  href="/"
+                  className="w-full text-center rounded-xl border border-zinc-300 bg-white py-2.5 text-xs font-bold text-zinc-800 hover:bg-zinc-50 transition"
+                >
+                  Kembali ke Beranda
+                </Link>
+              </div>
             </div>
           </div>
         ) : (
@@ -788,14 +837,36 @@ export default function BookingPage() {
                   </div>
                 </Step>
 
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#E4002B] px-6 py-3.5 text-base font-semibold text-white hover:bg-[#C20026] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E4002B] disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {loading && <Loader2 size={18} className="animate-spin motion-reduce:animate-none" />}
-                  {loading ? "Memproses..." : "Konfirmasi booking"}
-                </button>
+                <div className="flex flex-col gap-3 sm:flex-row">
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#E4002B] px-6 py-3.5 text-base font-semibold text-white hover:bg-[#C20026] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E4002B] disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {loading && <Loader2 size={18} className="animate-spin motion-reduce:animate-none" />}
+                    {loading ? "Memproses..." : "Konfirmasi Booking System"}
+                  </button>
+
+                  <a
+                    href={buildBookingWaUrl({
+                      nama: formData.nama_customer,
+                      noHp: formData.no_hp,
+                      tipeMotor: formData.tipe_motor,
+                      plat: formData.plat_kendaraan,
+                      noMesin: formData.no_mesin,
+                      paketServis: selectedService,
+                      tanggal: formData.tanggal_booking ? formatDate(formData.tanggal_booking) : "",
+                      jam: formData.jam_booking,
+                      catatan: formData.detail_lainnya,
+                    })}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 rounded-lg border-2 border-emerald-600 bg-emerald-50 px-5 py-3.5 text-base font-bold text-emerald-700 hover:bg-emerald-100 transition"
+                  >
+                    <MessageSquare size={18} />
+                    Booking via WA Direct
+                  </a>
+                </div>
               </form>
 
               <aside className="rounded-2xl border border-zinc-200 bg-white p-5 lg:sticky lg:top-[120px]">

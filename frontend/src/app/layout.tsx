@@ -81,6 +81,8 @@ export const metadata: Metadata = {
   },
 };
 
+import MobileBottomNav from "@/components/MobileBottomNav";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -92,8 +94,11 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${syne.variable} ${inter.variable} h-full antialiased`}
     >
-      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-[#FAFAFA] text-[#0A0A0A]">
-        <AuthProvider>{children}</AuthProvider>
+      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-[#FAFAFA] text-[#0A0A0A] pb-16 md:pb-0">
+        <AuthProvider>
+          {children}
+          <MobileBottomNav />
+        </AuthProvider>
       </body>
     </html>
   );
