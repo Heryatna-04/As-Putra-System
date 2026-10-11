@@ -158,9 +158,9 @@ export default function ProductCard({ part }: ProductCardProps) {
                 key={validImages[activeIndex]}
                 src={validImages[activeIndex]}
                 alt={part.part_name}
-                width={200}
-                height={200}
-                unoptimized
+                width={260}
+                height={260}
+                sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
                 onError={() => handleImageError(validImages[activeIndex])}
                 className={`w-full h-full object-contain mix-blend-multiply transition-transform duration-300 group-hover:scale-103 ${
                   !isAvailable ? "grayscale opacity-50" : ""
@@ -259,7 +259,7 @@ export default function ProductCard({ part }: ProductCardProps) {
                 src={validImages[activeIndex]}
                 alt={part.part_name}
                 fill
-                unoptimized
+                sizes="(max-width: 768px) 90vw, 600px"
                 className="object-contain p-4"
               />
 
@@ -292,7 +292,7 @@ export default function ProductCard({ part }: ProductCardProps) {
                       idx === activeIndex ? "border-[#FF1E27] scale-105" : "border-slate-200 opacity-60 hover:opacity-100"
                     }`}
                   >
-                    <Image src={img} alt="thumb" fill unoptimized className="object-cover" />
+                    <Image src={img} alt="thumb" fill sizes="64px" className="object-cover" />
                   </button>
                 ))}
               </div>
