@@ -200,8 +200,8 @@ function NavbarContent() {
         </div>
       </div>
 
-      {/* Bottom Navigation Menu Bar (Scrollable on mobile) */}
-      <div className="border-t border-zinc-100 bg-zinc-50/70 px-4 sm:px-6 overflow-x-auto no-scrollbar">
+      {/* Navigation Menu Bar (Desktop only, mobile uses MobileBottomNav) */}
+      <div className="hidden md:block border-t border-zinc-100 bg-zinc-50/70 px-4 sm:px-6 overflow-x-auto no-scrollbar">
         <div className="max-w-7xl mx-auto flex items-center justify-start sm:justify-center gap-5 sm:gap-8 text-xs sm:text-sm font-semibold whitespace-nowrap min-w-max">
           <Link
             href="/"

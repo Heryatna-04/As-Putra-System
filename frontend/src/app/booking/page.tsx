@@ -403,7 +403,7 @@ export default function BookingPage() {
     <div className="flex min-h-screen flex-col bg-zinc-50 font-sans text-zinc-900">
       <Navbar />
 
-      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-[125px] sm:pt-[110px] sm:px-6">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-20 md:pt-[110px] sm:px-6">
         {successData ? (
           <div className="mx-auto max-w-xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl transition-all">
             {/* Ticket Header Banner */}
