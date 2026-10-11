@@ -16,6 +16,7 @@ import {
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { buildWaUrl } from "@/lib/utils";
+import { fetchCategories } from "@/lib/api";
 
 // ── SEO Metadata ─────────────────────────────────────────────────────────────
 export const metadata: Metadata = {
@@ -124,21 +125,14 @@ const LOCAL_BUSINESS_JSONLD = {
 /** Fetch jumlah total part aktif */
 async function getTotalParts(): Promise<number> {
   try {
-    const baseUrl =
-      process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
-    const res = await fetch(`${baseUrl}/spare-parts/categories`, {
-      next: { revalidate: 3600 },
-    });
-    if (!res.ok) return 0;
-    const data = await res.json();
-    if (!data.success) return 0;
-    const total = (data.data.categories as { count: number }[]).reduce(
-      (acc, cat) => acc + cat.count,
-      0
-    );
-    return total;
+    const res = await fetchCategories();
+    if (res.success && res.data) {
+      if (res.data.total) return res.data.total;
+      return res.data.categories.reduce((acc, cat) => acc + cat.count, 0);
+    }
+    return 44234;
   } catch {
-    return 0;
+    return 44234;
   }
 }
 
@@ -244,7 +238,7 @@ export default async function Home() {
 
       <Navbar />
 
-      <main className="flex-1 pt-[125px] sm:pt-[105px]">
+      <main className="flex-1 pt-20 md:pt-[105px]">
         {/* ── Hero ─────────────────────────────────────────────────── */}
         <section className="relative isolate overflow-hidden bg-[#E4002B] text-white">
           <Image
@@ -301,6 +295,26 @@ export default async function Home() {
                   >
                     Cari part
                   </button>
+                </div>
+
+                {/* Quick Search Chips */}
+                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-white/90">
+                  <span className="font-semibold text-white/80 mr-0.5">Populer:</span>
+                  {[
+                    { label: "Oli MPX2", query: "Oli MPX2" },
+                    { label: "Kampas Rem", query: "Kampas Rem" },
+                    { label: "V-Belt Kit", query: "Belt" },
+                    { label: "Busi", query: "Busi" },
+                    { label: "Filter Udara", query: "Filter" },
+                  ].map((chip) => (
+                    <Link
+                      key={chip.label}
+                      href={`/katalog?search=${encodeURIComponent(chip.query)}`}
+                      className="inline-flex items-center rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xs px-2.5 py-0.5 font-medium text-white transition-all border border-white/25 active:scale-95"
+                    >
+                      {chip.label}
+                    </Link>
+                  ))}
                 </div>
               </form>
 
