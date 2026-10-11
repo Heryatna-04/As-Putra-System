@@ -837,36 +837,14 @@ export default function BookingPage() {
                   </div>
                 </Step>
 
-                <div className="flex flex-col gap-3 sm:flex-row">
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-[#E4002B] px-6 py-3.5 text-base font-semibold text-white hover:bg-[#C20026] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E4002B] disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {loading && <Loader2 size={18} className="animate-spin motion-reduce:animate-none" />}
-                    {loading ? "Memproses..." : "Konfirmasi Booking System"}
-                  </button>
-
-                  <a
-                    href={buildBookingWaUrl({
-                      nama: formData.nama_customer,
-                      noHp: formData.no_hp,
-                      tipeMotor: formData.tipe_motor,
-                      plat: formData.plat_kendaraan,
-                      noMesin: formData.no_mesin,
-                      paketServis: selectedService,
-                      tanggal: formData.tanggal_booking ? formatDate(formData.tanggal_booking) : "",
-                      jam: formData.jam_booking,
-                      catatan: formData.detail_lainnya,
-                    })}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 rounded-lg border-2 border-emerald-600 bg-emerald-50 px-5 py-3.5 text-base font-bold text-emerald-700 hover:bg-emerald-100 transition"
-                  >
-                    <MessageSquare size={18} />
-                    Booking via WA Direct
-                  </a>
-                </div>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex w-full items-center justify-center gap-2 rounded-lg bg-[#E4002B] px-6 py-3.5 text-base font-semibold text-white hover:bg-[#C20026] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E4002B] disabled:cursor-not-allowed disabled:opacity-60 shadow-sm"
+                >
+                  {loading && <Loader2 size={18} className="animate-spin motion-reduce:animate-none" />}
+                  {loading ? "Memproses..." : "Konfirmasi Booking"}
+                </button>
               </form>
 
               <aside className="rounded-2xl border border-zinc-200 bg-white p-5 lg:sticky lg:top-[120px]">
