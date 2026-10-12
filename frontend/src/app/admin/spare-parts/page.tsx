@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import {
   Plus,
   Upload,
@@ -86,9 +87,18 @@ export default function AdminSparePartsPage() {
     }
   }, [token, page, debouncedSearch, statusFilter, stockFilter]);
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     fetchParts();
   }, [fetchParts]);
+
+  // Auto-open create modal if navigated from Dashboard with ?action=create
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      handleOpenCreateModal();
+    }
+  }, [searchParams]);
 
   const handleOpenCreateModal = () => {
     setEditingPart(null);
@@ -430,27 +440,48 @@ export default function AdminSparePartsPage() {
                           </span>
                         </td>
                         <td className="py-3 px-4 align-middle text-center">
-                          <div className="flex items-center justify-center gap-2 opacity-100 md:opacity-80 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleUpdateStock(part.id, part.stok - 1)}
-                              disabled={part.stok <= 0}
-                              className="w-6 h-6 flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-500 rounded disabled:opacity-40 transition-colors"
-                            >
-                              -
-                            </button>
-                            <span
-                              className={`w-8 text-sm font-bold ${
-                                part.stok > 0 ? "text-green-600" : "text-red-600"
-                              }`}
-                            >
-                              {part.stok}
-                            </span>
-                            <button
-                              onClick={() => handleUpdateStock(part.id, part.stok + 1)}
-                              className="w-6 h-6 flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-500 rounded transition-colors"
-                            >
-                              +
-                            </button>
+                          <div className="flex flex-col items-center gap-1.5">
+                            <div className="flex items-center justify-center gap-2 opacity-100 md:opacity-80 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => handleUpdateStock(part.id, part.stok - 1)}
+                                disabled={part.stok <= 0}
+                                className="w-6 h-6 flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-500 rounded disabled:opacity-40 transition-colors font-bold"
+                              >
+                                -
+                              </button>
+                              <span
+                                className={`w-8 text-sm font-bold font-mono ${
+                                  part.stok === 0
+                                    ? "text-red-600"
+                                    : part.stok <= 3
+                                    ? "text-amber-600"
+                                    : "text-emerald-700"
+                                }`}
+                              >
+                                {part.stok}
+                              </span>
+                              <button
+                                onClick={() => handleUpdateStock(part.id, part.stok + 1)}
+                                className="w-6 h-6 flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-500 rounded transition-colors font-bold"
+                              >
+                                +
+                              </button>
+                            </div>
+
+                            {/* Stock Status Badge */}
+                            {part.stok === 0 ? (
+                              <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200/60 px-2 py-0.5 rounded-full">
+                                Habis
+                              </span>
+                            ) : part.stok <= 3 ? (
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full">
+                                Menipis
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+                                Aman
+                              </span>
+                            )}
                           </div>
                         </td>
                         <td className="py-3 px-4 align-middle">

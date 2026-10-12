@@ -552,7 +552,7 @@ export default function AdminDashboardPage() {
           {/* 4C. Tambah Sparepart Big Red CTA (Lg: col-span-3) */}
           <div className="lg:col-span-3">
             <Link
-              href="/admin/spare-parts"
+              href="/admin/spare-parts?action=create"
               className="relative overflow-hidden w-full h-full min-h-[200px] bg-gradient-to-br from-[#E4002B] via-[#D50028] to-[#99001B] hover:opacity-95 text-white rounded-3xl p-6 shadow-[0_6px_24px_rgba(228,0,43,0.35)] hover:shadow-[0_10px_30px_rgba(228,0,43,0.45)] transition-all flex flex-col items-center justify-center text-center group active:scale-98"
             >
               <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
