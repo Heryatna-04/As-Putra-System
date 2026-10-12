@@ -14,6 +14,7 @@ import {
   X,
   Loader2,
   Download,
+  AlertTriangle,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SparePart } from "@/types/spare-part";
@@ -28,7 +29,9 @@ export default function AdminSparePartsPage() {
   const [search, setSearch] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [stockFilter, setStockFilter] = useState<boolean>(false);
+  const [stockFilter, setStockFilter] = useState<"all" | "ready" | "restock">("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [categories, setCategories] = useState<{ name: string; count?: number }[]>([]);
   const [page, setPage] = useState<number>(1);
 
   // Modal State
@@ -54,6 +57,23 @@ export default function AdminSparePartsPage() {
     return () => clearTimeout(timer);
   }, [search]);
 
+  // Load categories once
+  useEffect(() => {
+    async function loadCategories() {
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
+        const res = await fetch(`${baseUrl}/spare-parts/categories`, { cache: "no-store" });
+        const data = await res.json();
+        if (data.success && data.data?.categories) {
+          setCategories(data.data.categories);
+        }
+      } catch (err) {
+        console.error("Failed to load categories", err);
+      }
+    }
+    loadCategories();
+  }, []);
+
   const fetchParts = useCallback(async () => {
     if (!token) return;
     setIsLoading(true);
@@ -65,7 +85,8 @@ export default function AdminSparePartsPage() {
       });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter) params.set("status", statusFilter);
-      if (stockFilter) params.set("stock_only", "true");
+      if (categoryFilter) params.set("category", categoryFilter);
+      if (stockFilter === "ready") params.set("stock_only", "true");
 
       const res = await fetch(`${baseUrl}/admin/spare-parts?${params.toString()}`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -74,8 +95,12 @@ export default function AdminSparePartsPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        setParts(data.data);
-        setTotal(data.meta.total);
+        let items: SparePart[] = data.data || [];
+        if (stockFilter === "restock") {
+          items = items.filter((p) => p.stok <= 3);
+        }
+        setParts(items);
+        setTotal(stockFilter === "restock" ? items.length : data.meta.total);
       } else {
         toast.error(data.message || "Gagal memuat data suku cadang");
       }
@@ -85,7 +110,7 @@ export default function AdminSparePartsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, page, debouncedSearch, statusFilter, stockFilter]);
+  }, [token, page, debouncedSearch, statusFilter, categoryFilter, stockFilter]);
 
   const searchParams = useSearchParams();
 
@@ -325,34 +350,80 @@ export default function AdminSparePartsPage() {
                 />
               </div>
 
+              {/* Category Select Dropdown */}
+              <div className="flex items-center gap-1.5 border border-zinc-200 rounded-lg px-2.5 py-1.5 bg-white text-sm text-zinc-700">
+                <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Kategori:</span>
+                <select
+                  value={categoryFilter}
+                  onChange={(e) => {
+                    setCategoryFilter(e.target.value);
+                    setPage(1);
+                  }}
+                  className="bg-transparent text-xs font-semibold text-zinc-800 outline-none cursor-pointer max-w-[150px] truncate"
+                >
+                  <option value="">Semua Kategori</option>
+                  {categories.map((c) => (
+                    <option key={c.name} value={c.name}>
+                      {c.name} {c.count ? `(${c.count})` : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
               {/* Filters */}
-              <div className="flex gap-2 ml-2">
+              <div className="flex flex-wrap gap-1.5 ml-1">
                 <button
-                  onClick={() => { setStatusFilter(""); setStockFilter(false); }}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors border ${
-                    statusFilter === "" && !stockFilter
-                      ? "bg-red-50 border-red-200 text-red-600 font-semibold"
-                      : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
+                  onClick={() => {
+                    setStatusFilter("");
+                    setStockFilter("all");
+                    setCategoryFilter("");
+                    setPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                    statusFilter === "" && stockFilter === "all" && categoryFilter === ""
+                      ? "bg-red-50 border-red-200 text-red-600"
+                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
                   }`}
                 >
                   Semua
                 </button>
                 <button
-                  onClick={() => { setStockFilter(!stockFilter); }}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors border ${
-                    stockFilter 
-                      ? "bg-red-50 border-red-200 text-red-600 font-semibold"
-                      : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
+                  onClick={() => {
+                    setStockFilter(stockFilter === "ready" ? "all" : "ready");
+                    setPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                    stockFilter === "ready"
+                      ? "bg-emerald-50 border-emerald-200 text-emerald-700"
+                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
                   }`}
                 >
                   Ready Stock
                 </button>
                 <button
-                  onClick={() => { setStatusFilter(statusFilter === "DISCONTINUE" ? "" : "DISCONTINUE"); }}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors border ${
+                  onClick={() => {
+                    setStockFilter(stockFilter === "restock" ? "all" : "restock");
+                    setPage(1);
+                  }}
+                  title="Sparepart dengan stok habis atau menipis (≤ 3)"
+                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                    stockFilter === "restock"
+                      ? "bg-amber-500 border-amber-500 text-white shadow-sm"
+                      : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+                  }`}
+                >
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  <span>Perlu Restock</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setStatusFilter(statusFilter === "DISCONTINUE" ? "" : "DISCONTINUE");
+                    setPage(1);
+                  }}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
                     statusFilter === "DISCONTINUE"
-                      ? "bg-red-50 border-red-200 text-red-600 font-semibold"
-                      : "bg-white border-zinc-200 text-zinc-500 hover:bg-zinc-50"
+                      ? "bg-red-50 border-red-200 text-red-600"
+                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
                   }`}
                 >
                   Discontinue

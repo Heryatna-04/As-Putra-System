@@ -12,8 +12,11 @@ import {
   Sparkles,
   Calendar,
   Clock,
-  Bike
+  Bike,
+  MessageSquare,
+  Check
 } from "lucide-react";
+import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
 import {
   PieChart,
@@ -22,8 +25,22 @@ import {
   ResponsiveContainer
 } from "recharts";
 
+interface BookingSummary {
+  id: string;
+  ticket_no: string;
+  nama_customer: string;
+  no_hp?: string;
+  no_telepon?: string;
+  plat_kendaraan: string;
+  tanggal_booking: string;
+  jam_booking: string;
+  jenis_servis: string;
+  status: "PENDING" | "CONFIRMED" | "IN_PROGRESS" | "DONE" | "CANCELLED";
+}
+
 export default function AdminDashboardPage() {
   const { token, user } = useAuth();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [summary, setSummary] = useState({
     totalActive: 0,
     outOfStock: 0,
@@ -36,8 +53,49 @@ export default function AdminDashboardPage() {
     pending: 0,
     cancelled: 0,
   });
-  const [recentBookings, setRecentBookings] = useState<any[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [recentBookings, setRecentBookings] = useState<BookingSummary[]>([]);
+  const [updatingBookingId, setUpdatingBookingId] = useState<string | null>(null);
+
+  const getWhatsAppLink = (item: BookingSummary) => {
+    let cleanPhone = (item.no_hp || item.no_telepon || "").replace(/\D/g, "");
+    if (cleanPhone.startsWith("0")) cleanPhone = "62" + cleanPhone.slice(1);
+    const message = `Halo Kak *${item.nama_customer}*,\n\nReservasi servis motor Anda di *AHASS AS Putra Rahmat Kuningan*:\n• *No Tiket:* ${item.ticket_no}\n• *Jadwal:* ${item.tanggal_booking} (Jam ${item.jam_booking} WIB)\n• *Plat:* ${item.plat_kendaraan}\n• *Paket:* ${item.jenis_servis}\n• *Status:* *DIKONFIRMASI*\n\nSilakan datang tepat waktu ke bengkel kami ya Kak. Terima kasih! 🙏`;
+    return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+  };
+
+  const handleQuickConfirm = async (id: string) => {
+    if (!token) return;
+    setUpdatingBookingId(id);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
+      const res = await fetch(`${baseUrl}/admin/bookings/${id}/status`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ status: "CONFIRMED" }),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        toast.success("Booking berhasil dikonfirmasi!");
+        // Update local state
+        setRecentBookings((prev) =>
+          prev.map((b) => (b.id === id ? { ...b, status: "CONFIRMED" } : b))
+        );
+        setBookingStats((prev) => ({
+          ...prev,
+          pending: Math.max(0, prev.pending - 1),
+        }));
+      } else {
+        toast.error(data.message || "Gagal mengonfirmasi booking");
+      }
+    } catch {
+      toast.error("Gagal terhubung ke server");
+    } finally {
+      setUpdatingBookingId(null);
+    }
+  };
 
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1); // 1-12
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
@@ -459,7 +517,31 @@ export default function AdminDashboardPage() {
                         </div>
                       </div>
 
-                      <div className="shrink-0 text-right">
+                      <div className="shrink-0 flex items-center gap-1.5">
+                        {(b.no_hp || b.no_telepon) && (
+                          <a
+                            href={getWhatsAppLink(b)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title="Chat WhatsApp Pelanggan"
+                            className="p-1.5 rounded-lg bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 border border-emerald-200 transition"
+                          >
+                            <MessageSquare className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+
+                        {b.status === "PENDING" && (
+                          <button
+                            type="button"
+                            onClick={() => handleQuickConfirm(b.id)}
+                            title="Konfirmasi Booking"
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold shadow-sm transition"
+                          >
+                            <Check className="w-3 h-3" />
+                            <span>Konfirmasi</span>
+                          </button>
+                        )}
+
                         {b.status === "DONE" ? (
                           <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
                             Selesai
@@ -472,11 +554,7 @@ export default function AdminDashboardPage() {
                           <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
                             Terjadwal
                           </span>
-                        ) : (
-                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
-                            Pending
-                          </span>
-                        )}
+                        ) : null}
                       </div>
                     </div>
                   ))
