@@ -9,10 +9,12 @@ import {
   Plus,
   FileSpreadsheet,
   CheckCircle2,
-  Clock,
   RefreshCw,
   ExternalLink,
-  ChevronDown
+  ChevronDown,
+  ArrowUpRight,
+  TrendingUp,
+  Sparkles
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -119,11 +121,11 @@ export default function AdminDashboardPage() {
   const pctEmpty = totalSku > 0 ? Math.round((summary.outOfStock / totalSku) * 100) : 0;
   const pctDisc = totalSku > 0 ? Math.round((summary.totalDiscontinue / totalSku) * 100) : 0;
 
-  // Semi-circle gauge data
+  // Semi-circle gauge data with modern sleek colors
   const gaugeData = [
     { name: "Part Tersedia", value: summary.totalActive || 1, color: "#E4002B" },
-    { name: "Part Kosong", value: summary.outOfStock || 0, color: "#F97316" },
-    { name: "Discontinue", value: summary.totalDiscontinue || 0, color: "#9CA3AF" },
+    { name: "Part Kosong", value: summary.outOfStock || 0, color: "#F59E0B" },
+    { name: "Discontinue", value: summary.totalDiscontinue || 0, color: "#94A3B8" },
   ];
 
   // Booking completion percentage
@@ -131,46 +133,48 @@ export default function AdminDashboardPage() {
     ? Math.round((bookingStats.done / bookingStats.total) * 100)
     : 0;
 
-  // Find max count for relative bar width
   const maxCategoryCount = categories.length > 0
     ? Math.max(...categories.map((c) => c.count))
     : 1;
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-[#E5E7EB]/40 p-4 sm:p-6 lg:p-8 font-sans text-zinc-900">
-      <div className="max-w-[1400px] w-full mx-auto space-y-6">
+    <div className="flex flex-col h-full overflow-y-auto bg-[#F1F3F6] p-4 sm:p-6 lg:p-8 font-sans text-zinc-900">
+      <div className="max-w-[1440px] w-full mx-auto space-y-6">
 
-        {/* 1. TOP HEADER BAR: Search input, Notification Pill, Settings */}
-        <div className="flex items-center gap-4">
-          <div className="flex-1 relative">
-            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-zinc-400">
+        {/* 1. TOP HEADER BAR: Modern floating search + quick actions */}
+        <div className="flex items-center gap-3 sm:gap-4">
+          <div className="flex-1 relative group">
+            <div className="absolute inset-y-0 left-0 pl-4.5 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-[#E4002B] transition-colors">
               <Search className="w-5 h-5" />
             </div>
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari data sparepart, booking servis, atau riwayat di dashboard..."
-              className="w-full pl-11 pr-4 py-3 bg-white rounded-2xl border border-zinc-200/80 text-sm font-medium placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4002B]/30 shadow-xs transition"
+              placeholder="Cari suku cadang, pelanggan booking, atau data gudang..."
+              className="w-full pl-12 pr-4 py-3.5 bg-white/90 backdrop-blur-md rounded-2xl border border-zinc-200/80 text-sm font-medium placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4002B]/20 focus:border-[#E4002B] shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all"
             />
           </div>
 
           <Link
             href="/admin/bookings?status=PENDING"
-            className="relative p-3 bg-red-50 text-[#E4002B] hover:bg-red-100 rounded-2xl border border-red-100 transition shadow-xs"
-            title="Notifikasi Booking"
+            className="relative p-3.5 bg-white/90 hover:bg-white text-zinc-700 hover:text-[#E4002B] rounded-2xl border border-zinc-200/80 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md"
+            title="Notifikasi Antrean Booking"
             aria-label="Notifikasi"
           >
             <Bell className="w-5 h-5" />
             {bookingStats.pending > 0 && (
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-[#E4002B] rounded-full ring-2 ring-white" />
+              <span className="absolute top-2.5 right-2.5 flex h-2.5 w-2.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E4002B] opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#E4002B] ring-2 ring-white"></span>
+              </span>
             )}
           </Link>
 
           <Link
             href="/admin/spare-parts"
-            className="p-3 bg-red-50 text-[#E4002B] hover:bg-red-100 rounded-2xl border border-red-100 transition shadow-xs"
-            title="Pengaturan & Master Data"
+            className="p-3.5 bg-white/90 hover:bg-white text-zinc-700 hover:text-[#E4002B] rounded-2xl border border-zinc-200/80 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md"
+            title="Katalog & Pengaturan"
             aria-label="Pengaturan"
           >
             <Settings className="w-5 h-5" />
@@ -178,36 +182,51 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* 2. WELCOME BANNER CARD */}
-        <div className="bg-white rounded-2xl p-6 sm:p-7 border border-zinc-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-zinc-900 font-display">
+        <div className="relative overflow-hidden bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-7 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row sm:items-center justify-between gap-5">
+          {/* Subtle decorative glow corner */}
+          <div className="absolute -top-12 -right-12 w-48 h-48 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
+
+          <div className="relative">
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#E4002B] bg-red-50 px-2.5 py-0.5 rounded-full border border-red-100">
+                <Sparkles className="w-3 h-3" /> AHASS 10870 Live Workspace
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 font-display">
               Hallo, Selamat datang !
             </h1>
             <p className="text-sm font-medium text-zinc-500 mt-1">
-              Selamat pagi {user?.nama || "Admin"}, semangat bekerja melayani pelanggan AHASS 10870.
+              Selamat bertugas {user?.nama || "Admin"}, monitoring operasional servis & 44k katalog aktif.
             </p>
           </div>
 
           <Link
             href="/admin/import"
-            className="inline-flex items-center justify-center gap-2 bg-[#E4002B] hover:bg-red-700 text-white font-bold text-sm px-6 py-3 rounded-2xl shadow-sm hover:shadow transition"
+            className="relative shrink-0 inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#E4002B] to-[#C90025] hover:from-[#C90025] hover:to-[#B00020] text-white font-bold text-sm px-6 py-3.5 rounded-2xl shadow-[0_4px_16px_rgba(228,0,43,0.3)] hover:shadow-[0_6px_20px_rgba(228,0,43,0.4)] transition-all transform active:scale-95"
           >
-            <FileSpreadsheet className="w-4 h-4" />
+            <FileSpreadsheet className="w-4.5 h-4.5" />
             <span>Import Data</span>
           </Link>
         </div>
 
-        {/* 3. ROW 1: STATUS INVENTARIS + BOOKING HERO BANNER + 3 MINI KPI CARDS */}
+        {/* 3. ROW 1: STATUS INVENTARIS + BOOKING HERO + 3 MINI KPI CARDS */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* COL LEFT (Lg 4): Status Inventaris (Semi-Circle Gauge) */}
-          <div className="lg:col-span-4 bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-xs flex flex-col justify-between">
+          {/* COL LEFT (Lg 4): Status Inventaris (Gauge) */}
+          <div className="lg:col-span-4 bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-7 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
             <div>
-              <h2 className="text-base font-bold text-zinc-900">Status inventaris</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">Distribusi ketersediaan stok sparepart</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold text-zinc-900">Status inventaris</h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">Distribusi ketersediaan stok sparepart</p>
+                </div>
+                <span className="p-2 bg-zinc-50 rounded-xl border border-zinc-100 text-zinc-400">
+                  <TrendingUp className="w-4 h-4 text-[#E4002B]" />
+                </span>
+              </div>
 
               {/* Gauge Semi-Circle */}
-              <div className="relative w-full h-[160px] flex items-center justify-center mt-2">
+              <div className="relative w-full h-[160px] flex items-center justify-center mt-3">
                 <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
                     <Pie
@@ -216,8 +235,8 @@ export default function AdminDashboardPage() {
                       cy="90%"
                       startAngle={180}
                       endAngle={0}
-                      innerRadius={65}
-                      outerRadius={95}
+                      innerRadius={68}
+                      outerRadius={96}
                       paddingAngle={3}
                       dataKey="value"
                       stroke="none"
@@ -229,107 +248,120 @@ export default function AdminDashboardPage() {
                   </PieChart>
                 </ResponsiveContainer>
 
-                {/* Center Value */}
                 <div className="absolute bottom-2 inset-x-0 flex flex-col items-center justify-center pointer-events-none">
                   <span className="text-3xl font-extrabold text-zinc-900 tracking-tight leading-none font-display">
                     {totalSku.toLocaleString("id-ID")}
                   </span>
                   <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
-                    TOTAL
+                    TOTAL SKU
                   </span>
                 </div>
               </div>
             </div>
 
             {/* List Breakdown */}
-            <div className="mt-4 pt-4 border-t border-zinc-100 space-y-2 text-xs font-semibold">
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-600">Part tersedia</span>
-                <span className="text-zinc-900">
+            <div className="mt-4 pt-4 border-t border-zinc-100 space-y-2.5 text-xs font-semibold">
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50/70 border border-zinc-100">
+                <span className="flex items-center gap-2 text-zinc-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#E4002B]" />
+                  Part tersedia
+                </span>
+                <span className="text-zinc-900 font-bold">
                   {summary.totalActive.toLocaleString("id-ID")}{" "}
-                  <span className="text-zinc-400 font-normal">({pctReady}%)</span>
+                  <span className="text-zinc-400 font-normal text-[11px]">({pctReady}%)</span>
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-600">Part kosong</span>
-                <span className="text-zinc-900">
+
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50/70 border border-zinc-100">
+                <span className="flex items-center gap-2 text-zinc-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
+                  Part kosong
+                </span>
+                <span className="text-zinc-900 font-bold">
                   {summary.outOfStock.toLocaleString("id-ID")}{" "}
-                  <span className="text-zinc-400 font-normal">({pctEmpty}%)</span>
+                  <span className="text-zinc-400 font-normal text-[11px]">({pctEmpty}%)</span>
                 </span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-600">Discontinue</span>
-                <span className="text-zinc-900">
+
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50/70 border border-zinc-100">
+                <span className="flex items-center gap-2 text-zinc-700">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#94A3B8]" />
+                  Discontinue
+                </span>
+                <span className="text-zinc-900 font-bold">
                   {summary.totalDiscontinue.toLocaleString("id-ID")}{" "}
-                  <span className="text-zinc-400 font-normal">({pctDisc}%)</span>
+                  <span className="text-zinc-400 font-normal text-[11px]">({pctDisc}%)</span>
                 </span>
               </div>
             </div>
           </div>
 
-          {/* COL RIGHT (Lg 8): Booking Hero Card + 3 Mini KPI Cards */}
+          {/* COL RIGHT (Lg 8): Booking Big Red Hero + 3 Mini KPI Cards */}
           <div className="lg:col-span-8 flex flex-col gap-6">
 
-            {/* Booking Big Red Card */}
-            <div className="bg-[#E4002B] text-white rounded-2xl p-6 sm:p-7 shadow-md relative overflow-hidden flex flex-col justify-between">
+            {/* Booking Big Red Card with subtle depth */}
+            <div className="bg-gradient-to-br from-[#E4002B] via-[#D50028] to-[#B00020] text-white rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_rgba(228,0,43,0.3)] relative overflow-hidden flex flex-col justify-between">
+              {/* Background ambient lighting */}
+              <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
+
               <div>
                 <div className="flex items-center justify-between mb-4">
                   <div>
-                    <h2 className="text-xl font-bold tracking-tight">Booking</h2>
-                    <p className="text-xs text-white/80 font-medium">Total booking servis</p>
+                    <h2 className="text-xl font-extrabold tracking-tight">Booking Servis</h2>
+                    <p className="text-xs text-white/80 font-medium">Monitoring reservasi pelanggan AHASS</p>
                   </div>
-                  <div className="flex items-center gap-2 bg-white/20 backdrop-blur-xs text-white text-xs font-semibold px-3 py-1.5 rounded-xl border border-white/20">
+                  <div className="flex items-center gap-2 bg-white/15 backdrop-blur-md text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-white/20 shadow-xs">
                     <span>Okt</span>
                     <span>2026</span>
                     <ChevronDown className="w-3.5 h-3.5 opacity-80" />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 my-4">
-                  <div>
-                    <div className="text-xs font-medium text-white/80">Selesai</div>
-                    <div className="text-3xl font-extrabold tracking-tight mt-1">
+                <div className="grid grid-cols-2 gap-6 my-4">
+                  <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
+                    <div className="text-xs font-semibold text-white/80">Selesai Dikerjakan</div>
+                    <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 font-display">
                       {bookingStats.done}
                     </div>
-                    <div className="text-[11px] text-white/70 mt-0.5">booking selesai</div>
+                    <div className="text-[11px] text-white/70 mt-0.5">unit tervalidasi selesai</div>
                   </div>
-                  <div className="text-right">
-                    <div className="text-xs font-medium text-white/80">Pending / Berjalan</div>
-                    <div className="text-3xl font-extrabold tracking-tight mt-1">
+                  <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 text-right">
+                    <div className="text-xs font-semibold text-white/80">Antrean Aktif</div>
+                    <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 font-display">
                       {bookingStats.pending}
                     </div>
-                    <div className="text-[11px] text-white/70 mt-0.5">booking tertunda</div>
+                    <div className="text-[11px] text-white/70 mt-0.5">menunggu / dikerjakan</div>
                   </div>
                 </div>
               </div>
 
               {/* Progress Bar */}
               <div className="mt-2">
-                <div className="h-3 w-full bg-white/25 rounded-full overflow-hidden p-0.5">
+                <div className="h-3 w-full bg-black/20 rounded-full overflow-hidden p-0.5 backdrop-blur-xs">
                   <div
-                    className="h-full bg-white rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(Math.max(bookingCompletionPct, 5), 100)}%` }}
+                    className="h-full bg-white rounded-full transition-all duration-700 shadow-sm"
+                    style={{ width: `${Math.min(Math.max(bookingCompletionPct, 6), 100)}%` }}
                   />
                 </div>
-                <div className="flex justify-between items-center text-[10px] font-bold text-white/80 mt-2">
+                <div className="flex justify-between items-center text-[10px] font-bold text-white/80 mt-2 px-1">
                   <span>0%</span>
-                  <span>50%</span>
+                  <span>Rasio Penyelesaian ({bookingCompletionPct}%)</span>
                   <span>100%</span>
                 </div>
               </div>
             </div>
 
-            {/* 3 Mini White KPI Cards */}
+            {/* 3 Mini KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
 
               {/* Card 1: Total Part Tersedia */}
-              <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs flex flex-col justify-between text-center">
+              <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
                 <div>
                   <h3 className="text-xs font-semibold text-zinc-600">Total Part Tersedia</h3>
-                  <div className="text-2xl font-extrabold text-zinc-900 tracking-tight mt-2 font-display">
+                  <div className="text-2xl font-extrabold text-zinc-900 tracking-tight mt-2 font-display group-hover:text-[#E4002B] transition-colors">
                     {summary.totalActive.toLocaleString("id-ID")}
                   </div>
-                  <div className="text-[10px] text-zinc-400 mt-0.5 font-medium">SKU tersedia</div>
+                  <div className="text-[10px] text-zinc-400 mt-0.5 font-medium">SKU siap order</div>
                 </div>
                 <div className="mt-4">
                   <span className="inline-block px-3 py-1 bg-red-50 text-[#E4002B] text-[11px] font-bold rounded-lg border border-red-100 mb-3">
@@ -337,7 +369,7 @@ export default function AdminDashboardPage() {
                   </span>
                   <Link
                     href="/admin/spare-parts?stock_only=true"
-                    className="block w-full py-2 bg-[#E4002B] hover:bg-red-700 text-white text-xs font-bold rounded-xl transition text-center shadow-xs"
+                    className="block w-full py-2.5 bg-gradient-to-r from-[#E4002B] to-[#C90025] hover:opacity-95 text-white text-xs font-bold rounded-xl transition text-center shadow-xs"
                   >
                     Lihat Semua
                   </Link>
@@ -345,13 +377,13 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Card 2: Part Kosong */}
-              <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs flex flex-col justify-between text-center">
+              <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
                 <div>
                   <h3 className="text-xs font-semibold text-zinc-600">Part Kosong</h3>
-                  <div className="text-2xl font-extrabold text-[#F97316] tracking-tight mt-2 font-display">
+                  <div className="text-2xl font-extrabold text-[#F97316] tracking-tight mt-2 font-display group-hover:text-amber-600 transition-colors">
                     {summary.outOfStock.toLocaleString("id-ID")}
                   </div>
-                  <div className="text-[10px] text-zinc-400 mt-0.5 font-medium">Segera restock</div>
+                  <div className="text-[10px] text-zinc-400 mt-0.5 font-medium">Perlu restock AHM</div>
                 </div>
                 <div className="mt-4">
                   <span className="inline-block px-3 py-1 bg-orange-50 text-orange-600 text-[11px] font-bold rounded-lg border border-orange-100 mb-3">
@@ -359,7 +391,7 @@ export default function AdminDashboardPage() {
                   </span>
                   <Link
                     href="/admin/spare-parts"
-                    className="block w-full py-2 bg-[#F97316] hover:bg-orange-600 text-white text-xs font-bold rounded-xl transition text-center shadow-xs"
+                    className="block w-full py-2.5 bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:opacity-95 text-white text-xs font-bold rounded-xl transition text-center shadow-xs"
                   >
                     Lihat Semua
                   </Link>
@@ -367,13 +399,13 @@ export default function AdminDashboardPage() {
               </div>
 
               {/* Card 3: Part Discontinue */}
-              <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs flex flex-col justify-between text-center">
+              <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
                 <div>
                   <h3 className="text-xs font-semibold text-zinc-600">Part Discontinue</h3>
                   <div className="text-2xl font-extrabold text-emerald-600 tracking-tight mt-2 font-display">
                     {summary.totalDiscontinue.toLocaleString("id-ID")}
                   </div>
-                  <div className="text-[10px] text-zinc-400 mt-0.5 font-medium">Tidak dijual</div>
+                  <div className="text-[10px] text-zinc-400 mt-0.5 font-medium">Arsip non-aktif</div>
                 </div>
                 <div className="mt-4">
                   <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-lg border border-emerald-100 mb-3">
@@ -381,7 +413,7 @@ export default function AdminDashboardPage() {
                   </span>
                   <Link
                     href="/admin/spare-parts?status=DISCONTINUE"
-                    className="block w-full py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition text-center shadow-xs"
+                    className="block w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:opacity-95 text-white text-xs font-bold rounded-xl transition text-center shadow-xs"
                   >
                     Lihat Semua
                   </Link>
@@ -394,17 +426,22 @@ export default function AdminDashboardPage() {
 
         </div>
 
-        {/* 4. ROW 2: EXCEL PROGRESS (LEFT) + TOP KATEGORI PART (CENTER) + TAMBAH SPAREPART HERO (RIGHT) */}
+        {/* 4. ROW 2: EXCEL PROGRESS + TOP KATEGORI + TAMBAH SPAREPART HERO */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-          {/* COL LEFT (Lg 4): In Progress / Complete Import Excel Files */}
+          {/* COL LEFT (Lg 4): File Import Cards */}
           <div className="lg:col-span-4 flex flex-col gap-4">
 
             {/* In Progress Card */}
-            <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs">
-              <div className="text-xs font-bold text-zinc-800 mb-3">In Progress</div>
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-red-50 text-[#E4002B] border border-red-100 flex items-center justify-center shrink-0">
+            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-zinc-700">In Progress</span>
+                <span className="text-[10px] font-bold text-[#E4002B] bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
+                  Sedang Proses
+                </span>
+              </div>
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-red-50 text-[#E4002B] border border-red-100 flex items-center justify-center shrink-0">
                   <FileSpreadsheet className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -412,23 +449,28 @@ export default function AdminDashboardPage() {
                     {importHistory.length > 0 ? importHistory[0].file_name : "Bulanan_oktober.xlsx"}
                   </div>
                   <div className="text-[11px] text-zinc-400 mt-0.5">
-                    {importHistory.length > 0 ? `${importHistory[0].total_rows || 0} baris` : "12kb"}
+                    {importHistory.length > 0 ? `${importHistory[0].total_rows || 0} baris data` : "12kb"}
                   </div>
                 </div>
               </div>
-              <div className="mt-3">
-                <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#E4002B] rounded-full w-2/3" />
+              <div className="mt-3.5">
+                <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-[#E4002B] to-[#F97316] rounded-full w-2/3" />
                 </div>
-                <span className="text-[10px] font-semibold text-zinc-400 mt-1 block">In Progress</span>
+                <span className="text-[10px] font-semibold text-zinc-400 mt-1.5 block">65% Diproses</span>
               </div>
             </div>
 
             {/* Complete Card */}
-            <div className="bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs">
-              <div className="text-xs font-bold text-zinc-800 mb-3">Complete</div>
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
+            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-md transition-all">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-bold text-zinc-700">Complete</span>
+                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                  Selesai
+                </span>
+              </div>
+              <div className="flex items-start gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
                   <FileSpreadsheet className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -436,26 +478,33 @@ export default function AdminDashboardPage() {
                     {importHistory.length > 1 ? importHistory[1].file_name : "Bulanan_september.xlsx"}
                   </div>
                   <div className="text-[11px] text-zinc-400 mt-0.5">
-                    {importHistory.length > 1 ? `${importHistory[1].total_rows || 0} baris` : "25kb"}
+                    {importHistory.length > 1 ? `${importHistory[1].total_rows || 0} baris sukses` : "25kb"}
                   </div>
                 </div>
               </div>
-              <div className="mt-3">
-                <div className="h-1.5 w-full bg-emerald-500 rounded-full" />
-                <span className="text-[10px] font-semibold text-emerald-600 mt-1 block flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3" />
-                  Complete
+              <div className="mt-3.5">
+                <div className="h-2 w-full bg-emerald-500 rounded-full" />
+                <span className="text-[10px] font-semibold text-emerald-700 mt-1.5 block flex items-center gap-1">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  100% Selesai &amp; Tersimpan
                 </span>
               </div>
             </div>
 
           </div>
 
-          {/* COL CENTER (Lg 5): Top Kategori Part (Horizontal Red Bars) */}
-          <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-zinc-200/80 shadow-xs flex flex-col justify-between">
+          {/* COL CENTER (Lg 5): Top Kategori Part */}
+          <div className="lg:col-span-5 bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-7 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all">
             <div>
-              <h2 className="text-base font-bold text-zinc-900">Top Kategori Part</h2>
-              <p className="text-xs text-zinc-500 mt-0.5">Berdasarkan jumlah SKU aktif</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-base font-bold text-zinc-900">Top Kategori Part</h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">Berdasarkan jumlah SKU aktif terdata</p>
+                </div>
+                <span className="text-[10px] font-bold text-zinc-500 bg-zinc-100 px-2 py-1 rounded-lg">
+                  AHM Parts
+                </span>
+              </div>
 
               <div className="mt-6 space-y-4">
                 {categories.length > 0 ? (
@@ -466,13 +515,13 @@ export default function AdminDashboardPage() {
                         <span className="w-20 text-xs font-bold text-zinc-700 truncate" title={cat.name}>
                           {cat.name}
                         </span>
-                        <div className="flex-1 bg-zinc-100 rounded-full h-4 overflow-hidden relative">
+                        <div className="flex-1 bg-zinc-100 rounded-full h-4.5 overflow-hidden relative p-0.5">
                           <div
-                            className="bg-[#E4002B] h-full rounded-full transition-all duration-500"
+                            className="bg-gradient-to-r from-[#E4002B] to-[#C90025] h-full rounded-full transition-all duration-700"
                             style={{ width: `${widthPct}%` }}
                           />
                         </div>
-                        <span className="w-12 text-right text-[11px] font-mono font-bold text-zinc-500">
+                        <span className="w-12 text-right text-[11px] font-mono font-bold text-zinc-600">
                           {cat.count}
                         </span>
                       </div>
@@ -487,23 +536,26 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="pt-4 mt-4 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500 font-medium">
-              <span>Honda Genuine Parts</span>
-              <Link href="/admin/spare-parts" className="text-[#E4002B] font-bold hover:underline flex items-center gap-1">
-                Katalog Lengkap <ExternalLink className="w-3 h-3" />
+              <span>Suku Cadang Asli Honda</span>
+              <Link href="/admin/spare-parts" className="text-[#E4002B] font-bold hover:underline flex items-center gap-1 group">
+                Katalog Lengkap <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </Link>
             </div>
           </div>
 
-          {/* COL RIGHT (Lg 3): Tambah Sparepart Big Red CTA Button */}
+          {/* COL RIGHT (Lg 3): Tambah Sparepart Modern Hero Card */}
           <div className="lg:col-span-3">
             <Link
-              href="/admin/spare-parts?action=create"
-              className="w-full h-full min-h-[220px] bg-[#E4002B] hover:bg-red-700 text-white rounded-2xl p-6 shadow-md hover:shadow-lg transition-all flex flex-col items-center justify-center text-center group"
+              href="/admin/spare-parts"
+              className="relative overflow-hidden w-full h-full min-h-[220px] bg-gradient-to-br from-[#E4002B] via-[#D50028] to-[#99001B] hover:opacity-95 text-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(228,0,43,0.35)] hover:shadow-[0_12px_36px_rgba(228,0,43,0.45)] transition-all flex flex-col items-center justify-center text-center group active:scale-98"
             >
-              <div className="w-16 h-16 rounded-full bg-white/20 group-hover:scale-110 group-hover:bg-white/30 transition-all flex items-center justify-center mb-4">
+              {/* Gloss highlight effect */}
+              <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
+
+              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md group-hover:scale-110 group-hover:bg-white/30 transition-all flex items-center justify-center mb-4 shadow-inner border border-white/25">
                 <Plus className="w-10 h-10 text-white stroke-[2.5]" />
               </div>
-              <span className="text-xl font-extrabold tracking-tight">
+              <span className="text-xl font-black tracking-tight drop-shadow-xs">
                 Tambah Sparepart
               </span>
               <span className="text-xs text-white/80 font-medium mt-1">
