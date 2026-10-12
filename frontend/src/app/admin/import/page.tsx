@@ -10,6 +10,7 @@ import {
   Clock,
   Loader2,
   ArrowRight,
+  Download,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { formatIDR } from "@/lib/utils";
@@ -83,6 +84,24 @@ export default function AdminImportPage() {
       fetchHistory();
     }
   }, [token, fetchHistory]);
+
+  const handleDownloadTemplate = () => {
+    const csvContent =
+      "part_no,part_name,category_detail,het\n" +
+      "08232-2MB-K1LN1,AHM OIL MPX 2 0.8L,Oli Mesin,58000\n" +
+      "06455-K59-A71,PAD SET FR (KAMPAS REM DEPAN),Brake System,55000\n" +
+      "23100-K44-V01,BELT DRIVE (V-BELT),Drive Belt,98000\n";
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", "template_import_sparepart_ahass.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
 
   const handlePreview = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -159,9 +178,17 @@ export default function AdminImportPage() {
           <div className="flex items-center text-sm text-gray-500 mt-1">
             <span>Admin</span>
             <span className="mx-2">•</span>
-            <span className="text-[#E8272A] font-medium">Upload & Synchronize</span>
+            <span className="text-[#E4002B] font-medium">Upload & Synchronize</span>
           </div>
         </div>
+        <button
+          type="button"
+          onClick={handleDownloadTemplate}
+          className="bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-300 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer shadow-xs"
+        >
+          <Download className="w-4 h-4 text-[#E4002B]" />
+          <span>Download Template Excel</span>
+        </button>
       </header>
 
       {/* Content Area */}
@@ -191,16 +218,27 @@ export default function AdminImportPage() {
         {/* Step 1: Upload Card */}
         {!previewData && (
           <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm mb-8">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-xl bg-[#E8272A]/10 text-[#E8272A] flex items-center justify-center font-bold">
-                <FileSpreadsheet className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-[#E4002B]/10 text-[#E4002B] flex items-center justify-center font-bold">
+                  <FileSpreadsheet className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-gray-900">Upload File Spreadsheet (.xlsx / .xls / .csv)</h3>
+                  <p className="text-sm text-gray-500">
+                    Format kolom standar: <code>part_no</code>, <code>part_name</code>, <code>category_detail</code>, <code>het</code>.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900">Upload File Spreadsheet (.xlsx / .xls)</h3>
-                <p className="text-sm text-gray-500">
-                  Pastikan header kolom menyertakan: <code>part_no</code>, <code>part_name</code>, <code>category_detail</code>, <code>het</code>.
-                </p>
-              </div>
+
+              <button
+                type="button"
+                onClick={handleDownloadTemplate}
+                className="self-start sm:self-auto text-xs font-bold text-[#E4002B] hover:text-red-700 flex items-center gap-1.5 underline underline-offset-4 cursor-pointer"
+              >
+                <Download className="w-3.5 h-3.5" />
+                <span>Unduh contoh format file</span>
+              </button>
             </div>
 
             <form onSubmit={handlePreview} className="space-y-4">
