@@ -338,176 +338,189 @@ export default function AdminSparePartsPage() {
           <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
             
             {/* Toolbar */}
-            <div className="p-4 border-b border-zinc-200 flex flex-wrap items-center gap-4">
-              <h3 className="text-base font-semibold text-zinc-900 mr-2">Suku Cadang</h3>
-              <span className="text-xs font-semibold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full">
-                {total} total
-              </span>
+            <div className="p-4 border-b border-zinc-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white">
+              {/* Left Section: Title & Controls */}
+              <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
+                <div className="flex items-center gap-2 shrink-0">
+                  <h3 className="text-sm sm:text-base font-semibold text-zinc-900">Suku Cadang</h3>
+                  <span className="text-xs font-semibold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full tabular-nums">
+                    {total.toLocaleString("id-ID")}
+                  </span>
+                </div>
 
-              {/* Search */}
-              <div className="flex items-center gap-2 border border-zinc-200 rounded-lg px-3 py-2 text-zinc-500 bg-white min-w-[240px]">
-                <Search size={16} className="shrink-0" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Cari part number atau nama..."
-                  className="w-full text-sm bg-transparent outline-none text-zinc-900 placeholder:text-zinc-400"
-                />
-                {search && (
-                  <button
-                    onClick={() => {
-                      setSearch("");
-                      setDebouncedSearch("");
+                {/* Search */}
+                <div className="flex items-center gap-2 border border-zinc-200 rounded-lg px-3 py-1.5 text-zinc-500 bg-white w-full sm:w-[220px] md:w-[260px] shrink-0">
+                  <Search size={15} className="shrink-0 text-zinc-400" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder="Cari kode part / nama..."
+                    className="w-full text-xs sm:text-sm bg-transparent outline-none text-zinc-900 placeholder:text-zinc-400"
+                  />
+                  {search && (
+                    <button
+                      onClick={() => {
+                        setSearch("");
+                        setDebouncedSearch("");
+                        setPage(1);
+                      }}
+                      title="Hapus pencarian"
+                      className="text-zinc-400 hover:text-zinc-600 p-0.5 shrink-0"
+                    >
+                      <X size={14} />
+                    </button>
+                  )}
+                </div>
+
+                {/* Category Select Dropdown */}
+                <div className="flex items-center gap-1.5 border border-zinc-200 rounded-lg px-2.5 py-1.5 bg-white text-zinc-700 shrink-0">
+                  <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Kategori:</span>
+                  <select
+                    value={categoryFilter}
+                    onChange={(e) => {
+                      setCategoryFilter(e.target.value);
                       setPage(1);
                     }}
-                    title="Hapus pencarian"
-                    className="text-zinc-400 hover:text-zinc-600 p-0.5"
+                    className="bg-transparent text-xs font-semibold text-zinc-800 outline-none cursor-pointer w-[130px] sm:w-[150px] truncate"
                   >
-                    <X size={14} />
-                  </button>
-                )}
-              </div>
+                    <option value="">Semua Kategori</option>
+                    {categories.map((c) => (
+                      <option key={c.name} value={c.name}>
+                        {c.name} {c.count ? `(${c.count})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                  {categoryFilter && (
+                    <button
+                      onClick={() => {
+                        setCategoryFilter("");
+                        setPage(1);
+                      }}
+                      title="Reset kategori"
+                      className="text-zinc-400 hover:text-zinc-600 shrink-0"
+                    >
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
 
-              {/* Category Select Dropdown */}
-              <div className="flex items-center gap-1.5 border border-zinc-200 rounded-lg px-2.5 py-1.5 bg-white text-sm text-zinc-700">
-                <span className="text-[11px] font-semibold text-zinc-400 uppercase tracking-wider">Kategori:</span>
-                <select
-                  value={categoryFilter}
-                  onChange={(e) => {
-                    setCategoryFilter(e.target.value);
-                    setPage(1);
-                  }}
-                  className="bg-transparent text-xs font-semibold text-zinc-800 outline-none cursor-pointer max-w-[170px] truncate"
-                >
-                  <option value="">Semua Kategori</option>
-                  {categories.map((c) => (
-                    <option key={c.name} value={c.name}>
-                      {c.name} {c.count ? `(${c.count})` : ""}
-                    </option>
-                  ))}
-                </select>
-                {categoryFilter && (
+                {/* Filter Tabs / Buttons */}
+                <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => {
-                      setCategoryFilter("");
-                      setPage(1);
-                    }}
-                    title="Reset kategori"
-                    className="text-zinc-400 hover:text-zinc-600"
-                  >
-                    <X size={12} />
-                  </button>
-                )}
-              </div>
-
-              {/* Filter Tabs / Buttons */}
-              <div className="flex flex-wrap items-center gap-1.5 ml-1">
-                <button
-                  onClick={() => {
-                    setStatusFilter("");
-                    setStockFilter("all");
-                    setPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-                    statusFilter === "" && stockFilter === "all"
-                      ? "bg-red-50 border-red-200 text-red-600 font-bold"
-                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
-                  }`}
-                >
-                  Semua
-                </button>
-                <button
-                  onClick={() => {
-                    setStockFilter(stockFilter === "ready" ? "all" : "ready");
-                    setStatusFilter("");
-                    setPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-                    stockFilter === "ready"
-                      ? "bg-emerald-600 border-emerald-600 text-white font-bold shadow-sm"
-                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"
-                  }`}
-                >
-                  Ready Stock
-                </button>
-                <button
-                  onClick={() => {
-                    setStockFilter(stockFilter === "restock" ? "all" : "restock");
-                    setStatusFilter("");
-                    setPage(1);
-                  }}
-                  title="Sparepart dengan stok habis atau menipis (≤ 3)"
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-                    stockFilter === "restock"
-                      ? "bg-amber-500 border-amber-500 text-white font-bold shadow-sm"
-                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200"
-                  }`}
-                >
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  <span>Perlu Restock</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setStatusFilter(statusFilter === "DISCONTINUE" ? "" : "DISCONTINUE");
-                    setStockFilter("all");
-                    setPage(1);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-                    statusFilter === "DISCONTINUE"
-                      ? "bg-zinc-800 border-zinc-800 text-white font-bold shadow-sm"
-                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-100"
-                  }`}
-                >
-                  Discontinue
-                </button>
-
-                {/* Reset All Filters button if any active */}
-                {(search || categoryFilter || statusFilter || stockFilter !== "all") && (
-                  <button
-                    onClick={() => {
-                      setSearch("");
-                      setDebouncedSearch("");
-                      setCategoryFilter("");
                       setStatusFilter("");
                       setStockFilter("all");
                       setPage(1);
                     }}
-                    title="Reset semua filter dan pencarian"
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors ml-1"
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                      statusFilter === "" && stockFilter === "all"
+                        ? "bg-red-50 border-red-200 text-red-600 font-bold"
+                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                    }`}
                   >
-                    <RotateCcw size={12} />
-                    <span>Reset Filter</span>
+                    Semua
                   </button>
-                )}
+                  <button
+                    onClick={() => {
+                      setStockFilter(stockFilter === "ready" ? "all" : "ready");
+                      setStatusFilter("");
+                      setPage(1);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                      stockFilter === "ready"
+                        ? "bg-emerald-600 border-emerald-600 text-white font-bold shadow-sm"
+                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"
+                    }`}
+                  >
+                    Ready Stock
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStockFilter(stockFilter === "restock" ? "all" : "restock");
+                      setStatusFilter("");
+                      setPage(1);
+                    }}
+                    title="Sparepart dengan stok habis atau menipis (≤ 3)"
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                      stockFilter === "restock"
+                        ? "bg-amber-500 border-amber-500 text-white font-bold shadow-sm"
+                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200"
+                    }`}
+                  >
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    <span>Perlu Restock</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStatusFilter(statusFilter === "DISCONTINUE" ? "" : "DISCONTINUE");
+                      setStockFilter("all");
+                      setPage(1);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                      statusFilter === "DISCONTINUE"
+                        ? "bg-zinc-800 border-zinc-800 text-white font-bold shadow-sm"
+                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-100"
+                    }`}
+                  >
+                    Discontinue
+                  </button>
+
+                  {/* Reset All Filters button if any active */}
+                  {(search || categoryFilter || statusFilter || stockFilter !== "all") && (
+                    <button
+                      onClick={() => {
+                        setSearch("");
+                        setDebouncedSearch("");
+                        setCategoryFilter("");
+                        setStatusFilter("");
+                        setStockFilter("all");
+                        setPage(1);
+                      }}
+                      title="Reset semua filter dan pencarian"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
+                    >
+                      <RotateCcw size={12} />
+                      <span>Reset</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
-              {/* Actions */}
-              <div className="ml-auto flex gap-2">
+              {/* Right Section: Actions */}
+              <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
                 <button
                   onClick={handleExport}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold bg-white border border-green-600/30 text-green-600 hover:bg-green-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-green-600/30 text-green-600 hover:bg-green-50 transition-colors"
                 >
-                  <Download size={16} /> Export Excel
+                  <Download size={15} /> Export Excel
                 </button>
                 <button
                   onClick={handleOpenCreateModal}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
                 >
-                  <Plus size={16} /> Tambah Manual
+                  <Plus size={15} /> Tambah Manual
                 </button>
                 <Link
                   href="/admin/import"
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-md text-sm font-semibold bg-zinc-900 text-white hover:bg-zinc-800 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-zinc-900 text-white hover:bg-zinc-800 transition-colors"
                 >
-                  <Upload size={16} /> Import Excel
+                  <Upload size={15} /> Import Excel
                 </Link>
               </div>
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-left">
+            <div className="overflow-x-auto min-h-[500px]">
+              <table className="w-full border-collapse text-left table-fixed min-w-[850px]">
+                <colgroup>
+                  <col className="w-[38%] min-w-[280px]" />
+                  <col className="w-[18%] min-w-[130px]" />
+                  <col className="w-[14%] min-w-[110px]" />
+                  <col className="w-[14%] min-w-[120px]" />
+                  <col className="w-[8%] min-w-[80px]" />
+                  <col className="w-[8%] min-w-[80px]" />
+                </colgroup>
                 <thead className="bg-[#FAFAFA] border-b border-zinc-200">
                   <tr>
                     <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Produk</th>
@@ -521,19 +534,22 @@ export default function AdminSparePartsPage() {
                 <tbody>
                   {isLoading ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-sm text-zinc-400">
-                        Memuat data suku cadang...
+                      <td colSpan={6} className="py-24 text-center">
+                        <div className="flex flex-col items-center justify-center gap-2">
+                          <Loader2 className="w-6 h-6 animate-spin text-[#E4002B]" />
+                          <span className="text-xs font-medium text-zinc-500">Memuat data suku cadang...</span>
+                        </div>
                       </td>
                     </tr>
                   ) : parts.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-12 text-center text-sm text-zinc-400">
+                      <td colSpan={6} className="py-20 text-center text-sm text-zinc-400">
                         Tidak ada data suku cadang yang ditemukan.
                       </td>
                     </tr>
                   ) : (
                     parts.map((part) => (
-                      <tr key={part.id} className="group hover:bg-[#FAFAFA] transition-colors border-b border-zinc-100 last:border-b-0">
+                      <tr key={part.id} className="group hover:bg-[#FAFAFA] transition-colors border-b border-zinc-100 last:border-b-0 h-[68px]">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded bg-white border border-zinc-200 flex items-center justify-center shrink-0 overflow-hidden relative">
@@ -543,13 +559,13 @@ export default function AdminSparePartsPage() {
                                 <ImageIcon className="w-5 h-5 text-zinc-300" />
                               )}
                             </div>
-                            <div>
+                            <div className="min-w-0">
                               <span className="text-[11px] font-mono font-bold text-[#E4002B] bg-red-50 border border-red-200/60 px-2 py-0.5 rounded inline-block mb-1">
                                 {part.part_no}
                               </span>
-                              <span className="text-sm font-bold text-zinc-900 block leading-tight">{part.part_name}</span>
+                              <span className="text-sm font-bold text-zinc-900 block leading-tight truncate">{part.part_name}</span>
                               {part.nama_umum && (
-                                <span className="text-xs text-zinc-500 font-medium block mt-0.5">{part.nama_umum}</span>
+                                <span className="text-xs text-zinc-500 font-medium block mt-0.5 truncate">{part.nama_umum}</span>
                               )}
                             </div>
                           </div>
