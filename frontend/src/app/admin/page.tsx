@@ -39,6 +39,51 @@ export default function AdminDashboardPage() {
   const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1); // 1-12
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
+  const [isFilteringBooking, setIsFilteringBooking] = useState(false);
+
+  const fetchBookingsForMonth = async (month: number, year: number) => {
+    if (!token) return;
+    setIsFilteringBooking(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
+      // Construct date range
+      const monthStr = month.toString().padStart(2, "0");
+      const lastDay = new Date(year, month, 0).getDate();
+      const tanggalFrom = `${year}-${monthStr}-01`;
+      const tanggalTo = `${year}-${monthStr}-${lastDay}`;
+
+      const res = await fetch(
+        `${baseUrl}/admin/bookings?tanggal_from=${tanggalFrom}&tanggal_to=${tanggalTo}&limit=100`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          cache: "no-store",
+        }
+      );
+      const data = await res.json();
+      if (res.ok && data.success) {
+        const bList: any[] = data.data.bookings || [];
+        const done = bList.filter((b) => b.status === "DONE").length;
+        const pending = bList.filter(
+          (b) => b.status === "PENDING" || b.status === "CONFIRMED" || b.status === "IN_PROGRESS"
+        ).length;
+        const cancelled = bList.filter((b) => b.status === "CANCELLED").length;
+        setBookingStats({
+          total: data.data.total || bList.length,
+          done,
+          pending,
+          cancelled,
+        });
+        setRecentBookings(bList.slice(0, 3));
+      }
+    } catch (err) {
+      console.error("Error fetching filtered bookings:", err);
+    } finally {
+      setIsFilteringBooking(false);
+    }
+  };
+
   useEffect(() => {
     const fetchDashboardData = async () => {
       if (!token) return;
@@ -64,25 +109,8 @@ export default function AdminDashboardPage() {
           setCategories(dataCategories.data.categories.slice(0, 5));
         }
 
-        // 3. Bookings Stats & Recent Bookings
-        const resBookings = await fetch(`${baseUrl}/admin/bookings?limit=10`, {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        });
-        const dataBookings = await resBookings.json();
-        if (resBookings.ok && dataBookings.success) {
-          const bList: any[] = dataBookings.data.bookings || [];
-          const done = bList.filter((b) => b.status === "DONE").length;
-          const pending = bList.filter((b) => b.status === "PENDING" || b.status === "CONFIRMED" || b.status === "IN_PROGRESS").length;
-          const cancelled = bList.filter((b) => b.status === "CANCELLED").length;
-          setBookingStats({
-            total: dataBookings.data.total || bList.length,
-            done,
-            pending,
-            cancelled,
-          });
-          setRecentBookings(bList.slice(0, 3));
-        }
+        // 3. Bookings Initial Load (Current selected month)
+        await fetchBookingsForMonth(selectedMonth, selectedYear);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
       } finally {
@@ -233,12 +261,49 @@ export default function AdminDashboardPage() {
               <div className="flex items-center justify-between mb-3">
                 <div>
                   <h2 className="text-base font-extrabold tracking-tight">Booking</h2>
-                  <p className="text-[11px] text-white/80 font-medium">Total booking</p>
+                  <p className="text-[11px] text-white/80 font-medium">Total booking servis</p>
                 </div>
-                <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-xl border border-white/20">
-                  <span>Okt</span>
-                  <span>2026</span>
-                  <ChevronDown className="w-3 h-3 opacity-80" />
+
+                {/* Interactive Month & Year Selector */}
+                <div className="flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/20 text-white text-[11px] font-bold">
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => {
+                      const m = parseInt(e.target.value, 10);
+                      setSelectedMonth(m);
+                      fetchBookingsForMonth(m, selectedYear);
+                    }}
+                    className="bg-transparent text-white font-bold cursor-pointer outline-none [color-scheme:dark]"
+                    aria-label="Filter Bulan"
+                  >
+                    <option value={1} className="bg-zinc-900 text-white">Jan</option>
+                    <option value={2} className="bg-zinc-900 text-white">Feb</option>
+                    <option value={3} className="bg-zinc-900 text-white">Mar</option>
+                    <option value={4} className="bg-zinc-900 text-white">Apr</option>
+                    <option value={5} className="bg-zinc-900 text-white">Mei</option>
+                    <option value={6} className="bg-zinc-900 text-white">Jun</option>
+                    <option value={7} className="bg-zinc-900 text-white">Jul</option>
+                    <option value={8} className="bg-zinc-900 text-white">Agu</option>
+                    <option value={9} className="bg-zinc-900 text-white">Sep</option>
+                    <option value={10} className="bg-zinc-900 text-white">Okt</option>
+                    <option value={11} className="bg-zinc-900 text-white">Nov</option>
+                    <option value={12} className="bg-zinc-900 text-white">Des</option>
+                  </select>
+
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => {
+                      const y = parseInt(e.target.value, 10);
+                      setSelectedYear(y);
+                      fetchBookingsForMonth(selectedMonth, y);
+                    }}
+                    className="bg-transparent text-white font-bold cursor-pointer outline-none [color-scheme:dark]"
+                    aria-label="Filter Tahun"
+                  >
+                    <option value={2025} className="bg-zinc-900 text-white">2025</option>
+                    <option value={2026} className="bg-zinc-900 text-white">2026</option>
+                    <option value={2027} className="bg-zinc-900 text-white">2027</option>
+                  </select>
                 </div>
               </div>
 
