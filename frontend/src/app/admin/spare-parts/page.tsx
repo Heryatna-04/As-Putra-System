@@ -281,25 +281,16 @@ export default function AdminSparePartsPage() {
               className="object-cover opacity-20 pointer-events-none"
               priority
             />
-            <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div>
-                <span className="inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-red-600 text-white mb-2">
-                  Master Data AHM
-                </span>
-                <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-display">
-                  Manajemen Suku Cadang
-                </h1>
-                <p className="text-xs sm:text-sm text-zinc-300 font-medium mt-1">
-                  Kelola master 44.000+ data suku cadang, penyesuaian harga HET resmi, dan stok gudang.
-                </p>
-              </div>
-              <button
-                onClick={handleOpenCreateModal}
-                className="self-start sm:self-auto bg-[#E4002B] hover:bg-red-700 text-white px-5 py-3 rounded-2xl text-xs sm:text-sm font-bold flex items-center gap-2 shadow-md transition shrink-0"
-              >
-                <Plus size={16} />
-                <span>Tambah Spare Part</span>
-              </button>
+            <div className="relative z-10">
+              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-red-600 text-white mb-2">
+                Master Data AHM
+              </span>
+              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-display">
+                Manajemen Suku Cadang
+              </h1>
+              <p className="text-xs sm:text-sm text-zinc-300 font-medium mt-1">
+                Kelola master 44.000+ data suku cadang, penyesuaian harga HET resmi, dan stok gudang.
+              </p>
             </div>
           </div>
           {/* Table Container */}
