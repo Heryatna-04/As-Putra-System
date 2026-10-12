@@ -34,6 +34,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (savedToken && savedUser) {
       try {
+        // JWT exp is in seconds; Supabase access tokens expire ~1h
+        const payload = JSON.parse(atob(savedToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))) as { exp?: number };
+        if (payload.exp && payload.exp * 1000 < Date.now()) {
+          Cookies.remove("as_putra_token");
+          Cookies.remove("as_putra_user");
+          setIsLoading(false);
+          router.push("/admin/login");
+          return;
+        }
         setToken(savedToken);
         setUser(JSON.parse(savedUser));
       } catch (err) {
@@ -43,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     }
     setIsLoading(false);
-  }, []);
+  }, [router]);
 
   const login = (newToken: string, newUser: UserProfile) => {
     setToken(newToken);
