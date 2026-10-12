@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, Layers, LogOut, CalendarDays, History, Users, X } from "lucide-react";
+import {
+  LayoutDashboard,
+  CalendarDays,
+  Wrench,
+  FileSpreadsheet,
+  X,
+  LogOut,
+  Users
+} from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 
 interface AdminSidebarProps {
@@ -16,28 +23,27 @@ interface AdminSidebarProps {
 export default function AdminSidebar({ userRole, userName, isOpen = false, onClose }: AdminSidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
-
   const isCrmAccessible = userRole === "ADMIN" || userRole === "KEPALA_BENGKEL";
 
   const navSections = [
     {
-      title: "Monitoring",
+      title: "OVERVIEW",
       items: [
         { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
         ...(isCrmAccessible ? [{ label: "Portal CRM", href: "/crm", icon: Users }] : []),
       ],
     },
     {
-      title: "Bengkel & Servis",
+      title: "LAYANAN & BOOKING",
       items: [
-        { label: "Booking Servis", href: "/admin/bookings", icon: CalendarDays },
+        { label: "Booking", href: "/admin/bookings", icon: CalendarDays },
       ],
     },
     {
-      title: "Inventaris AHM",
+      title: "INVENTARIS",
       items: [
-        { label: "Katalog Spare Part", href: "/admin/spare-parts", icon: Layers },
-        { label: "Riwayat Stok", href: "/admin/stock-logs", icon: History },
+        { label: "Sparepart", href: "/admin/spare-parts", icon: Wrench },
+        { label: "Import excel", href: "/admin/import", icon: FileSpreadsheet },
       ],
     },
   ];
@@ -54,44 +60,50 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
       )}
 
       <aside
-        className={`fixed md:static inset-y-0 left-0 z-50 w-[260px] bg-white text-zinc-700 flex flex-col shrink-0 h-screen overflow-hidden border-r border-zinc-200 font-sans shadow-xl md:shadow-xs transition-transform duration-200 ease-in-out ${
+        className={`fixed md:static inset-y-0 left-0 z-50 w-[260px] bg-[#E4002B] text-white flex flex-col shrink-0 h-screen overflow-hidden font-sans shadow-2xl md:shadow-none transition-transform duration-200 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         }`}
       >
-        {/* Brand Header */}
-        <div className="p-5 border-b border-zinc-200/80 bg-zinc-50 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="relative h-8 w-28 shrink-0">
-              <Image
-                src="/logo.png"
-                alt="AS Putra Motor Logo"
-                fill
-                priority
-                className="object-contain object-left"
-              />
-            </div>
+        {/* Brand Header: Logo Wing Honda + AS PUTRA MOTOR */}
+        <div className="pt-8 pb-6 px-6 flex flex-col items-center text-center relative border-b border-white/10">
+          {onClose && (
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-1 text-white/80 hover:text-white md:hidden rounded-lg hover:bg-white/10 transition"
+              aria-label="Tutup Menu"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          )}
+
+          {/* Clean White Honda Wing SVG */}
+          <div className="mb-3 flex items-center justify-center">
+            <svg
+              className="w-16 h-12 text-white"
+              viewBox="0 0 100 65"
+              fill="currentColor"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path d="M12 48 C 30 45, 60 38, 92 10 C 72 26, 44 38, 20 42 Z" />
+              <path d="M16 52 C 34 49, 62 43, 94 20 C 74 34, 46 44, 24 47 Z" />
+              <path d="M22 56 C 40 53, 65 47, 95 30 C 75 42, 49 50, 28 52 Z" />
+              <path d="M28 60 C 44 57, 68 52, 96 40 C 77 49, 52 55, 34 57 Z" />
+            </svg>
           </div>
-          <div className="flex items-center gap-2">
-            <span className="text-[10px] font-black uppercase tracking-wider text-white bg-gradient-to-r from-red-600 to-[#E4002B] px-2.5 py-0.5 rounded-full shadow-[0_2px_8px_rgba(228,0,43,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-red-400/40">
-              AHASS
-            </span>
-            {onClose && (
-              <button
-                onClick={onClose}
-                className="p-1 -mr-1 text-zinc-400 hover:text-zinc-700 md:hidden rounded-lg hover:bg-zinc-200 transition"
-                aria-label="Tutup Menu Navigasi"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            )}
-          </div>
+
+          <h2 className="text-xl font-extrabold tracking-tight text-white uppercase leading-tight font-display">
+            AS PUTRA MOTOR
+          </h2>
+          <span className="text-[11px] font-semibold text-white/80 tracking-wider uppercase mt-1">
+            AHASS 10870 KUNINGAN
+          </span>
         </div>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 px-3.5 py-6 overflow-y-auto space-y-6">
+        {/* Navigation Section */}
+        <nav className="flex-1 px-4 py-6 overflow-y-auto space-y-6">
           {navSections.map((sec, idx) => (
             <div key={idx}>
-              <div className="px-3 text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-2">
+              <div className="px-3 text-[11px] font-bold tracking-wider text-white/60 uppercase mb-2">
                 {sec.title}
               </div>
               <div className="space-y-1.5">
@@ -103,13 +115,13 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
                       key={item.href}
                       href={item.href}
                       onClick={onClose}
-                      className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                      className={`flex items-center gap-3.5 px-4 py-3 rounded-2xl text-sm font-bold transition-all ${
                         isActive
-                          ? "bg-gradient-to-r from-[#E4002B] via-red-600 to-red-700 text-white shadow-[0_6px_16px_rgba(228,0,43,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-red-500/40"
-                          : "text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900"
+                          ? "bg-white text-[#E4002B] shadow-lg shadow-black/10 scale-[1.02]"
+                          : "text-white/90 hover:bg-white/10 hover:text-white"
                       }`}
                     >
-                      <Icon className={`w-4.5 h-4.5 shrink-0 ${isActive ? "text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.3)]" : "text-zinc-500"}`} />
+                      <Icon className={`w-5 h-5 shrink-0 ${isActive ? "text-[#E4002B]" : "text-white"}`} />
                       <span>{item.label}</span>
                     </Link>
                   );
@@ -119,48 +131,28 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
           ))}
         </nav>
 
-      {/* Bottom User Bar */}
-      <div className="p-4 border-t border-zinc-200/80 bg-zinc-50/80 backdrop-blur-xs">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E4002B] via-red-600 to-red-900 text-white font-black text-sm flex items-center justify-center shadow-[0_6px_16px_rgba(228,0,43,0.35),inset_0_1px_1px_rgba(255,255,255,0.4),inset_0_-2px_4px_rgba(0,0,0,0.3)] border border-red-400/30 shrink-0">
-              {userName ? userName.charAt(0).toUpperCase() : "A"}
-            </div>
-            <div className="min-w-0 truncate">
-              <div className="text-sm font-semibold text-zinc-900 truncate">
-                {userName || "Staf Bengkel"}
+        {/* Footer Sidebar: User / Admin Workspace */}
+        <div className="p-4 border-t border-white/10 bg-black/10">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <div className="text-xs font-bold text-white truncate">
+                {userName || "Admin Bengkel"}
               </div>
-              <div className="mt-0.5">
-                {userRole === "KEPALA_BENGKEL" ? (
-                  <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-[0_2px_8px_rgba(245,158,11,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-amber-300">
-                    Kepala Bengkel
-                  </span>
-                ) : userRole === "CRM" ? (
-                  <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-[0_2px_8px_rgba(59,130,246,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-blue-300">
-                    CRM Staf
-                  </span>
-                ) : (
-                  <span className="inline-block px-2.5 py-0.5 text-[10px] font-bold rounded-full bg-zinc-200 text-zinc-800 shadow-2xs border border-zinc-300/60">
-                    {userRole || "Administrator"}
-                  </span>
-                )}
+              <div className="text-[10px] text-white/70 font-medium truncate">
+                Admin Workspace
               </div>
             </div>
+            <button
+              onClick={() => logout()}
+              className="p-2 text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-colors shrink-0"
+              title="Keluar"
+              aria-label="Logout"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
           </div>
-
-          <button
-            onClick={() => logout()}
-            className="p-2 text-zinc-400 hover:text-[#B00020] hover:bg-red-50 rounded-lg transition-colors shrink-0"
-            title="Keluar"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
         </div>
-        <div className="mt-3 pt-2.5 text-[10px] text-center text-zinc-400 border-t border-zinc-200/70 font-medium">
-          System Developed by <span className="font-bold text-zinc-600">Kelompok 37 KP FKOM UNIKU</span>
-        </div>
-      </div>
-    </aside>
+      </aside>
     </>
   );
 }
