@@ -21,6 +21,7 @@ import { fetchSparePartDetail, fetchCatalog } from "@/lib/api";
 import { formatIDR, buildWaUrl } from "@/lib/utils";
 import DetailImageGallery from "@/components/katalog/DetailImageGallery";
 import ProductCard from "@/components/katalog/ProductCard";
+import CopyPartNoButton from "@/components/katalog/CopyPartNoButton";
 import type { SparePart } from "@/types/spare-part";
 
 interface DetailPageProps {
@@ -156,9 +157,7 @@ export default async function SparePartDetailPage({ params }: DetailPageProps) {
               <span className="px-2.5 py-1 rounded-md bg-red-50 text-[#B00020] border border-red-200/60 text-xs font-bold uppercase tracking-wider">
                 {part.category_detail || "AHM Genuine Parts"}
               </span>
-              <span className="text-xs font-mono font-bold text-zinc-600 bg-zinc-100 px-2.5 py-1 rounded-md">
-                NO. PART: {part.part_no}
-              </span>
+              <CopyPartNoButton partNo={part.part_no} />
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight mb-2">
