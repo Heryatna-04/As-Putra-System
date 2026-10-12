@@ -15,6 +15,7 @@ import {
   Loader2,
   Download,
   AlertTriangle,
+  RotateCcw,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SparePart } from "@/types/spare-part";
@@ -79,9 +80,11 @@ export default function AdminSparePartsPage() {
     setIsLoading(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
+      const isRestockFilter = stockFilter === "restock";
+      const limit = isRestockFilter ? "100" : "15";
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: "15",
+        limit,
       });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter) params.set("status", statusFilter);
@@ -96,11 +99,14 @@ export default function AdminSparePartsPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         let items: SparePart[] = data.data || [];
-        if (stockFilter === "restock") {
+        if (isRestockFilter) {
           items = items.filter((p) => p.stok <= 3);
+          setParts(items.slice(0, 15));
+          setTotal(items.length);
+        } else {
+          setParts(items);
+          setTotal(data.meta.total);
         }
-        setParts(items);
-        setTotal(stockFilter === "restock" ? items.length : data.meta.total);
       } else {
         toast.error(data.message || "Gagal memuat data suku cadang");
       }
@@ -348,6 +354,19 @@ export default function AdminSparePartsPage() {
                   placeholder="Cari part number atau nama..."
                   className="w-full text-sm bg-transparent outline-none text-zinc-900 placeholder:text-zinc-400"
                 />
+                {search && (
+                  <button
+                    onClick={() => {
+                      setSearch("");
+                      setDebouncedSearch("");
+                      setPage(1);
+                    }}
+                    title="Hapus pencarian"
+                    className="text-zinc-400 hover:text-zinc-600 p-0.5"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
               </div>
 
               {/* Category Select Dropdown */}
@@ -359,7 +378,7 @@ export default function AdminSparePartsPage() {
                     setCategoryFilter(e.target.value);
                     setPage(1);
                   }}
-                  className="bg-transparent text-xs font-semibold text-zinc-800 outline-none cursor-pointer max-w-[150px] truncate"
+                  className="bg-transparent text-xs font-semibold text-zinc-800 outline-none cursor-pointer max-w-[170px] truncate"
                 >
                   <option value="">Semua Kategori</option>
                   {categories.map((c) => (
@@ -368,20 +387,31 @@ export default function AdminSparePartsPage() {
                     </option>
                   ))}
                 </select>
+                {categoryFilter && (
+                  <button
+                    onClick={() => {
+                      setCategoryFilter("");
+                      setPage(1);
+                    }}
+                    title="Reset kategori"
+                    className="text-zinc-400 hover:text-zinc-600"
+                  >
+                    <X size={12} />
+                  </button>
+                )}
               </div>
 
-              {/* Filters */}
-              <div className="flex flex-wrap gap-1.5 ml-1">
+              {/* Filter Tabs / Buttons */}
+              <div className="flex flex-wrap items-center gap-1.5 ml-1">
                 <button
                   onClick={() => {
                     setStatusFilter("");
                     setStockFilter("all");
-                    setCategoryFilter("");
                     setPage(1);
                   }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-                    statusFilter === "" && stockFilter === "all" && categoryFilter === ""
-                      ? "bg-red-50 border-red-200 text-red-600"
+                    statusFilter === "" && stockFilter === "all"
+                      ? "bg-red-50 border-red-200 text-red-600 font-bold"
                       : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
                   }`}
                 >
@@ -390,12 +420,13 @@ export default function AdminSparePartsPage() {
                 <button
                   onClick={() => {
                     setStockFilter(stockFilter === "ready" ? "all" : "ready");
+                    setStatusFilter("");
                     setPage(1);
                   }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
                     stockFilter === "ready"
-                      ? "bg-emerald-50 border-emerald-200 text-emerald-700"
-                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                      ? "bg-emerald-600 border-emerald-600 text-white font-bold shadow-sm"
+                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"
                   }`}
                 >
                   Ready Stock
@@ -403,13 +434,14 @@ export default function AdminSparePartsPage() {
                 <button
                   onClick={() => {
                     setStockFilter(stockFilter === "restock" ? "all" : "restock");
+                    setStatusFilter("");
                     setPage(1);
                   }}
                   title="Sparepart dengan stok habis atau menipis (≤ 3)"
-                  className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
                     stockFilter === "restock"
-                      ? "bg-amber-500 border-amber-500 text-white shadow-sm"
-                      : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+                      ? "bg-amber-500 border-amber-500 text-white font-bold shadow-sm"
+                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200"
                   }`}
                 >
                   <AlertTriangle className="w-3.5 h-3.5" />
@@ -418,16 +450,36 @@ export default function AdminSparePartsPage() {
                 <button
                   onClick={() => {
                     setStatusFilter(statusFilter === "DISCONTINUE" ? "" : "DISCONTINUE");
+                    setStockFilter("all");
                     setPage(1);
                   }}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
                     statusFilter === "DISCONTINUE"
-                      ? "bg-red-50 border-red-200 text-red-600"
-                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                      ? "bg-zinc-800 border-zinc-800 text-white font-bold shadow-sm"
+                      : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-100"
                   }`}
                 >
                   Discontinue
                 </button>
+
+                {/* Reset All Filters button if any active */}
+                {(search || categoryFilter || statusFilter || stockFilter !== "all") && (
+                  <button
+                    onClick={() => {
+                      setSearch("");
+                      setDebouncedSearch("");
+                      setCategoryFilter("");
+                      setStatusFilter("");
+                      setStockFilter("all");
+                      setPage(1);
+                    }}
+                    title="Reset semua filter dan pencarian"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors ml-1"
+                  >
+                    <RotateCcw size={12} />
+                    <span>Reset Filter</span>
+                  </button>
+                )}
               </div>
 
               {/* Actions */}
