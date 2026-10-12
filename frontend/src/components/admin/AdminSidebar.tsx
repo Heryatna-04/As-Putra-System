@@ -10,9 +10,10 @@ import {
   X,
   LogOut,
   Users,
-  ShieldCheck
+  ShieldCheck,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import Image from "next/image";
 
 interface AdminSidebarProps {
   userRole?: string;
@@ -21,7 +22,12 @@ interface AdminSidebarProps {
   onClose?: () => void;
 }
 
-export default function AdminSidebar({ userRole, userName, isOpen = false, onClose }: AdminSidebarProps) {
+export default function AdminSidebar({
+  userRole,
+  userName,
+  isOpen = false,
+  onClose,
+}: AdminSidebarProps) {
   const pathname = usePathname();
   const { logout } = useAuth();
   const isCrmAccessible = userRole === "ADMIN" || userRole === "KEPALA_BENGKEL";
@@ -31,7 +37,9 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
       title: "OVERVIEW",
       items: [
         { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
-        ...(isCrmAccessible ? [{ label: "Portal CRM", href: "/crm", icon: Users }] : []),
+        ...(isCrmAccessible
+          ? [{ label: "Portal CRM", href: "/crm", icon: Users }]
+          : []),
       ],
     },
     {
@@ -78,18 +86,16 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
           )}
 
           {/* Clean White Honda Wing SVG with subtle glow */}
-          <div className="mb-3.5 flex items-center justify-center p-3 rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 shadow-inner">
-            <svg
-              className="w-14 h-10 text-white drop-shadow-[0_2px_8px_rgba(0,0,0,0.2)]"
-              viewBox="0 0 100 65"
-              fill="currentColor"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path d="M12 48 C 30 45, 60 38, 92 10 C 72 26, 44 38, 20 42 Z" />
-              <path d="M16 52 C 34 49, 62 43, 94 20 C 74 34, 46 44, 24 47 Z" />
-              <path d="M22 56 C 40 53, 65 47, 95 30 C 75 42, 49 50, 28 52 Z" />
-              <path d="M28 60 C 44 57, 68 52, 96 40 C 77 49, 52 55, 34 57 Z" />
-            </svg>
+
+          <div className="relative mb-3.5 flex h-25 w-25 items-center justify-center overflow-hidden ">
+            <Image
+              src="/honda-logo.png"
+              alt="Logo Honda AS Putra"
+              width={64}
+              height={64}
+              className="h-full w-full object-contain opacity-90"
+              priority
+            />
           </div>
 
           <h2 className="text-xl font-black tracking-tight text-white uppercase leading-tight font-display drop-shadow-[0_1px_2px_rgba(0,0,0,0.25)]">
@@ -127,7 +133,9 @@ export default function AdminSidebar({ userRole, userName, isOpen = false, onClo
                           : "text-white/90 hover:bg-white/10 hover:text-white"
                       }`}
                     >
-                      <Icon className={`w-5 h-5 shrink-0 transition-transform duration-200 ${isActive ? "text-[#E4002B] scale-110" : "text-white/80"}`} />
+                      <Icon
+                        className={`w-5 h-5 shrink-0 transition-transform duration-200 ${isActive ? "text-[#E4002B] scale-110" : "text-white/80"}`}
+                      />
                       <span>{item.label}</span>
                     </Link>
                   );
