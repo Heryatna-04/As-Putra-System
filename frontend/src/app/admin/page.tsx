@@ -3,9 +3,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  Search,
-  Bell,
-  Settings,
   Plus,
   FileSpreadsheet,
   CheckCircle2,
@@ -38,7 +35,6 @@ export default function AdminDashboardPage() {
   });
   const [importHistory, setImportHistory] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -139,47 +135,7 @@ export default function AdminDashboardPage() {
     <div className="flex flex-col h-full overflow-y-auto bg-[#F1F3F6] p-4 sm:p-6 lg:p-7 font-sans text-zinc-900">
       <div className="max-w-[1440px] w-full mx-auto space-y-5">
 
-        {/* 1. TOP HEADER BAR: Search, Notification, Settings */}
-        <div className="flex items-center gap-3 sm:gap-4">
-          <div className="flex-1 relative group">
-            <div className="absolute inset-y-0 left-0 pl-4.5 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-[#E4002B] transition-colors">
-              <Search className="w-5 h-5" />
-            </div>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari suku cadang, pelanggan booking, atau data gudang..."
-              className="w-full pl-12 pr-4 py-3 bg-white/95 backdrop-blur-md rounded-2xl border border-zinc-200/80 text-sm font-medium placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4002B]/20 focus:border-[#E4002B] shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all"
-            />
-          </div>
-
-          <Link
-            href="/admin/bookings?status=PENDING"
-            className="relative p-3 bg-white/95 hover:bg-white text-zinc-700 hover:text-[#E4002B] rounded-2xl border border-zinc-200/80 transition-all shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md"
-            title="Notifikasi Antrean Booking"
-            aria-label="Notifikasi"
-          >
-            <Bell className="w-5 h-5" />
-            {bookingStats.pending > 0 && (
-              <span className="absolute top-2.5 right-2.5 flex h-2.5 w-2.5">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#E4002B] opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#E4002B] ring-2 ring-white"></span>
-              </span>
-            )}
-          </Link>
-
-          <Link
-            href="/admin/spare-parts"
-            className="p-3 bg-white/95 hover:bg-white text-zinc-700 hover:text-[#E4002B] rounded-2xl border border-zinc-200/80 transition-all shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md"
-            title="Katalog & Pengaturan"
-            aria-label="Pengaturan"
-          >
-            <Settings className="w-5 h-5" />
-          </Link>
-        </div>
-
-        {/* 2. WELCOME BANNER CARD */}
+        {/* 1. WELCOME BANNER CARD */}
         <div className="relative overflow-hidden bg-white/95 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
 
