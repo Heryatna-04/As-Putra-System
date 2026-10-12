@@ -9,7 +9,10 @@ import {
   RefreshCw,
   ArrowUpRight,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  Calendar,
+  Clock,
+  Bike
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import {
@@ -33,7 +36,7 @@ export default function AdminDashboardPage() {
     pending: 0,
     cancelled: 0,
   });
-  const [importHistory, setImportHistory] = useState<any[]>([]);
+  const [recentBookings, setRecentBookings] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -61,8 +64,8 @@ export default function AdminDashboardPage() {
           setCategories(dataCategories.data.categories.slice(0, 5));
         }
 
-        // 3. Bookings Stats
-        const resBookings = await fetch(`${baseUrl}/admin/bookings?limit=100`, {
+        // 3. Bookings Stats & Recent Bookings
+        const resBookings = await fetch(`${baseUrl}/admin/bookings?limit=10`, {
           headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
         });
@@ -78,16 +81,7 @@ export default function AdminDashboardPage() {
             pending,
             cancelled,
           });
-        }
-
-        // 4. Import History
-        const resImports = await fetch(`${baseUrl}/admin/imports`, {
-          headers: { Authorization: `Bearer ${token}` },
-          cache: "no-store",
-        });
-        const dataImports = await resImports.json();
-        if (resImports.ok && dataImports.success && Array.isArray(dataImports.data)) {
-          setImportHistory(dataImports.data.slice(0, 2));
+          setRecentBookings(bList.slice(0, 3));
         }
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -358,62 +352,90 @@ export default function AdminDashboardPage() {
         {/* 4. ROW 2: FILE IMPORT PROGRESS (KIRI) | TOP KATEGORI PART (TENGAH) | TAMBAH SPAREPART (KANAN) */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
 
-          {/* 4A. File Import Cards (Lg: col-span-3) */}
-          <div className="lg:col-span-3 flex flex-col gap-3.5">
-
-            {/* In Progress Card */}
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4.5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-md transition-all">
-              <div className="text-xs font-bold text-zinc-700 mb-2.5">In Progress</div>
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-red-50 text-[#E4002B] border border-red-100 flex items-center justify-center shrink-0">
-                  <FileSpreadsheet className="w-5 h-5" />
+          {/* 4A. Antrean Booking Terkini (Lg: col-span-4) */}
+          <div className="lg:col-span-4 bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-3.5">
+                <div>
+                  <h2 className="text-sm font-bold text-zinc-900">Antrean Servis Terkini</h2>
+                  <p className="text-[11px] text-zinc-500 mt-0.5">Reservasi masuk terbaru</p>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold text-zinc-900 truncate">
-                    {importHistory.length > 0 ? importHistory[0].file_name : "Bulanan_oktober.xlsx"}
-                  </div>
-                  <div className="text-[11px] text-zinc-400 mt-0.5">
-                    {importHistory.length > 0 ? `${importHistory[0].total_rows || 0} baris` : "12kb"}
-                  </div>
-                </div>
+                <Link
+                  href="/admin/bookings"
+                  className="text-[11px] font-bold text-[#E4002B] hover:underline"
+                >
+                  Semua ({bookingStats.total})
+                </Link>
               </div>
-              <div className="mt-3">
-                <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#E4002B] rounded-full w-2/3" />
-                </div>
-                <span className="text-[10px] font-semibold text-zinc-400 mt-1 block">In Progress</span>
+
+              <div className="space-y-2.5">
+                {recentBookings.length > 0 ? (
+                  recentBookings.map((b, idx) => (
+                    <div
+                      key={b.id || idx}
+                      className="p-3 rounded-2xl bg-zinc-50/80 border border-zinc-100 flex items-center justify-between gap-3 hover:bg-zinc-100/80 transition"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs font-bold text-zinc-900 truncate">
+                            {b.nama_customer}
+                          </span>
+                          <span className="text-[10px] font-mono font-bold text-zinc-600 bg-white px-1.5 py-0.5 rounded border border-zinc-200">
+                            {b.plat_kendaraan}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2 text-[10px] text-zinc-400 mt-1 font-medium">
+                          <span className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-zinc-400" />
+                            {b.jam_booking || "--:--"} WIB
+                          </span>
+                          <span>•</span>
+                          <span className="truncate text-zinc-600">{b.jenis_servis}</span>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 text-right">
+                        {b.status === "DONE" ? (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
+                            Selesai
+                          </span>
+                        ) : b.status === "IN_PROGRESS" ? (
+                          <span className="text-[10px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md border border-blue-100">
+                            Dikerjakan
+                          </span>
+                        ) : b.status === "CONFIRMED" ? (
+                          <span className="text-[10px] font-bold text-teal-700 bg-teal-50 px-2 py-0.5 rounded-md border border-teal-100">
+                            Terjadwal
+                          </span>
+                        ) : (
+                          <span className="text-[10px] font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md border border-amber-100">
+                            Pending
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="py-8 text-center text-xs text-zinc-400">
+                    Belum ada antrean masuk hari ini
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Complete Card */}
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4.5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-md transition-all">
-              <div className="text-xs font-bold text-zinc-700 mb-2.5">Complete</div>
-              <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
-                  <FileSpreadsheet className="w-5 h-5" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="text-xs font-bold text-zinc-900 truncate">
-                    {importHistory.length > 1 ? importHistory[1].file_name : "Bulanan_september.xlsx"}
-                  </div>
-                  <div className="text-[11px] text-zinc-400 mt-0.5">
-                    {importHistory.length > 1 ? `${importHistory[1].total_rows || 0} baris` : "25kb"}
-                  </div>
-                </div>
-              </div>
-              <div className="mt-3">
-                <div className="h-1.5 w-full bg-emerald-500 rounded-full" />
-                <span className="text-[10px] font-semibold text-emerald-700 mt-1 block flex items-center gap-1">
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                  Complete
-                </span>
-              </div>
+            <div className="pt-3 mt-3 border-t border-zinc-100">
+              <Link
+                href="/admin/bookings"
+                className="w-full py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition"
+              >
+                <span>Buka Jadwal &amp; Slip Mekanik</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
-
           </div>
 
-          {/* 4B. Top Kategori Part (Lg: col-span-6) */}
-          <div className="lg:col-span-6 bg-white/95 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md transition-all">
+          {/* 4B. Top Kategori Part (Lg: col-span-5) */}
+          <div className="lg:col-span-5 bg-white/95 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md transition-all">
             <div>
               <div className="flex items-center justify-between">
                 <div>
