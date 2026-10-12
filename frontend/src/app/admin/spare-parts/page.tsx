@@ -289,7 +289,7 @@ export default function AdminSparePartsPage() {
                 Manajemen Suku Cadang
               </h1>
               <p className="text-xs sm:text-sm text-zinc-300 font-medium mt-1">
-                Kelola master 44.000+ data suku cadang, penyesuaian harga HET resmi, dan stok gudang.
+                Kelola master {total > 0 ? `${total.toLocaleString("id-ID")}+` : "44.000+"} data suku cadang, penyesuaian harga HET resmi, dan stok gudang.
               </p>
             </div>
           </div>
