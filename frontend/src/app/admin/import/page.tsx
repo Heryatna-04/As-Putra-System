@@ -64,7 +64,7 @@ export default function AdminImportPage() {
 
   const fetchHistory = useCallback(async () => {
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const res = await fetch(`${baseUrl}/admin/imports`, {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -113,7 +113,7 @@ export default function AdminImportPage() {
     setConfirmResult(null);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const formData = new FormData();
       formData.append("file", selectedFile);
 

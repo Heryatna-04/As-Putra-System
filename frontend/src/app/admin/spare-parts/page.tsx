@@ -58,7 +58,7 @@ export default function AdminSparePartsPage() {
     if (!token) return;
     setIsLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const params = new URLSearchParams({
         page: page.toString(),
         limit: "15",
@@ -135,7 +135,7 @@ export default function AdminSparePartsPage() {
     setIsSubmitting(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const payload = {
         part_no: formData.part_no,
         part_name: formData.part_name,
@@ -197,7 +197,7 @@ export default function AdminSparePartsPage() {
   const handleUpdateStock = async (id: string, newStok: number) => {
     if (newStok < 0) return;
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const res = await fetch(`${baseUrl}/admin/spare-parts/${id}/stock`, {
         method: "PATCH",
         headers: {
@@ -225,7 +225,7 @@ export default function AdminSparePartsPage() {
     if (!confirm("Apakah Anda yakin ingin menonaktifkan suku cadang ini (Status: DISCONTINUE)?")) return;
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const res = await fetch(`${baseUrl}/admin/spare-parts/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -245,7 +245,7 @@ export default function AdminSparePartsPage() {
   const handleExport = async () => {
     const exportToast = toast.loading("Mempersiapkan data export...");
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const res = await fetch(`${baseUrl}/admin/spare-parts/export`, {
         headers: { Authorization: `Bearer ${token}` },
       });

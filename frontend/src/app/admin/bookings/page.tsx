@@ -95,7 +95,7 @@ function AdminBookingsContent() {
     if (!token) return;
     setIsLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const params = new URLSearchParams({
         page: String(page),
         limit: String(limit),
@@ -143,7 +143,7 @@ function AdminBookingsContent() {
     if (!token) return;
     setIsExporting(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const params = new URLSearchParams();
       if (statusFilter !== "ALL") params.append("status", statusFilter);
       if (debouncedSearch) params.append("q", debouncedSearch);
@@ -179,7 +179,7 @@ function AdminBookingsContent() {
   const handleUpdateStatus = async (id: string, newStatus: string) => {
     setUpdatingId(id);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const res = await fetch(`${baseUrl}/admin/bookings/${id}/status`, {
         method: "PATCH",
         headers: {
