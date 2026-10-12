@@ -10,10 +10,8 @@ import {
   FileSpreadsheet,
   CheckCircle2,
   RefreshCw,
-  ExternalLink,
-  ChevronDown,
   ArrowUpRight,
-  TrendingUp,
+  ChevronDown,
   Sparkles
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -121,7 +119,7 @@ export default function AdminDashboardPage() {
   const pctEmpty = totalSku > 0 ? Math.round((summary.outOfStock / totalSku) * 100) : 0;
   const pctDisc = totalSku > 0 ? Math.round((summary.totalDiscontinue / totalSku) * 100) : 0;
 
-  // Semi-circle gauge data with modern sleek colors
+  // Semi-circle gauge data
   const gaugeData = [
     { name: "Part Tersedia", value: summary.totalActive || 1, color: "#E4002B" },
     { name: "Part Kosong", value: summary.outOfStock || 0, color: "#F59E0B" },
@@ -138,10 +136,10 @@ export default function AdminDashboardPage() {
     : 1;
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-[#F1F3F6] p-4 sm:p-6 lg:p-8 font-sans text-zinc-900">
-      <div className="max-w-[1440px] w-full mx-auto space-y-6">
+    <div className="flex flex-col h-full overflow-y-auto bg-[#F1F3F6] p-4 sm:p-6 lg:p-7 font-sans text-zinc-900">
+      <div className="max-w-[1440px] w-full mx-auto space-y-5">
 
-        {/* 1. TOP HEADER BAR: Modern floating search + quick actions */}
+        {/* 1. TOP HEADER BAR: Search, Notification, Settings */}
         <div className="flex items-center gap-3 sm:gap-4">
           <div className="flex-1 relative group">
             <div className="absolute inset-y-0 left-0 pl-4.5 flex items-center pointer-events-none text-zinc-400 group-focus-within:text-[#E4002B] transition-colors">
@@ -152,13 +150,13 @@ export default function AdminDashboardPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari suku cadang, pelanggan booking, atau data gudang..."
-              className="w-full pl-12 pr-4 py-3.5 bg-white/90 backdrop-blur-md rounded-2xl border border-zinc-200/80 text-sm font-medium placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4002B]/20 focus:border-[#E4002B] shadow-[0_2px_12px_rgba(0,0,0,0.03)] transition-all"
+              className="w-full pl-12 pr-4 py-3 bg-white/95 backdrop-blur-md rounded-2xl border border-zinc-200/80 text-sm font-medium placeholder-zinc-400 focus:outline-none focus:ring-2 focus:ring-[#E4002B]/20 focus:border-[#E4002B] shadow-[0_2px_10px_rgba(0,0,0,0.02)] transition-all"
             />
           </div>
 
           <Link
             href="/admin/bookings?status=PENDING"
-            className="relative p-3.5 bg-white/90 hover:bg-white text-zinc-700 hover:text-[#E4002B] rounded-2xl border border-zinc-200/80 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md"
+            className="relative p-3 bg-white/95 hover:bg-white text-zinc-700 hover:text-[#E4002B] rounded-2xl border border-zinc-200/80 transition-all shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md"
             title="Notifikasi Antrean Booking"
             aria-label="Notifikasi"
           >
@@ -173,7 +171,7 @@ export default function AdminDashboardPage() {
 
           <Link
             href="/admin/spare-parts"
-            className="p-3.5 bg-white/90 hover:bg-white text-zinc-700 hover:text-[#E4002B] rounded-2xl border border-zinc-200/80 transition-all shadow-[0_2px_12px_rgba(0,0,0,0.03)] hover:shadow-md"
+            className="p-3 bg-white/95 hover:bg-white text-zinc-700 hover:text-[#E4002B] rounded-2xl border border-zinc-200/80 transition-all shadow-[0_2px_10px_rgba(0,0,0,0.02)] hover:shadow-md"
             title="Katalog & Pengaturan"
             aria-label="Pengaturan"
           >
@@ -182,61 +180,53 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* 2. WELCOME BANNER CARD */}
-        <div className="relative overflow-hidden bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-7 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-          {/* Subtle decorative glow corner */}
+        <div className="relative overflow-hidden bg-white/95 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative">
-            <div className="flex items-center gap-2 mb-1.5">
+            <div className="flex items-center gap-2 mb-1">
               <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#E4002B] bg-red-50 px-2.5 py-0.5 rounded-full border border-red-100">
                 <Sparkles className="w-3 h-3" /> AHASS 10870 Live Workspace
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 font-display">
+            <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 font-display">
               Hallo, Selamat datang !
             </h1>
-            <p className="text-sm font-medium text-zinc-500 mt-1">
-              Selamat bertugas {user?.nama || "Admin"}, monitoring operasional servis & 44k katalog aktif.
+            <p className="text-xs sm:text-sm font-medium text-zinc-500 mt-0.5">
+              Selamat pagi {user?.nama || "Admin"}, semangat bekerja melayani pelanggan AHASS.
             </p>
           </div>
 
           <Link
             href="/admin/import"
-            className="relative shrink-0 inline-flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#E4002B] to-[#C90025] hover:from-[#C90025] hover:to-[#B00020] text-white font-bold text-sm px-6 py-3.5 rounded-2xl shadow-[0_4px_16px_rgba(228,0,43,0.3)] hover:shadow-[0_6px_20px_rgba(228,0,43,0.4)] transition-all transform active:scale-95"
+            className="relative shrink-0 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#E4002B] to-[#C90025] hover:from-[#C90025] hover:to-[#B00020] text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-[0_4px_14px_rgba(228,0,43,0.3)] hover:shadow-[0_6px_18px_rgba(228,0,43,0.4)] transition-all transform active:scale-95"
           >
-            <FileSpreadsheet className="w-4.5 h-4.5" />
+            <FileSpreadsheet className="w-4 h-4" />
             <span>Import Data</span>
           </Link>
         </div>
 
-        {/* 3. ROW 1: STATUS INVENTARIS + BOOKING HERO + 3 MINI KPI CARDS */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* 3. ROW 1: STATUS INVENTARIS (KIRI) | BOOKING MERAH KOMPAK (TENGAH) | 3 MINI KPI CARDS (SEBELAH KANAN) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 items-stretch">
 
-          {/* COL LEFT (Lg 4): Status Inventaris (Gauge) */}
-          <div className="lg:col-span-4 bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-7 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col justify-between transition-all hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)]">
+          {/* 3A. Status Inventaris (Lg: col-span-3) */}
+          <div className="lg:col-span-3 bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between">
             <div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-base font-bold text-zinc-900">Status inventaris</h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">Distribusi ketersediaan stok sparepart</p>
-                </div>
-                <span className="p-2 bg-zinc-50 rounded-xl border border-zinc-100 text-zinc-400">
-                  <TrendingUp className="w-4 h-4 text-[#E4002B]" />
-                </span>
-              </div>
+              <h2 className="text-sm font-bold text-zinc-900">Status inventaris</h2>
+              <p className="text-[11px] text-zinc-500 mt-0.5">Distribusi ketersediaan stok</p>
 
               {/* Gauge Semi-Circle */}
-              <div className="relative w-full h-[160px] flex items-center justify-center mt-3">
-                <ResponsiveContainer width="100%" height={160}>
+              <div className="relative w-full h-[135px] flex items-center justify-center mt-2">
+                <ResponsiveContainer width="100%" height={135}>
                   <PieChart>
                     <Pie
                       data={gaugeData}
                       cx="50%"
-                      cy="90%"
+                      cy="88%"
                       startAngle={180}
                       endAngle={0}
-                      innerRadius={68}
-                      outerRadius={96}
+                      innerRadius={54}
+                      outerRadius={78}
                       paddingAngle={3}
                       dataKey="value"
                       stroke="none"
@@ -249,199 +239,177 @@ export default function AdminDashboardPage() {
                 </ResponsiveContainer>
 
                 <div className="absolute bottom-2 inset-x-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-3xl font-extrabold text-zinc-900 tracking-tight leading-none font-display">
+                  <span className="text-2xl font-extrabold text-zinc-900 tracking-tight leading-none font-display">
                     {totalSku.toLocaleString("id-ID")}
                   </span>
-                  <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
-                    TOTAL SKU
+                  <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
+                    TOTAL
                   </span>
                 </div>
               </div>
             </div>
 
             {/* List Breakdown */}
-            <div className="mt-4 pt-4 border-t border-zinc-100 space-y-2.5 text-xs font-semibold">
-              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50/70 border border-zinc-100">
-                <span className="flex items-center gap-2 text-zinc-700">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#E4002B]" />
-                  Part tersedia
-                </span>
+            <div className="mt-3 pt-3 border-t border-zinc-100 space-y-1.5 text-xs font-semibold">
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-600">Part tersedia</span>
                 <span className="text-zinc-900 font-bold">
                   {summary.totalActive.toLocaleString("id-ID")}{" "}
-                  <span className="text-zinc-400 font-normal text-[11px]">({pctReady}%)</span>
+                  <span className="text-zinc-400 font-normal text-[11px]">{pctReady}%</span>
                 </span>
               </div>
-
-              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50/70 border border-zinc-100">
-                <span className="flex items-center gap-2 text-zinc-700">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
-                  Part kosong
-                </span>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-600">Part kosong</span>
                 <span className="text-zinc-900 font-bold">
                   {summary.outOfStock.toLocaleString("id-ID")}{" "}
-                  <span className="text-zinc-400 font-normal text-[11px]">({pctEmpty}%)</span>
+                  <span className="text-zinc-400 font-normal text-[11px]">{pctEmpty}%</span>
                 </span>
               </div>
-
-              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50/70 border border-zinc-100">
-                <span className="flex items-center gap-2 text-zinc-700">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#94A3B8]" />
-                  Discontinue
-                </span>
+              <div className="flex items-center justify-between">
+                <span className="text-zinc-600">Discontinue</span>
                 <span className="text-zinc-900 font-bold">
                   {summary.totalDiscontinue.toLocaleString("id-ID")}{" "}
-                  <span className="text-zinc-400 font-normal text-[11px]">({pctDisc}%)</span>
+                  <span className="text-zinc-400 font-normal text-[11px]">{pctDisc}%</span>
                 </span>
               </div>
             </div>
           </div>
 
-          {/* COL RIGHT (Lg 8): Booking Big Red Hero + 3 Mini KPI Cards */}
-          <div className="lg:col-span-8 flex flex-col gap-6">
+          {/* 3B. Booking Kotak Merah Kompak (Lg: col-span-4) */}
+          <div className="lg:col-span-4 bg-gradient-to-br from-[#E4002B] via-[#D50028] to-[#B00020] text-white rounded-3xl p-5 shadow-[0_6px_24px_rgba(228,0,43,0.3)] relative overflow-hidden flex flex-col justify-between">
+            <div className="absolute top-0 right-0 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none" />
 
-            {/* Booking Big Red Card with subtle depth */}
-            <div className="bg-gradient-to-br from-[#E4002B] via-[#D50028] to-[#B00020] text-white rounded-3xl p-6 sm:p-7 shadow-[0_8px_30px_rgba(228,0,43,0.3)] relative overflow-hidden flex flex-col justify-between">
-              {/* Background ambient lighting */}
-              <div className="absolute top-0 right-0 w-80 h-80 bg-white/10 rounded-full blur-3xl pointer-events-none" />
-
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h2 className="text-xl font-extrabold tracking-tight">Booking Servis</h2>
-                    <p className="text-xs text-white/80 font-medium">Monitoring reservasi pelanggan AHASS</p>
-                  </div>
-                  <div className="flex items-center gap-2 bg-white/15 backdrop-blur-md text-white text-xs font-bold px-3.5 py-1.5 rounded-xl border border-white/20 shadow-xs">
-                    <span>Okt</span>
-                    <span>2026</span>
-                    <ChevronDown className="w-3.5 h-3.5 opacity-80" />
-                  </div>
+            <div>
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2 className="text-base font-extrabold tracking-tight">Booking</h2>
+                  <p className="text-[11px] text-white/80 font-medium">Total booking</p>
                 </div>
-
-                <div className="grid grid-cols-2 gap-6 my-4">
-                  <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10">
-                    <div className="text-xs font-semibold text-white/80">Selesai Dikerjakan</div>
-                    <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 font-display">
-                      {bookingStats.done}
-                    </div>
-                    <div className="text-[11px] text-white/70 mt-0.5">unit tervalidasi selesai</div>
-                  </div>
-                  <div className="p-3.5 rounded-2xl bg-white/10 backdrop-blur-sm border border-white/10 text-right">
-                    <div className="text-xs font-semibold text-white/80">Antrean Aktif</div>
-                    <div className="text-3xl sm:text-4xl font-extrabold tracking-tight mt-1 font-display">
-                      {bookingStats.pending}
-                    </div>
-                    <div className="text-[11px] text-white/70 mt-0.5">menunggu / dikerjakan</div>
-                  </div>
+                <div className="flex items-center gap-1.5 bg-white/15 backdrop-blur-md text-white text-[11px] font-bold px-2.5 py-1 rounded-xl border border-white/20">
+                  <span>Okt</span>
+                  <span>2026</span>
+                  <ChevronDown className="w-3 h-3 opacity-80" />
                 </div>
               </div>
 
-              {/* Progress Bar */}
-              <div className="mt-2">
-                <div className="h-3 w-full bg-black/20 rounded-full overflow-hidden p-0.5 backdrop-blur-xs">
-                  <div
-                    className="h-full bg-white rounded-full transition-all duration-700 shadow-sm"
-                    style={{ width: `${Math.min(Math.max(bookingCompletionPct, 6), 100)}%` }}
-                  />
+              <div className="grid grid-cols-2 gap-3 my-3">
+                <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10">
+                  <div className="text-[11px] font-semibold text-white/80">Selesai</div>
+                  <div className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-0.5 font-display">
+                    {bookingStats.done}
+                  </div>
+                  <div className="text-[10px] text-white/70">booking selesai</div>
                 </div>
-                <div className="flex justify-between items-center text-[10px] font-bold text-white/80 mt-2 px-1">
-                  <span>0%</span>
-                  <span>Rasio Penyelesaian ({bookingCompletionPct}%)</span>
-                  <span>100%</span>
+                <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10 text-right">
+                  <div className="text-[11px] font-semibold text-white/80">Batal / Tertunda</div>
+                  <div className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-0.5 font-display">
+                    {bookingStats.pending}
+                  </div>
+                  <div className="text-[10px] text-white/70">booking tertunda</div>
                 </div>
               </div>
             </div>
 
-            {/* 3 Mini KPI Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-              {/* Card 1: Total Part Tersedia */}
-              <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
-                <div>
-                  <h3 className="text-xs font-semibold text-zinc-600">Total Part Tersedia</h3>
-                  <div className="text-2xl font-extrabold text-zinc-900 tracking-tight mt-2 font-display group-hover:text-[#E4002B] transition-colors">
-                    {summary.totalActive.toLocaleString("id-ID")}
-                  </div>
-                  <div className="text-[10px] text-zinc-400 mt-0.5 font-medium">SKU siap order</div>
-                </div>
-                <div className="mt-4">
-                  <span className="inline-block px-3 py-1 bg-red-50 text-[#E4002B] text-[11px] font-bold rounded-lg border border-red-100 mb-3">
-                    Tersedia
-                  </span>
-                  <Link
-                    href="/admin/spare-parts?stock_only=true"
-                    className="block w-full py-2.5 bg-gradient-to-r from-[#E4002B] to-[#C90025] hover:opacity-95 text-white text-xs font-bold rounded-xl transition text-center shadow-xs"
-                  >
-                    Lihat Semua
-                  </Link>
-                </div>
+            {/* Progress Bar */}
+            <div className="mt-1">
+              <div className="h-2.5 w-full bg-black/20 rounded-full overflow-hidden p-0.5 backdrop-blur-xs">
+                <div
+                  className="h-full bg-white rounded-full transition-all duration-700"
+                  style={{ width: `${Math.min(Math.max(bookingCompletionPct, 6), 100)}%` }}
+                />
               </div>
-
-              {/* Card 2: Part Kosong */}
-              <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
-                <div>
-                  <h3 className="text-xs font-semibold text-zinc-600">Part Kosong</h3>
-                  <div className="text-2xl font-extrabold text-[#F97316] tracking-tight mt-2 font-display group-hover:text-amber-600 transition-colors">
-                    {summary.outOfStock.toLocaleString("id-ID")}
-                  </div>
-                  <div className="text-[10px] text-zinc-400 mt-0.5 font-medium">Perlu restock AHM</div>
-                </div>
-                <div className="mt-4">
-                  <span className="inline-block px-3 py-1 bg-orange-50 text-orange-600 text-[11px] font-bold rounded-lg border border-orange-100 mb-3">
-                    Kosong
-                  </span>
-                  <Link
-                    href="/admin/spare-parts"
-                    className="block w-full py-2.5 bg-gradient-to-r from-[#F97316] to-[#EA580C] hover:opacity-95 text-white text-xs font-bold rounded-xl transition text-center shadow-xs"
-                  >
-                    Lihat Semua
-                  </Link>
-                </div>
+              <div className="flex justify-between items-center text-[10px] font-bold text-white/80 mt-1.5 px-0.5">
+                <span>0%</span>
+                <span>50%</span>
+                <span>100%</span>
               </div>
+            </div>
+          </div>
 
-              {/* Card 3: Part Discontinue */}
-              <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
-                <div>
-                  <h3 className="text-xs font-semibold text-zinc-600">Part Discontinue</h3>
-                  <div className="text-2xl font-extrabold text-emerald-600 tracking-tight mt-2 font-display">
-                    {summary.totalDiscontinue.toLocaleString("id-ID")}
-                  </div>
-                  <div className="text-[10px] text-zinc-400 mt-0.5 font-medium">Arsip non-aktif</div>
+          {/* 3C. 3 MINI KPI CARDS DI SEBELAH KANAN (Lg: col-span-5) */}
+          <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+
+            {/* Total Part Tersedia */}
+            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4.5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
+              <div>
+                <h3 className="text-xs font-semibold text-zinc-600">Total Part Tersedia</h3>
+                <div className="text-xl sm:text-2xl font-extrabold text-zinc-900 tracking-tight mt-1.5 font-display group-hover:text-[#E4002B] transition-colors">
+                  {summary.totalActive.toLocaleString("id-ID")}
                 </div>
-                <div className="mt-4">
-                  <span className="inline-block px-3 py-1 bg-emerald-50 text-emerald-700 text-[11px] font-bold rounded-lg border border-emerald-100 mb-3">
-                    Discontinue
-                  </span>
-                  <Link
-                    href="/admin/spare-parts?status=DISCONTINUE"
-                    className="block w-full py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:opacity-95 text-white text-xs font-bold rounded-xl transition text-center shadow-xs"
-                  >
-                    Lihat Semua
-                  </Link>
-                </div>
+                <div className="text-[10px] text-zinc-400 font-medium">SKU tersedia</div>
               </div>
+              <div className="mt-3">
+                <span className="inline-block px-2.5 py-0.5 bg-red-50 text-[#E4002B] text-[10px] font-bold rounded-md border border-red-100 mb-2.5">
+                  Tersedia
+                </span>
+                <Link
+                  href="/admin/spare-parts?stock_only=true"
+                  className="block w-full py-1.5 bg-[#E4002B] hover:bg-red-700 text-white text-[11px] font-bold rounded-xl transition text-center shadow-xs"
+                >
+                  Lihat Semua
+                </Link>
+              </div>
+            </div>
 
+            {/* Part Kosong */}
+            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4.5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
+              <div>
+                <h3 className="text-xs font-semibold text-zinc-600">Part Kosong</h3>
+                <div className="text-xl sm:text-2xl font-extrabold text-[#F97316] tracking-tight mt-1.5 font-display group-hover:text-amber-600 transition-colors">
+                  {summary.outOfStock.toLocaleString("id-ID")}
+                </div>
+                <div className="text-[10px] text-zinc-400 font-medium">Segera restock</div>
+              </div>
+              <div className="mt-3">
+                <span className="inline-block px-2.5 py-0.5 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-md border border-orange-100 mb-2.5">
+                  Kosong
+                </span>
+                <Link
+                  href="/admin/spare-parts"
+                  className="block w-full py-1.5 bg-[#F97316] hover:bg-orange-600 text-white text-[11px] font-bold rounded-xl transition text-center shadow-xs"
+                >
+                  Lihat Semua
+                </Link>
+              </div>
+            </div>
+
+            {/* Part Discontinue */}
+            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4.5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
+              <div>
+                <h3 className="text-xs font-semibold text-zinc-600">Part Discontinue</h3>
+                <div className="text-xl sm:text-2xl font-extrabold text-emerald-600 tracking-tight mt-1.5 font-display">
+                  {summary.totalDiscontinue.toLocaleString("id-ID")}
+                </div>
+                <div className="text-[10px] text-zinc-400 font-medium">Tidak dijual</div>
+              </div>
+              <div className="mt-3">
+                <span className="inline-block px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-md border border-emerald-100 mb-2.5">
+                  Discontinue
+                </span>
+                <Link
+                  href="/admin/spare-parts?status=DISCONTINUE"
+                  className="block w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-xl transition text-center shadow-xs"
+                >
+                  Lihat Semua
+                </Link>
+              </div>
             </div>
 
           </div>
 
         </div>
 
-        {/* 4. ROW 2: EXCEL PROGRESS + TOP KATEGORI + TAMBAH SPAREPART HERO */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* 4. ROW 2: FILE IMPORT PROGRESS (KIRI) | TOP KATEGORI PART (TENGAH) | TAMBAH SPAREPART (KANAN) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
 
-          {/* COL LEFT (Lg 4): File Import Cards */}
-          <div className="lg:col-span-4 flex flex-col gap-4">
+          {/* 4A. File Import Cards (Lg: col-span-3) */}
+          <div className="lg:col-span-3 flex flex-col gap-3.5">
 
             {/* In Progress Card */}
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-md transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-zinc-700">In Progress</span>
-                <span className="text-[10px] font-bold text-[#E4002B] bg-red-50 px-2 py-0.5 rounded-md border border-red-100">
-                  Sedang Proses
-                </span>
-              </div>
-              <div className="flex items-start gap-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-red-50 text-[#E4002B] border border-red-100 flex items-center justify-center shrink-0">
+            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4.5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-md transition-all">
+              <div className="text-xs font-bold text-zinc-700 mb-2.5">In Progress</div>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-red-50 text-[#E4002B] border border-red-100 flex items-center justify-center shrink-0">
                   <FileSpreadsheet className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -449,28 +417,23 @@ export default function AdminDashboardPage() {
                     {importHistory.length > 0 ? importHistory[0].file_name : "Bulanan_oktober.xlsx"}
                   </div>
                   <div className="text-[11px] text-zinc-400 mt-0.5">
-                    {importHistory.length > 0 ? `${importHistory[0].total_rows || 0} baris data` : "12kb"}
+                    {importHistory.length > 0 ? `${importHistory[0].total_rows || 0} baris` : "12kb"}
                   </div>
                 </div>
               </div>
-              <div className="mt-3.5">
-                <div className="h-2 w-full bg-zinc-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-gradient-to-r from-[#E4002B] to-[#F97316] rounded-full w-2/3" />
+              <div className="mt-3">
+                <div className="h-1.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-[#E4002B] rounded-full w-2/3" />
                 </div>
-                <span className="text-[10px] font-semibold text-zinc-400 mt-1.5 block">65% Diproses</span>
+                <span className="text-[10px] font-semibold text-zinc-400 mt-1 block">In Progress</span>
               </div>
             </div>
 
             {/* Complete Card */}
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] hover:shadow-md transition-all">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-bold text-zinc-700">Complete</span>
-                <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-100">
-                  Selesai
-                </span>
-              </div>
-              <div className="flex items-start gap-3.5">
-                <div className="w-11 h-11 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
+            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4.5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-md transition-all">
+              <div className="text-xs font-bold text-zinc-700 mb-2.5">Complete</div>
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-100 flex items-center justify-center shrink-0">
                   <FileSpreadsheet className="w-5 h-5" />
                 </div>
                 <div className="min-w-0 flex-1">
@@ -478,35 +441,35 @@ export default function AdminDashboardPage() {
                     {importHistory.length > 1 ? importHistory[1].file_name : "Bulanan_september.xlsx"}
                   </div>
                   <div className="text-[11px] text-zinc-400 mt-0.5">
-                    {importHistory.length > 1 ? `${importHistory[1].total_rows || 0} baris sukses` : "25kb"}
+                    {importHistory.length > 1 ? `${importHistory[1].total_rows || 0} baris` : "25kb"}
                   </div>
                 </div>
               </div>
-              <div className="mt-3.5">
-                <div className="h-2 w-full bg-emerald-500 rounded-full" />
-                <span className="text-[10px] font-semibold text-emerald-700 mt-1.5 block flex items-center gap-1">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                  100% Selesai &amp; Tersimpan
+              <div className="mt-3">
+                <div className="h-1.5 w-full bg-emerald-500 rounded-full" />
+                <span className="text-[10px] font-semibold text-emerald-700 mt-1 block flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                  Complete
                 </span>
               </div>
             </div>
 
           </div>
 
-          {/* COL CENTER (Lg 5): Top Kategori Part */}
-          <div className="lg:col-span-5 bg-white/95 backdrop-blur-md rounded-3xl p-6 sm:p-7 border border-zinc-200/80 shadow-[0_4px_24px_rgba(0,0,0,0.03)] flex flex-col justify-between hover:shadow-[0_8px_30px_rgba(0,0,0,0.06)] transition-all">
+          {/* 4B. Top Kategori Part (Lg: col-span-6) */}
+          <div className="lg:col-span-6 bg-white/95 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md transition-all">
             <div>
               <div className="flex items-center justify-between">
                 <div>
                   <h2 className="text-base font-bold text-zinc-900">Top Kategori Part</h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">Berdasarkan jumlah SKU aktif terdata</p>
+                  <p className="text-xs text-zinc-500 mt-0.5">Berdasarkan jumlah SKU aktif</p>
                 </div>
-                <span className="text-[10px] font-bold text-zinc-500 bg-zinc-100 px-2 py-1 rounded-lg">
+                <span className="text-[10px] font-bold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-md">
                   AHM Parts
                 </span>
               </div>
 
-              <div className="mt-6 space-y-4">
+              <div className="mt-5 space-y-3.5">
                 {categories.length > 0 ? (
                   categories.map((cat, idx) => {
                     const widthPct = Math.max(Math.round((cat.count / maxCategoryCount) * 100), 12);
@@ -515,9 +478,9 @@ export default function AdminDashboardPage() {
                         <span className="w-20 text-xs font-bold text-zinc-700 truncate" title={cat.name}>
                           {cat.name}
                         </span>
-                        <div className="flex-1 bg-zinc-100 rounded-full h-4.5 overflow-hidden relative p-0.5">
+                        <div className="flex-1 bg-zinc-100 rounded-full h-4 overflow-hidden relative">
                           <div
-                            className="bg-gradient-to-r from-[#E4002B] to-[#C90025] h-full rounded-full transition-all duration-700"
+                            className="bg-[#E4002B] h-full rounded-full transition-all duration-700"
                             style={{ width: `${widthPct}%` }}
                           />
                         </div>
@@ -535,7 +498,7 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="pt-4 mt-4 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500 font-medium">
+            <div className="pt-3.5 mt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-500 font-medium">
               <span>Suku Cadang Asli Honda</span>
               <Link href="/admin/spare-parts" className="text-[#E4002B] font-bold hover:underline flex items-center gap-1 group">
                 Katalog Lengkap <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
@@ -543,22 +506,21 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* COL RIGHT (Lg 3): Tambah Sparepart Modern Hero Card */}
+          {/* 4C. Tambah Sparepart Big Red CTA (Lg: col-span-3) */}
           <div className="lg:col-span-3">
             <Link
               href="/admin/spare-parts"
-              className="relative overflow-hidden w-full h-full min-h-[220px] bg-gradient-to-br from-[#E4002B] via-[#D50028] to-[#99001B] hover:opacity-95 text-white rounded-3xl p-6 shadow-[0_8px_30px_rgba(228,0,43,0.35)] hover:shadow-[0_12px_36px_rgba(228,0,43,0.45)] transition-all flex flex-col items-center justify-center text-center group active:scale-98"
+              className="relative overflow-hidden w-full h-full min-h-[200px] bg-gradient-to-br from-[#E4002B] via-[#D50028] to-[#99001B] hover:opacity-95 text-white rounded-3xl p-6 shadow-[0_6px_24px_rgba(228,0,43,0.35)] hover:shadow-[0_10px_30px_rgba(228,0,43,0.45)] transition-all flex flex-col items-center justify-center text-center group active:scale-98"
             >
-              {/* Gloss highlight effect */}
               <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
 
-              <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur-md group-hover:scale-110 group-hover:bg-white/30 transition-all flex items-center justify-center mb-4 shadow-inner border border-white/25">
-                <Plus className="w-10 h-10 text-white stroke-[2.5]" />
+              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md group-hover:scale-110 group-hover:bg-white/30 transition-all flex items-center justify-center mb-3.5 shadow-inner border border-white/25">
+                <Plus className="w-9 h-9 text-white stroke-[2.5]" />
               </div>
-              <span className="text-xl font-black tracking-tight drop-shadow-xs">
+              <span className="text-lg font-black tracking-tight drop-shadow-xs">
                 Tambah Sparepart
               </span>
-              <span className="text-xs text-white/80 font-medium mt-1">
+              <span className="text-xs text-white/80 font-medium mt-0.5">
                 Input master SKU manual
               </span>
             </Link>
