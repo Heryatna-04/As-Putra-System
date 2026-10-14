@@ -16,6 +16,7 @@ import {
   Download,
   AlertTriangle,
   RotateCcw,
+  RefreshCw,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SparePart } from "@/types/spare-part";
@@ -303,12 +304,20 @@ export default function AdminSparePartsPage() {
   return (
     <div className="flex flex-col h-full overflow-hidden">
       {/* Topbar */}
-      <div className="h-[52px] bg-white border-b border-zinc-200 flex items-center px-6 shrink-0">
+      <div className="h-[52px] bg-white border-b border-zinc-200 flex items-center justify-between px-6 shrink-0">
         <div className="flex items-center gap-2 text-sm text-zinc-500">
           <span>Admin</span>
           <span className="text-zinc-300">/</span>
           <span className="font-semibold text-zinc-900">Suku Cadang</span>
         </div>
+        <button
+          onClick={() => fetchParts()}
+          disabled={isLoading}
+          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 transition disabled:opacity-50"
+          title="Segarkan data suku cadang"
+        >
+          <RefreshCw size={12} className={isLoading ? "animate-spin text-red-600" : ""} /> Refresh
+        </button>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -489,6 +498,15 @@ export default function AdminSparePartsPage() {
 
               {/* Right Section: Actions */}
               <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
+                <button
+                  onClick={() => fetchParts()}
+                  disabled={isLoading}
+                  title="Segarkan data tabel"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw size={14} className={isLoading ? "animate-spin text-red-600" : ""} />
+                  <span>Refresh</span>
+                </button>
                 <button
                   onClick={handleExport}
                   className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-green-600/30 text-green-600 hover:bg-green-50 transition-colors"
