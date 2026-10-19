@@ -26,7 +26,7 @@ interface StockLogItem {
 }
 
 export default function StockLogsPage() {
-  const { token } = useAuth();
+  const { token, authFetch } = useAuth();
   const [logs, setLogs] = useState<StockLogItem[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -38,14 +38,13 @@ export default function StockLogsPage() {
     if (!token) return;
     setIsLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const params = new URLSearchParams({
         page: String(page),
         limit: String(limit),
       });
 
-      const res = await fetch(`${baseUrl}/admin/stock-logs?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await authFetch(`${baseUrl}/admin/stock-logs?${params.toString()}`, {
         cache: "no-store",
       });
       const data = await res.json();

@@ -1,20 +1,17 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import {
   Plus,
   FileSpreadsheet,
-  CheckCircle2,
   RefreshCw,
   ArrowUpRight,
-  ChevronDown,
   Sparkles,
-  Calendar,
   Clock,
-  Bike,
   MessageSquare,
-  Check
+  Check,
+  Loader2
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -39,7 +36,7 @@ interface BookingSummary {
 }
 
 export default function AdminDashboardPage() {
-  const { token, user } = useAuth();
+  const { token, user, authFetch } = useAuth();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [summary, setSummary] = useState({
     totalActive: 0,
@@ -68,10 +65,9 @@ export default function AdminDashboardPage() {
     setUpdatingBookingId(id);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
-      const res = await fetch(`${baseUrl}/admin/bookings/${id}/status`, {
+      const res = await authFetch(`${baseUrl}/admin/bookings/${id}/status`, {
         method: "PATCH",
         headers: {
-          Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ status: "CONFIRMED" }),
@@ -99,11 +95,9 @@ export default function AdminDashboardPage() {
 
   const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth() + 1); // 1-12
   const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
-  const [isFilteringBooking, setIsFilteringBooking] = useState(false);
 
-  const fetchBookingsForMonth = async (month: number, year: number) => {
+  const fetchBookingsForMonth = useCallback(async (month: number, year: number) => {
     if (!token) return;
-    setIsFilteringBooking(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       // Construct date range
@@ -112,16 +106,15 @@ export default function AdminDashboardPage() {
       const tanggalFrom = `${year}-${monthStr}-01`;
       const tanggalTo = `${year}-${monthStr}-${lastDay}`;
 
-      const res = await fetch(
+      const res = await authFetch(
         `${baseUrl}/admin/bookings?tanggal_from=${tanggalFrom}&tanggal_to=${tanggalTo}&limit=100`,
         {
-          headers: { Authorization: `Bearer ${token}` },
           cache: "no-store",
         }
       );
       const data = await res.json();
       if (res.ok && data.success) {
-        const bList: any[] = data.data.bookings || [];
+        const bList: BookingSummary[] = data.data.bookings || [];
         const done = bList.filter((b) => b.status === "DONE").length;
         const pending = bList.filter(
           (b) => b.status === "PENDING" || b.status === "CONFIRMED" || b.status === "IN_PROGRESS"
@@ -137,10 +130,8 @@ export default function AdminDashboardPage() {
       }
     } catch (err) {
       console.error("Error fetching filtered bookings:", err);
-    } finally {
-      setIsFilteringBooking(false);
     }
-  };
+  }, [token, authFetch]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -149,8 +140,7 @@ export default function AdminDashboardPage() {
         const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
 
         // 1. Summary Spare Parts
-        const resSummary = await fetch(`${baseUrl}/admin/summary`, {
-          headers: { Authorization: `Bearer ${token}` },
+        const resSummary = await authFetch(`${baseUrl}/admin/summary`, {
           cache: "no-store",
         });
         const dataSummary = await resSummary.json();
@@ -177,7 +167,7 @@ export default function AdminDashboardPage() {
     };
 
     fetchDashboardData();
-  }, [token]);
+  }, [token, fetchBookingsForMonth, selectedMonth, selectedYear]);
 
   if (isLoading) {
     return (
@@ -533,11 +523,16 @@ export default function AdminDashboardPage() {
                         {b.status === "PENDING" && (
                           <button
                             type="button"
+                            disabled={updatingBookingId === b.id}
                             onClick={() => handleQuickConfirm(b.id)}
                             title="Konfirmasi Booking"
-                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white text-[10px] font-bold shadow-sm transition"
+                            className="flex items-center gap-1 px-2 py-1 rounded-lg bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white text-[10px] font-bold shadow-sm transition"
                           >
-                            <Check className="w-3 h-3" />
+                            {updatingBookingId === b.id ? (
+                              <Loader2 className="w-3 h-3 animate-spin" />
+                            ) : (
+                              <Check className="w-3 h-3" />
+                            )}
                             <span>Konfirmasi</span>
                           </button>
                         )}

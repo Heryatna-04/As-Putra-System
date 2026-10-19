@@ -50,7 +50,7 @@ interface ImportBatch {
 }
 
 export default function AdminImportPage() {
-  const { token } = useAuth();
+  const { token, authFetch } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isPreviewing, setIsPreviewing] = useState<boolean>(false);
   const [previewData, setPreviewData] = useState<PreviewData | null>(null);
@@ -65,9 +65,7 @@ export default function AdminImportPage() {
   const fetchHistory = useCallback(async () => {
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
-      const res = await fetch(`${baseUrl}/admin/imports`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`${baseUrl}/admin/imports`);
       const data = await res.json();
       if (res.ok && data.success) {
         setHistory(data.data);
@@ -117,9 +115,8 @@ export default function AdminImportPage() {
       const formData = new FormData();
       formData.append("file", selectedFile);
 
-      const res = await fetch(`${baseUrl}/admin/import/spare-parts/preview`, {
+      const res = await authFetch(`${baseUrl}/admin/import/spare-parts/preview`, {
         method: "POST",
-        headers: { Authorization: `Bearer ${token}` },
         body: formData,
       });
 
@@ -143,12 +140,11 @@ export default function AdminImportPage() {
     setErrorMsg(null);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
-      const res = await fetch(`${baseUrl}/admin/import/spare-parts/confirm`, {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
+      const res = await authFetch(`${baseUrl}/admin/import/spare-parts/confirm`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ batch_id: previewData.batch_id }),
       });

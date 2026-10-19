@@ -11,6 +11,7 @@ import {
   LogOut,
   Users,
   ShieldCheck,
+  History,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Image from "next/image";
@@ -52,6 +53,7 @@ export default function AdminSidebar({
       title: "INVENTARIS",
       items: [
         { label: "Sparepart", href: "/admin/spare-parts", icon: Wrench },
+        { label: "Riwayat Stok", href: "/admin/stock-logs", icon: History },
         { label: "Import excel", href: "/admin/import", icon: FileSpreadsheet },
       ],
     },

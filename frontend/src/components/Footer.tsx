@@ -60,7 +60,8 @@ export default function Footer() {
                 </div>
                 <div>
                   <div className="font-semibold text-zinc-900">Layanan Pelanggan & WhatsApp</div>
-                  <a
+                  <div>
+                    <a
                     href="https://wa.me/6281111116408"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -68,6 +69,17 @@ export default function Footer() {
                   >
                     +62 811-1111-6408
                   </a>
+                  </div>
+                  <div>
+                    <a
+                    href="https://wa.me/628112108708"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-0.5 inline-block text-base font-bold text-emerald-700 hover:underline"
+                  >
+                    +62 811-2108-708
+                  </a>
+                  </div>
                 </div>
               </div>
             </div>

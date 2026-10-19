@@ -34,7 +34,7 @@ interface BookingCRM {
 }
 
 export default function CrmBookingsPage() {
-  const { token } = useAuth();
+  const { token, authFetch } = useAuth();
   const [bookings, setBookings] = useState<BookingCRM[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
@@ -71,7 +71,7 @@ export default function CrmBookingsPage() {
     if (!token) return;
     setIsLoading(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const params = new URLSearchParams({
         page: String(page),
         limit: String(limit),
@@ -82,8 +82,7 @@ export default function CrmBookingsPage() {
       if (tanggalFrom) params.append("tanggal_from", tanggalFrom);
       if (tanggalTo) params.append("tanggal_to", tanggalTo);
 
-      const res = await fetch(`${baseUrl}/crm/bookings?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await authFetch(`${baseUrl}/crm/bookings?${params.toString()}`, {
         cache: "no-store",
       });
       const data = await res.json();
@@ -101,7 +100,7 @@ export default function CrmBookingsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, page, limit, statusFilter, debouncedSearch, tanggalFrom, tanggalTo]);
+  }, [token, authFetch, page, limit, statusFilter, debouncedSearch, tanggalFrom, tanggalTo]);
 
   useEffect(() => {
     fetchCrmBookings();
@@ -111,16 +110,14 @@ export default function CrmBookingsPage() {
     if (!token) return;
     setIsExporting(true);
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const params = new URLSearchParams();
       if (statusFilter !== "ALL") params.append("status", statusFilter);
       if (debouncedSearch) params.append("q", debouncedSearch);
       if (tanggalFrom) params.append("tanggal_from", tanggalFrom);
       if (tanggalTo) params.append("tanggal_to", tanggalTo);
 
-      const res = await fetch(`${baseUrl}/crm/bookings/export?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`${baseUrl}/crm/bookings/export?${params.toString()}`);
 
       if (!res.ok) {
         throw new Error("Gagal mengunduh file Excel CRM");

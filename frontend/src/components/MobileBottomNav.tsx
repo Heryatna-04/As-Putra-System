@@ -7,8 +7,8 @@ import { Home, Calendar, PackageSearch, MessageSquare } from "lucide-react";
 export default function MobileBottomNav() {
   const pathname = usePathname();
 
-  // Hide on admin panel routes
-  if (pathname.startsWith("/admin")) {
+  // Hide on admin and CRM portal routes
+  if (pathname.startsWith("/admin") || pathname.startsWith("/crm")) {
     return null;
   }
 

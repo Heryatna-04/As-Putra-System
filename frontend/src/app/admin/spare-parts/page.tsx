@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, Suspense } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -24,7 +24,7 @@ import { formatIDR } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function AdminSparePartsPage() {
-  const { token } = useAuth();
+  const { token, authFetch } = useAuth();
   const [parts, setParts] = useState<SparePart[]>([]);
   const [total, setTotal] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -92,8 +92,7 @@ export default function AdminSparePartsPage() {
       if (categoryFilter) params.set("category", categoryFilter);
       if (stockFilter === "ready") params.set("stock_only", "true");
 
-      const res = await fetch(`${baseUrl}/admin/spare-parts?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await authFetch(`${baseUrl}/admin/spare-parts?${params.toString()}`, {
         cache: "no-store",
       });
 
@@ -125,14 +124,7 @@ export default function AdminSparePartsPage() {
     fetchParts();
   }, [fetchParts]);
 
-  // Auto-open create modal if navigated from Dashboard with ?action=create
-  useEffect(() => {
-    if (searchParams.get("action") === "create") {
-      handleOpenCreateModal();
-    }
-  }, [searchParams]);
-
-  const handleOpenCreateModal = () => {
+  const handleOpenCreateModal = useCallback(() => {
     setEditingPart(null);
     setFormData({
       part_no: "",
@@ -145,7 +137,14 @@ export default function AdminSparePartsPage() {
     });
     setSelectedFile(null);
     setIsModalOpen(true);
-  };
+  }, []);
+
+  // Auto-open create modal if navigated from Dashboard with ?action=create
+  useEffect(() => {
+    if (searchParams.get("action") === "create") {
+      handleOpenCreateModal();
+    }
+  }, [searchParams, handleOpenCreateModal]);
 
   const handleOpenEditModal = (part: SparePart) => {
     setEditingPart(part);
@@ -187,11 +186,10 @@ export default function AdminSparePartsPage() {
         method = "PUT";
       }
 
-      const res = await fetch(url, {
+      const res = await authFetch(url, {
         method,
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify(payload),
       });
@@ -209,9 +207,8 @@ export default function AdminSparePartsPage() {
         const formDataImage = new FormData();
         formDataImage.append("image", selectedFile);
 
-        await fetch(`${baseUrl}/admin/spare-parts/${partId}/image`, {
+        await authFetch(`${baseUrl}/admin/spare-parts/${partId}/image`, {
           method: "POST",
-          headers: { Authorization: `Bearer ${token}` },
           body: formDataImage,
         });
       }
@@ -230,11 +227,10 @@ export default function AdminSparePartsPage() {
     if (newStok < 0) return;
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
-      const res = await fetch(`${baseUrl}/admin/spare-parts/${id}/stock`, {
+      const res = await authFetch(`${baseUrl}/admin/spare-parts/${id}/stock`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ stok: newStok }),
       });
@@ -258,9 +254,8 @@ export default function AdminSparePartsPage() {
 
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
-      const res = await fetch(`${baseUrl}/admin/spare-parts/${id}`, {
+      const res = await authFetch(`${baseUrl}/admin/spare-parts/${id}`, {
         method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
         toast.success("Suku cadang berhasil dinonaktifkan");
@@ -278,9 +273,7 @@ export default function AdminSparePartsPage() {
     const exportToast = toast.loading("Mempersiapkan data export...");
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
-      const res = await fetch(`${baseUrl}/admin/spare-parts/export`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`${baseUrl}/admin/spare-parts/export`);
       
       if (!res.ok) throw new Error("Gagal mengunduh file export");
       

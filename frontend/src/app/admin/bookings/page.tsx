@@ -52,7 +52,7 @@ function getWhatsAppLink(item: Booking) {
 }
 
 function AdminBookingsContent() {
-  const { token } = useAuth();
+  const { token, authFetch } = useAuth();
   const searchParams = useSearchParams();
   const initialStatus = searchParams.get("status") || "ALL";
 
@@ -106,8 +106,7 @@ function AdminBookingsContent() {
       if (tanggalFrom) params.append("tanggal_from", tanggalFrom);
       if (tanggalTo) params.append("tanggal_to", tanggalTo);
 
-      const res = await fetch(`${baseUrl}/admin/bookings?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
+      const res = await authFetch(`${baseUrl}/admin/bookings?${params.toString()}`, {
         cache: "no-store",
       });
       const data = await res.json();
@@ -150,9 +149,7 @@ function AdminBookingsContent() {
       if (tanggalFrom) params.append("tanggal_from", tanggalFrom);
       if (tanggalTo) params.append("tanggal_to", tanggalTo);
 
-      const res = await fetch(`${baseUrl}/admin/bookings/export?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await authFetch(`${baseUrl}/admin/bookings/export?${params.toString()}`);
 
       if (!res.ok) {
         throw new Error("Gagal mengunduh file Excel");
@@ -180,11 +177,10 @@ function AdminBookingsContent() {
     setUpdatingId(id);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
-      const res = await fetch(`${baseUrl}/admin/bookings/${id}/status`, {
+      const res = await authFetch(`${baseUrl}/admin/bookings/${id}/status`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({ status: newStatus }),
       });
