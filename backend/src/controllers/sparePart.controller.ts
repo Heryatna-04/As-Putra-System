@@ -19,6 +19,7 @@ export const SparePartController = {
       }
 
       const result = await SparePartService.getCatalog(parsed.data);
+      res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
       res.json({ success: true, message: 'Berhasil mengambil katalog', ...result });
     } catch (err) {
       next(err);
@@ -35,6 +36,7 @@ export const SparePartController = {
         return;
       }
 
+      res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=1800');
       res.json({ success: true, message: 'Berhasil', data });
     } catch (err: any) {
       if (err?.code === 'PGRST116') {
@@ -48,6 +50,7 @@ export const SparePartController = {
   async getCategories(req: Request, res: Response, next: NextFunction) {
     try {
       const data = await SparePartService.getCategories();
+      res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
       res.json({ success: true, message: 'Berhasil mengambil daftar kategori', data });
     } catch (err) {
       next(err);
@@ -65,6 +68,7 @@ export const SparePartController = {
       }
 
       const result = await SparePartService.getAllAdmin(parsed.data);
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       res.json({ success: true, message: 'Berhasil', ...result });
     } catch (err) {
       next(err);
@@ -81,6 +85,7 @@ export const SparePartController = {
         return;
       }
 
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
       res.json({ success: true, message: 'Berhasil', data });
     } catch (err: any) {
       if (err?.code === 'PGRST116') {
