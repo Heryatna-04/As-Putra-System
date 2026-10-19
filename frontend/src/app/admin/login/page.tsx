@@ -36,7 +36,7 @@ export default function AdminLoginPage() {
         throw new Error(data.message || "Login gagal. Periksa kembali email dan password Anda.");
       }
 
-      login(data.data.access_token, data.data.user);
+      login(data.data.access_token, data.data.user, data.data.refresh_token);
 
       if (data.data.user?.role === "CRM") {
         router.push("/crm");

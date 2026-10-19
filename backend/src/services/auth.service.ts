@@ -63,4 +63,32 @@ export const AuthService = {
       email: user?.email,
     };
   },
+
+  async refreshToken(refreshToken: string) {
+    const supabaseAdmin = getSupabaseAdmin();
+    const { data, error } = await supabaseAdmin.auth.refreshSession({ refresh_token: refreshToken });
+    if (error || !data.session || !data.user) {
+      throw new Error('Sesi kedaluwarsa atau refresh token tidak valid');
+    }
+
+    const { session, user } = data;
+    const dbClient = getSupabaseAdmin();
+    const { data: profile } = await dbClient
+      .from('profiles')
+      .select('role, full_name')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    return {
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+      expires_at: session.expires_at,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: profile?.role,
+        nama: profile?.full_name,
+      },
+    };
+  },
 };

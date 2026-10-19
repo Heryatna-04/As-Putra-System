@@ -1,19 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import { Toaster } from "sonner";
-import { Menu } from "lucide-react";
+import { Menu, Loader2 } from "lucide-react";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const { user, isLoading } = useAuth();
   const pathname = usePathname();
+  const router = useRouter();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
   const isLoginPage = pathname === "/admin/login";
+
+  // Client-side role guard: jika user adalah CRM, alihkan dari /admin/* ke /crm
+  useEffect(() => {
+    if (!isLoading && user && user.role === "CRM" && !isLoginPage) {
+      router.replace("/crm");
+    }
+  }, [isLoading, user, isLoginPage, router]);
 
   if (isLoginPage) {
     return (
@@ -24,12 +32,12 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     );
   }
 
-  // With middleware.ts handling the redirect, we just show a loader 
-  // if the client context is still resolving the user data
+  // Loader halus saat memeriksa atau me-refresh sesi di client
   if (isLoading) {
     return (
-      <div className="h-screen bg-[#FAFAFA] flex items-center justify-center text-zinc-500 text-sm font-medium">
-        Memeriksa sesi...
+      <div className="h-screen bg-[#FAFAFA] flex flex-col items-center justify-center gap-3 text-zinc-500 text-sm font-medium">
+        <Loader2 className="w-6 h-6 animate-spin text-[#E4002B]" />
+        <span>Memverifikasi sesi petugas...</span>
       </div>
     );
   }

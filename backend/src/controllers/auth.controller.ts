@@ -63,4 +63,31 @@ export const AuthController = {
       next(err);
     }
   },
+
+  async refresh(req: Request, res: Response, _next: NextFunction) {
+    try {
+      const { refresh_token } = req.body;
+      if (!refresh_token || typeof refresh_token !== 'string') {
+        res.status(400).json({
+          success: false,
+          message: 'refresh_token wajib disertakan',
+          errors: [],
+        });
+        return;
+      }
+
+      const result = await AuthService.refreshToken(refresh_token);
+      res.json({
+        success: true,
+        message: 'Token berhasil diperbarui',
+        data: result,
+      });
+    } catch (err: any) {
+      res.status(401).json({
+        success: false,
+        message: err?.message || 'Gagal memperbarui token',
+        errors: [],
+      });
+    }
+  },
 };

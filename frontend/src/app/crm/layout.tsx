@@ -4,7 +4,7 @@ import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect } from "react";
-import { LogOut, Wrench, LayoutDashboard } from "lucide-react";
+import { LogOut, Wrench, LayoutDashboard, Loader2 } from "lucide-react";
 import { Toaster } from "sonner";
 
 export default function CrmLayout({ children }: { children: React.ReactNode }) {
@@ -19,8 +19,9 @@ export default function CrmLayout({ children }: { children: React.ReactNode }) {
 
   if (isLoading) {
     return (
-      <div className="h-screen bg-[#F8F9FA] flex items-center justify-center text-zinc-500 text-sm font-medium">
-        Memeriksa hak akses CRM...
+      <div className="h-screen bg-[#F8F9FA] flex flex-col items-center justify-center gap-3 text-zinc-500 text-sm font-medium">
+        <Loader2 className="w-6 h-6 animate-spin text-[#E8272A]" />
+        <span>Memverifikasi hak akses CRM...</span>
       </div>
     );
   }
