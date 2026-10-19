@@ -7,7 +7,7 @@ const router = Router();
 
 const loginLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Allow up to 100 attempts per IP window on Vercel Edge Proxy
+  max: 15, // Max 15 failed login attempts per IP
   skipSuccessfulRequests: true,
   message: {
     success: false,
@@ -20,6 +20,9 @@ const loginLimiter = rateLimit({
 
 // POST /api/v1/auth/login
 router.post('/login', loginLimiter, AuthController.login);
+
+// POST /api/v1/auth/refresh
+router.post('/refresh', AuthController.refresh);
 
 // POST /api/v1/auth/logout
 router.post('/logout', authMiddleware, AuthController.logout);

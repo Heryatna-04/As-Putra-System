@@ -8,7 +8,10 @@ async function testLogin() {
   const res = await fetch(`${BASE}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email: 'admin@asputra.com', password: 'password123' }),
+    body: JSON.stringify({
+      email: process.env.ADMIN_TEST_EMAIL || 'admin@asputra.com',
+      password: process.env.ADMIN_TEST_PASSWORD || 'password123',
+    }),
   });
   const data = await res.json();
   console.log('Status:', res.status);

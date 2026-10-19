@@ -3,16 +3,21 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 /**
  * Factory function for admin operations (bypass RLS, system ops)
  */
-export const getSupabaseAdmin = (): SupabaseClient => {
-  const supabaseUrl = process.env.SUPABASE_URL || '';
-  const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+let adminClient: SupabaseClient | null = null;
 
-  return createClient(supabaseUrl, supabaseServiceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
+export const getSupabaseAdmin = (): SupabaseClient => {
+  if (!adminClient) {
+    const supabaseUrl = process.env.SUPABASE_URL || '';
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+    adminClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    });
+  }
+  return adminClient;
 };
 
 /**

@@ -37,7 +37,7 @@ export class BookingService {
   /**
    * Generate ticket number: ASP-YYYYMMDD-XXXX
    */
-  private static async generateTicketNo(dateStr: string): Promise<string> {
+  private static async generateTicketNo(dateStr: string, attempt: number = 0): Promise<string> {
     const rawDate = new Date(dateStr);
     const yyyy = rawDate.getFullYear();
     const mm = String(rawDate.getMonth() + 1).padStart(2, '0');
@@ -49,7 +49,14 @@ export class BookingService {
       .select('*', { count: 'exact', head: true })
       .like('ticket_no', `${prefix}%`);
 
-    const seq = String((count ?? 0) + 1).padStart(4, '0');
+    const nextVal = (count ?? 0) + 1 + attempt;
+    const seq = String(nextVal).padStart(4, '0');
+
+    if (attempt > 0) {
+      const rand = Math.random().toString(36).substring(2, 4).toUpperCase();
+      return `${prefix}${seq}-${rand}`;
+    }
+
     return `${prefix}${seq}`;
   }
 
@@ -57,33 +64,50 @@ export class BookingService {
    * Public Customer Booking creation
    */
   public static async createBooking(dto: CreateBookingDTO) {
-    const ticketNo = await this.generateTicketNo(dto.tanggal_booking);
-
     const jenisServisString = Array.isArray(dto.jenis_servis)
       ? dto.jenis_servis.join(', ')
       : String(dto.jenis_servis);
 
-    const { data, error } = await supabase
-      .from('bookings')
-      .insert({
-        ticket_no: ticketNo,
-        nama_customer: dto.nama_customer.trim(),
-        email: dto.email.trim().toLowerCase(),
-        no_hp: dto.no_hp.trim(),
-        no_mesin: dto.no_mesin.trim().toUpperCase(),
-        plat_kendaraan: dto.plat_kendaraan.trim().toUpperCase(),
-        tipe_motor: dto.tipe_motor?.trim() || null,
-        tanggal_booking: dto.tanggal_booking,
-        jam_booking: dto.jam_booking,
-        jenis_servis: jenisServisString,
-        detail_lainnya: dto.detail_lainnya?.trim() || null,
-        status: 'PENDING',
-      })
-      .select()
-      .single();
+    const bookingPayload = {
+      nama_customer: dto.nama_customer.trim(),
+      email: dto.email.trim().toLowerCase(),
+      no_hp: dto.no_hp.trim(),
+      no_mesin: dto.no_mesin.trim().toUpperCase(),
+      plat_kendaraan: dto.plat_kendaraan.trim().toUpperCase(),
+      tipe_motor: dto.tipe_motor?.trim() || null,
+      tanggal_booking: dto.tanggal_booking,
+      jam_booking: dto.jam_booking,
+      jenis_servis: jenisServisString,
+      detail_lainnya: dto.detail_lainnya?.trim() || null,
+      status: 'PENDING' as const,
+    };
 
-    if (error) {
-      throw new Error(`Gagal menyimpan booking: ${error.message}`);
+    let data: any = null;
+    let insertError: any = null;
+
+    for (let attempt = 0; attempt < 3; attempt++) {
+      const ticketNo = await this.generateTicketNo(dto.tanggal_booking, attempt);
+      const res = await supabase
+        .from('bookings')
+        .insert({ ...bookingPayload, ticket_no: ticketNo })
+        .select()
+        .single();
+
+      if (!res.error) {
+        data = res.data;
+        insertError = null;
+        break;
+      }
+
+      insertError = res.error;
+      const isDuplicate = res.error.message?.includes('duplicate key') || res.error.message?.includes('ticket_no');
+      if (!isDuplicate) {
+        break;
+      }
+    }
+
+    if (insertError || !data) {
+      throw new Error(`Gagal menyimpan booking: ${insertError?.message || 'Terjadi kesalahan sistem'}`);
     }
 
     // Dispatch automated confirmation email
@@ -216,8 +240,10 @@ export class BookingService {
     }
 
     if (filters.q) {
-      const q = filters.q.trim();
-      query = query.or(`nama_customer.ilike.%${q}%,ticket_no.ilike.%${q}%,plat_kendaraan.ilike.%${q}%,email.ilike.%${q}%`);
+      const q = filters.q.replace(/[,():;"'%_\\]/g, '').trim();
+      if (q) {
+        query = query.or(`nama_customer.ilike.%${q}%,ticket_no.ilike.%${q}%,plat_kendaraan.ilike.%${q}%,email.ilike.%${q}%`);
+      }
     }
 
     query = query.order('created_at', { ascending: false });

@@ -2,7 +2,7 @@ import type { CatalogResponse, SparePartDetailResponse, SparePart } from '@/type
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'https://backend-beta-murex-36.vercel.app/api/v1';
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://esvwatrnlqgcnvjtebmr.supabase.co';
-const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const SUPABASE_KEY = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const SUPABASE_STORAGE_PUBLIC_URL = `${SUPABASE_URL}/storage/v1/object/public/spare-parts`;
 
 // In-Memory Category Cache to prevent downloading 44k category rows on every page click
@@ -68,9 +68,11 @@ async function fetchCatalogFromSupabase(params: Record<string, string>): Promise
   }
 
   if (params.search) {
-    const search = params.search.trim();
-    const cleanNoSpace = search.replace(/\s+/g, '');
-    url.searchParams.append('or', `(part_no.ilike.%${cleanNoSpace}%,part_name.ilike.%${search}%,nama_umum.ilike.%${search}%)`);
+    const sanitizedSearch = params.search.replace(/[(),:;"'%_\\]/g, ' ').trim();
+    if (sanitizedSearch) {
+      const cleanNoSpace = sanitizedSearch.replace(/\s+/g, '');
+      url.searchParams.append('or', `(part_no.ilike.%${cleanNoSpace}%,part_name.ilike.%${sanitizedSearch}%,nama_umum.ilike.%${sanitizedSearch}%)`);
+    }
   }
 
   // Sorting
@@ -204,10 +206,10 @@ export async function fetchCategories(): Promise<{
     // Fallback
   }
 
-  // 2. Supabase fallback query if key is available
+  // 2. Supabase fallback query using database view category_counts
   if (SUPABASE_KEY) {
     try {
-      const url = `${SUPABASE_URL}/rest/v1/spare_parts?select=category_detail&status=eq.ACTIVE&limit=10000`;
+      const url = `${SUPABASE_URL}/rest/v1/category_counts?select=*&order=count.desc`;
       const res = await fetch(url, {
         headers: {
           apikey: SUPABASE_KEY,
@@ -217,20 +219,15 @@ export async function fetchCategories(): Promise<{
       });
 
       if (res.ok) {
-        const parts: { category_detail: string }[] = await res.json();
-        const categoryCounts: Record<string, number> = {};
+        const rows: { category_detail: string; count: number }[] = await res.json();
         let total = 0;
-
-        parts.forEach((p) => {
-          total++;
-          if (p.category_detail) {
-            categoryCounts[p.category_detail] = (categoryCounts[p.category_detail] || 0) + 1;
-          }
+        const categories = (rows ?? []).map((r) => {
+          total += Number(r.count || 0);
+          return {
+            name: r.category_detail,
+            count: Number(r.count || 0),
+          };
         });
-
-        const categories = Object.keys(categoryCounts)
-          .map((name) => ({ name, count: categoryCounts[name] }))
-          .sort((a, b) => b.count - a.count);
 
         const result = {
           success: true,

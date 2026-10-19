@@ -25,18 +25,20 @@ export const SparePartService = {
       .eq('status', 'ACTIVE');
 
     if (search) {
-      const cleanSearch = search.trim();
-      const cleanNoSpace = cleanSearch.replace(/\s+/g, '');
-      const terms = cleanSearch.split(/\s+/).filter(Boolean);
+      const sanitized = search.replace(/[(),:;"'%_\\]/g, ' ').trim();
+      if (sanitized) {
+        const cleanNoSpace = sanitized.replace(/\s+/g, '');
+        const terms = sanitized.split(/\s+/).filter(Boolean);
 
-      if (terms.length === 1) {
-        query = query.or(`part_no.ilike.%${cleanNoSpace}%,part_name.ilike.%${cleanSearch}%,nama_umum.ilike.%${cleanSearch}%`);
-      } else {
-        // Multi-term AND matching: Every search term must exist in part_no, part_name, or nama_umum
-        terms.forEach((t) => {
-          const tNoSpace = t.replace(/\s+/g, '');
-          query = query.or(`part_no.ilike.%${tNoSpace}%,part_name.ilike.%${t}%,nama_umum.ilike.%${t}%`);
-        });
+        if (terms.length <= 1) {
+          query = query.or(`part_no.ilike.%${cleanNoSpace}%,part_name.ilike.%${sanitized}%,nama_umum.ilike.%${sanitized}%`);
+        } else {
+          // Multi-term matching
+          terms.forEach((t) => {
+            const tNoSpace = t.replace(/\s+/g, '');
+            query = query.or(`part_no.ilike.%${tNoSpace}%,part_name.ilike.%${t}%,nama_umum.ilike.%${t}%`);
+          });
+        }
       }
     }
 
@@ -65,6 +67,7 @@ export const SparePartService = {
       case 'newest':
         query = query.order('created_at', { ascending: false });
         break;
+      case 'relevance':
       case 'name_asc':
       case 'a_z':
       default:
@@ -196,8 +199,11 @@ export const SparePartService = {
     }
 
     if (search) {
-      const cleanSearch = search.replace(/\s+/g, '');
-      query = query.or(`part_no.ilike.%${cleanSearch}%,part_name.ilike.%${search}%,nama_umum.ilike.%${search}%`);
+      const sanitized = search.replace(/[(),:;"'%_\\]/g, ' ').trim();
+      if (sanitized) {
+        const cleanSearch = sanitized.replace(/\s+/g, '');
+        query = query.or(`part_no.ilike.%${cleanSearch}%,part_name.ilike.%${sanitized}%,nama_umum.ilike.%${sanitized}%`);
+      }
     }
 
     if (category) {
@@ -425,16 +431,46 @@ export const SparePartService = {
   },
 
   async exportExcel() {
-    const { data, error } = await supabase
-      .from('spare_parts')
-      .select('part_no, part_name, nama_umum, category_detail, het, stok, status')
-      .order('part_name', { ascending: true });
+    const allRows: any[] = [];
+    const CHUNK_SIZE = 2000;
+    let offset = 0;
+    let hasMore = true;
 
-    if (error) throw error;
+    while (hasMore) {
+      const { data, error } = await supabase
+        .from('spare_parts')
+        .select('part_no, part_name, nama_umum, category_detail, het, stok, status')
+        .order('part_name', { ascending: true })
+        .range(offset, offset + CHUNK_SIZE - 1);
 
-    const worksheet = xlsx.utils.json_to_sheet(data ?? []);
+      if (error) throw error;
+
+      if (!data || data.length === 0) {
+        hasMore = false;
+        break;
+      }
+
+      allRows.push(...data);
+      if (data.length < CHUNK_SIZE) {
+        hasMore = false;
+      } else {
+        offset += CHUNK_SIZE;
+      }
+    }
+
+    const formattedRows = allRows.map((p) => ({
+      'Nomor Part (Part No)': p.part_no,
+      'Nama Part': p.part_name,
+      'Nama Umum': p.nama_umum || '-',
+      'Kategori': p.category_detail || '-',
+      'Harga HET (Rp)': p.het ? Number(p.het) : 0,
+      'Stok': p.stok ?? 0,
+      'Status': p.status,
+    }));
+
+    const worksheet = xlsx.utils.json_to_sheet(formattedRows);
     const workbook = xlsx.utils.book_new();
-    xlsx.utils.book_append_sheet(workbook, worksheet, 'Katalog');
+    xlsx.utils.book_append_sheet(workbook, worksheet, 'Katalog Spare Part');
 
     const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
     return buffer as Buffer;

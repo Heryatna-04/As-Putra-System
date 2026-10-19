@@ -25,17 +25,22 @@ export async function GET(request: Request) {
   }
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://esvwatrnlqgcnvjtebmr.supabase.co";
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
 
   if (!supabaseKey) {
     return NextResponse.json({ success: true, data: [] });
   }
 
-  const cleanNoSpace = q.replace(/\s+/g, "");
+  const sanitizedQ = q.replace(/[(),:;"'%_\\]/g, ' ').trim();
+  if (!sanitizedQ) {
+    return NextResponse.json({ success: true, data: [] });
+  }
+
+  const cleanNoSpace = sanitizedQ.replace(/\s+/g, "");
   const url = new URL(`${supabaseUrl}/rest/v1/spare_parts`);
   url.searchParams.append("select", "id,part_no,part_name,nama_umum,het,stok");
   url.searchParams.append("status", "eq.ACTIVE");
-  url.searchParams.append("or", `(part_no.ilike.%${cleanNoSpace}%,part_name.ilike.%${q}%,nama_umum.ilike.%${q}%)`);
+  url.searchParams.append("or", `(part_no.ilike.%${cleanNoSpace}%,part_name.ilike.%${sanitizedQ}%,nama_umum.ilike.%${sanitizedQ}%)`);
   url.searchParams.append("limit", "5");
 
   try {
