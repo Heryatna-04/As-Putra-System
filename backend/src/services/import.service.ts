@@ -125,38 +125,30 @@ export const ImportService = {
 
       const existingSet = new Set((existingParts ?? []).map(p => p.part_no));
 
-      const toInsert: any[] = [];
+      const upsertPayload = batchChunk.map((row) => ({
+        part_no: row.part_no,
+        part_name: row.part_name,
+        category_detail: row.category_detail ?? null,
+        het: row.het ?? null,
+        status: 'ACTIVE',
+      }));
+
+      const { error: upsertErr } = await supabase
+        .from('spare_parts')
+        .upsert(upsertPayload, { onConflict: 'part_no' });
+
+      if (upsertErr) throw upsertErr;
+
       for (const row of batchChunk) {
         if (existingSet.has(row.part_no)) {
-          await supabase
-            .from('spare_parts')
-            .update({
-              part_name: row.part_name,
-              category_detail: row.category_detail ?? null,
-              het: row.het ?? null,
-              status: 'ACTIVE',
-            })
-            .eq('part_no', row.part_no);
           updatedRows++;
         } else {
-          toInsert.push({
-            part_no: row.part_no,
-            part_name: row.part_name,
-            category_detail: row.category_detail ?? null,
-            het: row.het ?? null,
-            stok: 0,
-            status: 'ACTIVE',
-          });
+          insertedRows++;
         }
-      }
-
-      if (toInsert.length > 0) {
-        await supabase.from('spare_parts').insert(toInsert);
-        insertedRows += toInsert.length;
       }
     }
 
-    // Update batch to COMPLETED
+    // Update batch to COMPLETED and clean up notes JSON to save PostgreSQL storage
     const { data: updatedBatch, error: updateError } = await supabase
       .from('import_batches')
       .update({
@@ -165,6 +157,10 @@ export const ImportService = {
         inserted_rows: insertedRows,
         updated_rows: updatedRows,
         finished_at: new Date().toISOString(),
+        notes: JSON.stringify({
+          summary: `Selesai: ${insertedRows} data baru, ${updatedRows} data diperbarui dari ${validRows.length} baris diproses.`,
+          completed_at: new Date().toISOString(),
+        }),
       })
       .eq('id', batchId)
       .select()
