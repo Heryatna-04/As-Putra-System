@@ -42,11 +42,20 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ── Health Check ─────────────────────────────────────────────────────────────
+// ── Health & Root Check ──────────────────────────────────────────────────────
 app.get(['/api/v1/health', '/v1/health', '/health'], (_req: Request, res: Response) => {
   res.status(200).json({
     success: true,
     message: 'AS Putra API is running',
+  });
+});
+
+app.get(['/', '/api/v1', '/v1'], (_req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: 'AS Putra API Server is running',
+    version: '1.1.0',
+    status: 'ONLINE',
   });
 });
 

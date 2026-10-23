@@ -124,7 +124,7 @@ function AdminBookingsContent() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, page, limit, statusFilter, debouncedSearch, tanggalFrom, tanggalTo]);
+  }, [token, page, limit, statusFilter, debouncedSearch, tanggalFrom, tanggalTo, authFetch]);
 
   useEffect(() => {
     fetchBookings();

@@ -75,7 +75,7 @@ export default function AdminImportPage() {
     } finally {
       setIsLoadingHistory(false);
     }
-  }, [token]);
+  }, [authFetch]);
 
   useEffect(() => {
     if (token) {

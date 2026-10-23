@@ -167,7 +167,7 @@ export default function AdminDashboardPage() {
     };
 
     fetchDashboardData();
-  }, [token, fetchBookingsForMonth, selectedMonth, selectedYear]);
+  }, [token, fetchBookingsForMonth, selectedMonth, selectedYear, authFetch]);
 
   if (isLoading) {
     return (

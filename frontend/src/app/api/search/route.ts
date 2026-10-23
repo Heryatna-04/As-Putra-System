@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 const CACHE_HEADERS = {
-  "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
+  "Cache-Control": "no-store, no-cache, must-revalidate",
 };
 
 export async function GET(request: Request) {
@@ -16,7 +16,8 @@ export async function GET(request: Request) {
 
   try {
     const res = await fetch(`${baseUrl}/spare-parts?search=${encodeURIComponent(q)}&limit=5`, {
-      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(3000),
+      cache: "no-store",
     });
     if (res.ok) {
       const json = await res.json();
@@ -53,7 +54,8 @@ export async function GET(request: Request) {
         apikey: supabaseKey,
         Authorization: `Bearer ${supabaseKey}`,
       },
-      next: { revalidate: 60 },
+      signal: AbortSignal.timeout(3000),
+      cache: "no-store",
     });
 
     if (!res.ok) {

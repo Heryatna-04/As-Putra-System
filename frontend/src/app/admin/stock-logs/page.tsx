@@ -62,7 +62,7 @@ export default function StockLogsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, page, limit]);
+  }, [token, page, limit, authFetch]);
 
   useEffect(() => {
     fetchStockLogs();

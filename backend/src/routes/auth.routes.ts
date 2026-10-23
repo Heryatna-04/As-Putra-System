@@ -20,6 +20,12 @@ const loginLimiter = rateLimit({
 
 // POST /api/v1/auth/login
 router.post('/login', loginLimiter, AuthController.login);
+router.get('/login', (_req, res) => {
+  res.status(200).json({
+    success: true,
+    message: 'Endpoint login menggunakan HTTP POST dengan body JSON: { email, password }',
+  });
+});
 
 // POST /api/v1/auth/refresh
 router.post('/refresh', AuthController.refresh);

@@ -100,7 +100,8 @@ async function fetchCatalogFromSupabase(params: Record<string, string>): Promise
       'Authorization': `Bearer ${SUPABASE_KEY}`,
       'Prefer': 'count=planned',
     },
-    next: { revalidate: 300 }, // Cache 5 min
+    signal: AbortSignal.timeout(4000),
+    cache: 'no-store',
   });
 
   if (!res.ok) throw new Error('Gagal mengambil data dari Supabase');
@@ -131,7 +132,7 @@ async function fetchCatalogFromSupabase(params: Record<string, string>): Promise
 
 export async function fetchCatalog(
   params: Record<string, string>,
-  revalidate = 300
+  revalidate = 0
 ): Promise<CatalogResponse> {
   // 1. Try Backend API first (fully operational on Vercel)
   try {
@@ -139,9 +140,12 @@ export async function fetchCatalog(
       Object.fromEntries(Object.entries(params).filter(([, v]) => v !== ""))
     ).toString();
 
-    const res = await fetch(`${BASE_URL}/spare-parts?${qs}`, {
-      next: { revalidate },
-    });
+    const fetchOptions: RequestInit = {
+      signal: AbortSignal.timeout(4000),
+      ...(revalidate === 0 ? { cache: "no-store" } : { next: { revalidate } }),
+    };
+
+    const res = await fetch(`${BASE_URL}/spare-parts?${qs}`, fetchOptions);
 
     if (res.ok) {
       const json: CatalogResponse = await res.json();
@@ -192,6 +196,7 @@ export async function fetchCategories(): Promise<{
   // 1. Try Backend API first
   try {
     const res = await fetch(`${BASE_URL}/spare-parts/categories`, {
+      signal: AbortSignal.timeout(4000),
       next: { revalidate: 3600 },
     });
     if (res.ok) {
@@ -215,6 +220,7 @@ export async function fetchCategories(): Promise<{
           apikey: SUPABASE_KEY,
           Authorization: `Bearer ${SUPABASE_KEY}`,
         },
+        signal: AbortSignal.timeout(4000),
         next: { revalidate: 3600 },
       });
 
@@ -261,7 +267,8 @@ export async function fetchSparePartDetail(
   // 1. Try Backend API first
   try {
     const res = await fetch(`${BASE_URL}/spare-parts/${encodeURIComponent(partNo)}`, {
-      next: { revalidate: 300 },
+      signal: AbortSignal.timeout(4000),
+      cache: "no-store",
     });
     if (res.ok) {
       const json: SparePartDetailResponse = await res.json();
@@ -285,7 +292,8 @@ export async function fetchSparePartDetail(
           apikey: SUPABASE_KEY,
           Authorization: `Bearer ${SUPABASE_KEY}`,
         },
-        next: { revalidate: 300 },
+        signal: AbortSignal.timeout(4000),
+        cache: "no-store",
       });
 
       if (res.ok) {

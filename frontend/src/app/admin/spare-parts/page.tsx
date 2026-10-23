@@ -116,7 +116,7 @@ export default function AdminSparePartsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, page, debouncedSearch, statusFilter, categoryFilter, stockFilter]);
+  }, [token, page, debouncedSearch, statusFilter, categoryFilter, stockFilter, authFetch]);
 
   const searchParams = useSearchParams();
 

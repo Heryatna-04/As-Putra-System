@@ -24,6 +24,9 @@ import ProductCard from "@/components/katalog/ProductCard";
 import CopyPartNoButton from "@/components/katalog/CopyPartNoButton";
 import type { SparePart } from "@/types/spare-part";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 interface DetailPageProps {
   params: Promise<{
     partNo: string;

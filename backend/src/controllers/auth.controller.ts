@@ -30,6 +30,14 @@ export const AuthController = {
         });
         return;
       }
+      if (err?.message?.includes('Profil pengguna tidak ditemukan')) {
+        res.status(403).json({
+          success: false,
+          message: err.message,
+          errors: [],
+        });
+        return;
+      }
       next(err);
     }
   },

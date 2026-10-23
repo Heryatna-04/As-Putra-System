@@ -2,7 +2,8 @@ const fs = require('fs');
 const path = require('path');
 const { Client } = require('pg');
 
-const migrationPath = path.resolve(__dirname, '../database/migrations/004_create_bookings_table.sql');
+const migrationFile = process.argv[2] || '../database/migrations/004_create_bookings_table.sql';
+const migrationPath = path.resolve(__dirname, migrationFile);
 const sql = fs.readFileSync(migrationPath, 'utf8');
 
 const client = new Client({

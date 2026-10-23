@@ -1,17 +1,24 @@
+import { createClient } from '@supabase/supabase-js';
 import { getSupabaseAdmin } from '../config/supabase';
 
 export const AuthService = {
   async login(email: string, password: string) {
-    const supabaseAdmin = getSupabaseAdmin();
+    const supabaseUrl = process.env.SUPABASE_URL || '';
+    const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
-    const { data, error } = await supabaseAdmin.auth.signInWithPassword({ email, password });
+    // Gunakan client terisolasi untuk login agar admin client singleton tidak terpolusi session user
+    const authClient = createClient(supabaseUrl, supabaseServiceRoleKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+    });
+
+    const { data, error } = await authClient.auth.signInWithPassword({ email, password });
     if (error) throw error;
 
     const { session, user } = data;
 
-    // Fetch user role & profile using fresh admin client (bypasses RLS issues)
-    const dbClient = getSupabaseAdmin();
-    const { data: profile, error: profileError } = await dbClient
+    // Fetch user role & profile using admin client (bypasses RLS)
+    const adminClient = getSupabaseAdmin();
+    const { data: profile, error: profileError } = await adminClient
       .from('profiles')
       .select('role, full_name')
       .eq('id', user.id)
