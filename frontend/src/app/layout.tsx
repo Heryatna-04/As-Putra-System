@@ -82,6 +82,9 @@ export const metadata: Metadata = {
 };
 
 import MobileBottomNav from "@/components/MobileBottomNav";
+import { PartInquiryProvider } from "@/context/PartInquiryContext";
+import PartInquiryDrawer from "@/components/katalog/PartInquiryDrawer";
+import FloatingInquiryBar from "@/components/katalog/FloatingInquiryBar";
 
 export default function RootLayout({
   children,
@@ -96,8 +99,12 @@ export default function RootLayout({
     >
       <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-[#FAFAFA] text-[#0A0A0A] pb-16 md:pb-0">
         <AuthProvider>
-          {children}
-          <MobileBottomNav />
+          <PartInquiryProvider>
+            {children}
+            <PartInquiryDrawer />
+            <FloatingInquiryBar />
+            <MobileBottomNav />
+          </PartInquiryProvider>
         </AuthProvider>
       </body>
     </html>

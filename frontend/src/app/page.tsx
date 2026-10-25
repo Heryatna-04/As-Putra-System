@@ -48,9 +48,10 @@ const LOCAL_BUSINESS_JSONLD = {
         "Dealer dan bengkel resmi Honda (AHASS kode 10870) di Kabupaten Kuningan, Jawa Barat. Menyediakan suku cadang asli AHM, booking servis online, mekanik bersertifikat Honda.",
       address: {
         "@type": "PostalAddress",
-        streetAddress: "Jl. Raya Kuningan",
+        streetAddress: "Jl. Siliwangi 126 Kasturi, Sebelah Utara Taman Cirendang",
         addressLocality: "Kuningan",
         addressRegion: "Jawa Barat",
+        postalCode: "45518",
         addressCountry: "ID",
       },
       geo: {
@@ -64,13 +65,13 @@ const LOCAL_BUSINESS_JSONLD = {
           "@type": "OpeningHoursSpecification",
           dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
           opens: "08:00",
-          closes: "15:00",
+          closes: "16:00",
         },
         {
           "@type": "OpeningHoursSpecification",
           dayOfWeek: ["Sunday"],
           opens: "08:00",
-          closes: "14:00",
+          closes: "15:00",
         },
       ],
       priceRange: "IDR",
@@ -113,7 +114,7 @@ const LOCAL_BUSINESS_JSONLD = {
           name: "Apakah ada layanan servis ke lokasi atau instansi?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Ada. Kami melayani Service Visit (servis keliling) untuk rombongan instansi atau perusahaan di Kabupaten Kuningan dan sekitarnya.",
+            text: "Ada. Kami melayani Service Visit (AHASS Keliling) terjadwal ke satu titik lokasi terpusat, seperti desa yang sudah dicanvasing atau kantor instansi/perusahaan di Kabupaten Kuningan. Layanan ini bukan panggilan servis ke rumah perorangan.",
           },
         },
       ],
@@ -219,7 +220,7 @@ const FAQS = [
   },
   {
     q: "Apakah ada layanan servis ke lokasi atau instansi?",
-    a: "Ada. Kami melayani Service Visit (servis keliling) untuk rombongan instansi atau perusahaan di Kabupaten Kuningan dan sekitarnya.",
+    a: "Ada. Kami melayani Service Visit (AHASS Keliling) terjadwal ke satu titik lokasi terpusat, seperti desa yang sudah dicanvasing atau instansi/perusahaan di Kabupaten Kuningan. Layanan ini bukan panggilan servis ke rumah perorangan.",
   },
 ] as const;
 
@@ -425,6 +426,14 @@ export default async function Home() {
                 Booking servis
                 <ArrowRight className="w-4 h-4" aria-hidden />
               </Link>
+            </div>
+
+            {/* Info AHASS Keliling / Service Visit */}
+            <div className="mt-4 flex items-start gap-3 rounded-lg border border-zinc-200 bg-white p-4 text-xs text-zinc-600 sm:text-sm">
+              <span className="font-bold text-zinc-900 shrink-0">Info Service Visit:</span>
+              <span>
+                Layanan AHASS Keliling diadakan terjadwal khusus untuk satu titik lokasi kumpul desa yang telah dicanvasing atau instansi mitra di Kabupaten Kuningan (bukan panggilan servis ke rumah perorangan).
+              </span>
             </div>
           </div>
         </section>

@@ -870,6 +870,16 @@ export default function BookingPage() {
                   Mohon hadir 10 menit lebih awal dari jadwal.
                 </p>
 
+                {/* Checklist Kedatangan */}
+                <div className="mt-3 rounded-lg border border-zinc-200 bg-zinc-50 p-3 text-xs text-zinc-600">
+                  <span className="font-bold text-zinc-800 block mb-1.5">Persiapan ke Bengkel:</span>
+                  <ul className="space-y-1 list-disc list-inside">
+                    <li>Bawa STNK motor (asli/foto)</li>
+                    <li>Bawa Buku Servis/Garansi (khusus servis gratis KPB)</li>
+                    <li>Tunjukkan nomor tiket ini ke petugas AHASS</li>
+                  </ul>
+                </div>
+
                 {/* Location & Map Card */}
                 <div className="mt-6 rounded-xl border border-zinc-200 bg-zinc-50 p-4">
                   <div className="flex items-center gap-2 mb-1.5 font-bold text-xs text-zinc-900">
@@ -877,7 +887,7 @@ export default function BookingPage() {
                     <span>Lokasi AHASS 10870</span>
                   </div>
                   <p className="text-[11px] text-zinc-600 mb-2.5 leading-snug">
-                    Jl. Raya Kuningan, Kab. Kuningan, Jawa Barat
+                    Jl. Siliwangi 126 Kasturi, Sebelah Utara Taman Cirendang, Kuningan, Jawa Barat 45518
                   </p>
                   <div className="h-32 rounded-lg overflow-hidden border border-zinc-200 relative mb-3">
                     <iframe

@@ -2,7 +2,19 @@
 
 import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Package, Layers, SlidersHorizontal, ChevronDown } from "lucide-react";
+import { Package, Layers, SlidersHorizontal, ChevronDown, Bike } from "lucide-react";
+
+const POPULAR_MOTORS = [
+  "Beat",
+  "Vario",
+  "Scoopy",
+  "PCX",
+  "ADV",
+  "Genio",
+  "Supra",
+  "CB150",
+  "CBR",
+];
 
 interface FilterSidebarProps {
   categories?: { name: string; count: number }[];
@@ -54,6 +66,7 @@ function FilterSidebarContent({ categories = [], totalParts = 0 }: FilterSidebar
 
   const currentCategory = searchParams.get("category") || "";
   const stockOnly = searchParams.get("stock_only") === "true";
+  const currentSearch = searchParams.get("search") || "";
 
   const updateParam = (key: string, value: string | null) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -67,6 +80,8 @@ function FilterSidebarContent({ categories = [], totalParts = 0 }: FilterSidebar
     setIsMobileOpen(false);
   };
 
+  const hasAnyFilter = Boolean(currentCategory || stockOnly || currentSearch);
+
   return (
     <aside
       aria-label="Filter katalog"
@@ -78,12 +93,17 @@ function FilterSidebarContent({ categories = [], totalParts = 0 }: FilterSidebar
         onClick={() => setIsMobileOpen((prev) => !prev)}
         className="flex w-full items-center justify-between gap-2 rounded-lg border border-zinc-300 bg-zinc-50 px-3.5 py-2.5 text-left text-sm font-semibold text-zinc-800 lg:hidden"
       >
-        <span className="flex items-center gap-2">
+        <span className="flex flex-wrap items-center gap-1.5">
           <SlidersHorizontal className="h-4 w-4 text-[#E4002B]" />
           <span>Filter & Kategori</span>
           {currentCategory && (
             <span className="rounded-full bg-red-100 px-2 py-0.5 text-xs font-bold text-[#B00020]">
               {currentCategory}
+            </span>
+          )}
+          {currentSearch && (
+            <span className="rounded-full bg-zinc-900 px-2 py-0.5 text-xs font-bold text-white">
+              {currentSearch}
             </span>
           )}
         </span>
@@ -92,27 +112,68 @@ function FilterSidebarContent({ categories = [], totalParts = 0 }: FilterSidebar
 
       {/* Content Container (Collapsible on mobile, always visible on desktop) */}
       <div className={`mt-4 lg:mt-0 ${isMobileOpen ? "block" : "hidden lg:block"}`}>
+        {/* Model Motor Honda */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-2.5">
+            <h2 className="text-base font-semibold text-zinc-900 flex items-center gap-1.5">
+              <Bike className="w-4 h-4 text-[#E4002B]" />
+              Model Motor
+            </h2>
+            {currentSearch && (
+              <button
+                type="button"
+                onClick={() => updateParam("search", null)}
+                className="text-xs font-semibold text-[#E4002B] hover:underline cursor-pointer"
+              >
+                Reset Motor
+              </button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {POPULAR_MOTORS.map((motor) => {
+              const isSelected = currentSearch.toLowerCase() === motor.toLowerCase();
+              return (
+                <button
+                  key={motor}
+                  type="button"
+                  onClick={() => updateParam("search", isSelected ? null : motor)}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-semibold transition-all ${
+                    isSelected
+                      ? "bg-[#E4002B] text-white shadow-xs"
+                      : "bg-zinc-100 text-zinc-700 hover:bg-zinc-200"
+                  }`}
+                >
+                  {motor}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        <hr className="my-6 border-zinc-200" />
+
         {/* Kategori */}
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-base font-semibold text-zinc-900">Kategori</h2>
-          {Boolean(currentCategory || stockOnly) && (
+          {hasAnyFilter && (
             <button
               type="button"
               onClick={() => {
                 const params = new URLSearchParams(searchParams.toString());
                 params.delete("category");
                 params.delete("stock_only");
+                params.delete("search");
                 params.set("page", "1");
                 router.push(`/katalog?${params.toString()}`);
                 setIsMobileOpen(false);
               }}
               className="text-xs font-semibold text-[#E4002B] hover:underline cursor-pointer"
             >
-              Reset
+              Reset Semua
             </button>
           )}
         </div>
-        <div className="flex max-h-56 flex-col gap-0.5 overflow-y-auto pr-1 lg:max-h-[480px]">
+        <div className="flex max-h-56 flex-col gap-0.5 overflow-y-auto pr-1 lg:max-h-[380px]">
           <CategoryButton
             label="Semua spare part"
             count={totalParts}

@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { MessageSquare, ChevronLeft, ChevronRight, ZoomIn, X, Wrench } from "lucide-react";
+import { MessageSquare, ChevronLeft, ChevronRight, ZoomIn, X, Wrench, Plus, Check } from "lucide-react";
 import { SparePart } from "@/types/spare-part";
 import { formatIDR, buildWaUrl } from "@/lib/utils";
+import { usePartInquiry } from "@/context/PartInquiryContext";
 
 interface ProductCardProps {
   part: SparePart;
@@ -14,6 +15,8 @@ interface ProductCardProps {
 export default function ProductCard({ part }: ProductCardProps) {
   const isAvailable = part.stok > 0;
   const waUrl = buildWaUrl(part.part_no, part.part_name);
+  const { addItem, isInInquiry, removeItem } = usePartInquiry();
+  const inList = isInInquiry(part.part_no);
 
   const images = (part.gambar_urls && part.gambar_urls.length > 0)
     ? part.gambar_urls
@@ -96,6 +99,27 @@ export default function ProductCard({ part }: ProductCardProps) {
                 <ZoomIn className="w-4 h-4" aria-hidden />
               </button>
             )}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (inList) {
+                  removeItem(part.part_no);
+                } else {
+                  addItem(part, 1);
+                }
+              }}
+              aria-label={inList ? "Hapus dari daftar part" : "Tambah ke daftar part"}
+              title={inList ? "Tercatat di daftar part (klik untuk hapus)" : "Tambah ke daftar part"}
+              className={`w-10 h-10 rounded-lg border flex items-center justify-center transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 ${
+                inList
+                  ? "bg-emerald-600 text-white border-emerald-600 hover:bg-emerald-700"
+                  : "bg-white text-zinc-700 border-zinc-300 hover:bg-zinc-100 hover:text-[#E4002B] hover:border-[#E4002B]"
+              }`}
+            >
+              {inList ? <Check className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
+            </button>
             <a
               href={waUrl}
               target="_blank"
@@ -213,19 +237,44 @@ export default function ProductCard({ part }: ProductCardProps) {
               </div>
             </div>
 
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-2xs ${
-                isAvailable
-                  ? "bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
-                  : "bg-zinc-100 text-zinc-800 border border-zinc-300 hover:bg-zinc-200"
-              }`}
-            >
-              <MessageSquare className="w-4 h-4 shrink-0" aria-hidden />
-              <span>{isAvailable ? "Tanya via WA" : "Tanya inden"}</span>
-            </a>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => inList ? removeItem(part.part_no) : addItem(part, 1)}
+                title={inList ? "Tercatat di daftar part (klik untuk hapus)" : "Tambah ke daftar part konsultasi WA"}
+                className={`px-3 py-2.5 min-h-[44px] rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-all active:scale-95 border ${
+                  inList
+                    ? "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
+                    : "bg-white text-zinc-700 border-zinc-300 hover:bg-zinc-50 hover:border-zinc-400"
+                }`}
+              >
+                {inList ? (
+                  <>
+                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                    <span>Dicatat</span>
+                  </>
+                ) : (
+                  <>
+                    <Plus className="w-3.5 h-3.5 text-[#E4002B]" />
+                    <span>+ List</span>
+                  </>
+                )}
+              </button>
+
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all active:scale-95 shadow-2xs ${
+                  isAvailable
+                    ? "bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
+                    : "bg-zinc-100 text-zinc-800 border border-zinc-300 hover:bg-zinc-200"
+                }`}
+              >
+                <MessageSquare className="w-4 h-4 shrink-0" aria-hidden />
+                <span>{isAvailable ? "Tanya via WA" : "Tanya inden"}</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>

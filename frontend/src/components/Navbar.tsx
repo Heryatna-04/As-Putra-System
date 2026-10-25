@@ -4,16 +4,18 @@ import { Suspense, useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Search, MessageSquare, User, CalendarDays } from "lucide-react";
+import { Search, MessageSquare, User, CalendarDays, ShoppingBag } from "lucide-react";
 import { buildWaUrl } from "@/lib/utils";
 
 import { formatIDR } from "@/lib/utils";
 import { SparePart } from "@/types/spare-part";
+import { usePartInquiry } from "@/context/PartInquiryContext";
 
 function NavbarContent() {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { totalCount, setIsDrawerOpen } = usePartInquiry();
   const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
   const [searchResults, setSearchResults] = useState<SparePart[]>([]);
   const [isSearching, setIsSearching] = useState(false);
@@ -91,8 +93,21 @@ function NavbarContent() {
             Dealer & Bengkel Resmi Honda
           </span>
 
-          {/* Mobile Right Buttons (WA & Staff) */}
-          <div className="flex sm:hidden items-center gap-2">
+          {/* Mobile Right Buttons (WA & List & Staff) */}
+          <div className="flex sm:hidden items-center gap-1.5">
+            <button
+              type="button"
+              onClick={() => setIsDrawerOpen(true)}
+              className="relative w-11 h-11 flex items-center justify-center text-zinc-700 hover:text-zinc-900 border border-zinc-200/90 rounded-xl active:scale-95 transition-all shadow-2xs bg-white"
+              title="Daftar Kebutuhan Part"
+            >
+              <ShoppingBag className="w-4 h-4 text-[#E4002B]" />
+              {totalCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-[#E4002B] text-[9px] font-black text-white flex items-center justify-center">
+                  {totalCount}
+                </span>
+              )}
+            </button>
             <Link
               href="/admin/login"
               className="w-11 h-11 flex items-center justify-center text-zinc-600 hover:text-zinc-900 border border-zinc-200/90 rounded-xl active:scale-95 transition-all shadow-2xs bg-white"
@@ -180,8 +195,23 @@ function NavbarContent() {
           )}
         </form>
 
-        {/* Desktop Right: Login & WA */}
+        {/* Desktop Right: List & Login & WA */}
         <div className="hidden sm:flex items-center gap-2 sm:gap-3">
+          <button
+            type="button"
+            onClick={() => setIsDrawerOpen(true)}
+            className="flex items-center gap-1.5 border border-zinc-200 hover:border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg text-xs font-semibold transition-all relative"
+            title="Daftar Kebutuhan Part"
+          >
+            <ShoppingBag className="w-3.5 h-3.5 text-[#E4002B]" />
+            <span>Daftar Part</span>
+            {totalCount > 0 && (
+              <span className="rounded-full bg-[#E4002B] text-white px-1.5 py-0.2 text-[10px] font-bold">
+                {totalCount}
+              </span>
+            )}
+          </button>
+
           <Link
             href="/admin/login"
             className="flex items-center gap-1.5 border border-zinc-200 hover:border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-lg text-xs font-semibold transition-all"

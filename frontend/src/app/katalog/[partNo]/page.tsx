@@ -22,6 +22,7 @@ import { formatIDR, buildWaUrl } from "@/lib/utils";
 import DetailImageGallery from "@/components/katalog/DetailImageGallery";
 import ProductCard from "@/components/katalog/ProductCard";
 import CopyPartNoButton from "@/components/katalog/CopyPartNoButton";
+import AddToInquiryButton from "@/components/katalog/AddToInquiryButton";
 import type { SparePart } from "@/types/spare-part";
 
 export const dynamic = "force-dynamic";
@@ -249,6 +250,11 @@ export default async function SparePartDetailPage({ params }: DetailPageProps) {
               <Share2 className="w-4 h-4" />
               <span className="sm:hidden ml-2">Bagikan</span>
             </a>
+          </div>
+
+          {/* Multi-item WA Inquiry CTA */}
+          <div className="pt-2">
+            <AddToInquiryButton part={part} />
           </div>
         </div>
       </div>
