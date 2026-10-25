@@ -1,18 +1,6 @@
 import Image from "next/image";
-import Link from "next/link";
-import { MessageSquare, Bike } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { buildWaUrl } from "@/lib/utils";
-
-const POPULAR_MOTORS = [
-  "Beat",
-  "Vario",
-  "Scoopy",
-  "PCX",
-  "ADV",
-  "Genio",
-  "Supra",
-  "CBR",
-];
 
 interface HeroBannerProps {
   totalParts: number;
@@ -51,23 +39,6 @@ export default function HeroBanner({ totalParts }: HeroBannerProps) {
           <p className="mt-3 text-base text-white">
             {partCount} part resmi AHM. Stok dan harga HET diperbarui langsung dari database.
           </p>
-
-          {/* Quick Motor Filter Chips */}
-          <div className="mt-4 flex flex-wrap items-center gap-1.5 text-xs text-white">
-            <span className="font-semibold text-white/90 inline-flex items-center gap-1 mr-0.5">
-              <Bike className="w-3.5 h-3.5" aria-hidden />
-              Pilih Motor:
-            </span>
-            {POPULAR_MOTORS.map((motor) => (
-              <Link
-                key={motor}
-                href={`/katalog?search=${encodeURIComponent(motor)}`}
-                className="inline-flex items-center rounded-full bg-white/20 hover:bg-white/30 px-2.5 py-1 font-medium text-white transition-all border border-white/25 active:scale-95"
-              >
-                {motor}
-              </Link>
-            ))}
-          </div>
         </div>
 
         <a
