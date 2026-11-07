@@ -19,9 +19,11 @@ import {
   Eye,
   X,
   Store,
-  CheckCircle2
+  CheckCircle2,
+  CalendarDays,
 } from "lucide-react";
 import { toast } from "sonner";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface BookingItem {
   part_no: string;
@@ -252,51 +254,35 @@ function AdminBookingsContent() {
   };
 
   return (
-    <div className="flex flex-col h-full overflow-hidden bg-gradient-to-b from-[#F2F4F8] via-[#F7F9FC] to-[#EEF2F6]">
-      {/* Topbar */}
-      <div className="h-[54px] bg-white/90 backdrop-blur-md border-b border-zinc-200/80 flex items-center justify-between px-6 shrink-0 shadow-2xs">
-        <div className="flex items-center gap-2 text-sm text-zinc-500 font-medium">
-          <span>Admin</span>
-          <span className="text-zinc-300">/</span>
-          <span className="font-bold text-zinc-900">Booking Servis</span>
-        </div>
-        <div className="flex items-center gap-2.5">
-          <button
-            onClick={handleExportExcel}
-            disabled={isExporting}
-            className="text-xs font-bold text-emerald-800 bg-gradient-to-b from-emerald-50 to-emerald-100/80 hover:from-emerald-100 hover:to-emerald-200 flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-emerald-300 shadow-[0_2px_6px_rgba(16,185,129,0.15),inset_0_1px_0_rgba(255,255,255,0.9)] transition disabled:opacity-50"
-          >
-            <FileSpreadsheet size={13} className={isExporting ? "animate-spin" : ""} />
-            {isExporting ? "Mengunduh Excel..." : "Export Excel"}
-          </button>
-          <button
-            onClick={() => fetchBookings()}
-            className="text-xs font-bold text-zinc-700 hover:text-zinc-900 flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white hover:bg-zinc-50 border border-zinc-200 shadow-[0_2px_4px_rgba(0,0,0,0.04),inset_0_1px_0_rgba(255,255,255,0.9)] transition"
-          >
-            <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} /> Refresh
-          </button>
-        </div>
-      </div>
+    <div className="flex flex-col h-full overflow-hidden bg-[#F5F6F8]">
+      <AdminPageHeader
+        title="Manajemen Booking & Reservasi"
+        subtitle={`${total} total reservasi · antrean servis & suku cadang Honda`}
+        breadcrumb="Booking Servis"
+        icon={CalendarDays}
+        actions={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleExportExcel}
+              disabled={isExporting}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-emerald-200 bg-emerald-50 hover:bg-emerald-100 text-xs font-semibold text-emerald-800 transition disabled:opacity-50"
+            >
+              <FileSpreadsheet size={13} className={isExporting ? "animate-spin" : ""} />
+              {isExporting ? "Mengunduh..." : "Export Excel"}
+            </button>
+            <button
+              onClick={() => fetchBookings()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 transition"
+            >
+              <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} /> Refresh
+            </button>
+          </div>
+        }
+      />
 
       {/* Content Body */}
-      <div className="flex-1 overflow-y-auto p-6 sm:p-7">
-        <div className="max-w-7xl mx-auto space-y-6">
-          {/* Header */}
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight font-display drop-shadow-[0_1px_1px_rgba(0,0,0,0.04)]">
-                Manajemen Booking &amp; Reservasi
-              </h1>
-              <p className="text-xs sm:text-sm text-zinc-500 font-medium mt-1">
-                Kelola antrean servis kendaraan dan pesanan suku cadang Honda secara terpadu dan real-time.
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-xs font-bold text-zinc-700 bg-white border border-zinc-200/90 px-3.5 py-2 rounded-xl shadow-2xs">
-                Total Reservasi: <strong className="text-zinc-900 font-black">{total}</strong>
-              </div>
-            </div>
-          </div>
+      <div className="flex-1 overflow-y-auto p-5 sm:p-6">
+        <div className="max-w-7xl mx-auto space-y-5">
 
           {/* Tipe Booking Filter Tabs */}
           <div className="flex flex-wrap items-center gap-2">

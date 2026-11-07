@@ -17,11 +17,13 @@ import {
   AlertTriangle,
   RotateCcw,
   RefreshCw,
+  Wrench,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SparePart } from "@/types/spare-part";
 import { formatIDR } from "@/lib/utils";
 import { toast } from "sonner";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 export default function AdminSparePartsPage() {
   const { token, authFetch } = useAuth();
@@ -296,47 +298,32 @@ export default function AdminSparePartsPage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Topbar */}
-      <div className="h-[52px] bg-white border-b border-zinc-200 flex items-center justify-between px-6 shrink-0">
-        <div className="flex items-center gap-2 text-sm text-zinc-500">
-          <span>Admin</span>
-          <span className="text-zinc-300">/</span>
-          <span className="font-semibold text-zinc-900">Suku Cadang</span>
-        </div>
-        <button
-          onClick={() => fetchParts()}
-          disabled={isLoading}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 transition disabled:opacity-50"
-          title="Segarkan data suku cadang"
-        >
-          <RefreshCw size={12} className={isLoading ? "animate-spin text-red-600" : ""} /> Refresh
-        </button>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 space-y-6">
-        <div className="max-w-[1400px] mx-auto space-y-6">
-          {/* Header Banner */}
-          <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-[#0F172A] via-[#1E293B] to-[#0F172A] p-6 sm:p-8 text-white shadow-sm border border-slate-800">
-            <Image
-              src="/as-putra-dealer.png"
-              alt="Bengkel AS Putra"
-              fill
-              className="object-cover opacity-20 pointer-events-none"
-              priority
-            />
-            <div className="relative z-10">
-              <span className="inline-block px-3 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider bg-red-600 text-white mb-2">
-                Master Data AHM
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight font-display">
-                Manajemen Suku Cadang
-              </h1>
-              <p className="text-xs sm:text-sm text-zinc-300 font-medium mt-1">
-                Kelola master {total > 0 ? `${total.toLocaleString("id-ID")}+` : "44.000+"} data suku cadang, penyesuaian harga HET resmi, dan stok gudang.
-              </p>
-            </div>
+      <AdminPageHeader
+        title="Manajemen Suku Cadang"
+        subtitle={`${total > 0 ? total.toLocaleString("id-ID") + "+" : "44.000+"} SKU · harga HET AHM & stok gudang`}
+        breadcrumb="Suku Cadang"
+        icon={Wrench}
+        actions={
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setEditingPart(null); setIsModalOpen(true); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 border border-white/25 text-white text-xs font-semibold transition"
+            >
+              <Plus size={13} /> Tambah Part
+            </button>
+            <button
+              onClick={() => fetchParts()}
+              disabled={isLoading}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs font-semibold transition disabled:opacity-50"
+            >
+              <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} /> Refresh
+            </button>
           </div>
-          {/* Table Container */}
+        }
+      />
+
+      <div className="flex-1 overflow-y-auto p-5 space-y-5">
+        <div className="max-w-[1400px] mx-auto space-y-5">
           <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
             
             {/* Toolbar */}

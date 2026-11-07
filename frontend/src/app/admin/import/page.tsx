@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { formatIDR } from "@/lib/utils";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface ValidImportRow {
   part_no: string;
@@ -166,29 +167,26 @@ export default function AdminImportPage() {
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 overflow-hidden bg-gray-50/50">
-      {/* Topbar Header */}
-      <header className="h-20 bg-white/80 backdrop-blur-md border-b border-gray-200 flex items-center justify-between px-8 z-10 sticky top-0 shrink-0">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">Import Excel Suku Cadang</h2>
-          <div className="flex items-center text-sm text-gray-500 mt-1">
-            <span>Admin</span>
-            <span className="mx-2">•</span>
-            <span className="text-[#E4002B] font-medium">Upload & Synchronize</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={handleDownloadTemplate}
-          className="bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-300 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm flex items-center gap-2 transition cursor-pointer shadow-xs"
-        >
-          <Download className="w-4 h-4 text-[#E4002B]" />
-          <span>Download Template Excel</span>
-        </button>
-      </header>
+    <div className="flex flex-col h-full overflow-hidden bg-[#F5F6F8]">
+      <AdminPageHeader
+        title="Import Excel Suku Cadang"
+        subtitle="Upload & sinkronisasi katalog AHM via spreadsheet"
+        breadcrumb="Import Excel"
+        icon={FileSpreadsheet}
+        actions={
+          <button
+            type="button"
+            onClick={handleDownloadTemplate}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 transition"
+          >
+            <Download className="w-3.5 h-3.5 text-[#E4002B]" />
+            Template Excel
+          </button>
+        }
+      />
 
       {/* Content Area */}
-      <div className="flex-1 overflow-auto p-8 max-w-6xl">
+      <div className="flex-1 overflow-auto p-5 max-w-6xl">
         {/* Error Alert */}
         {errorMsg && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3 text-red-600 text-sm font-medium">

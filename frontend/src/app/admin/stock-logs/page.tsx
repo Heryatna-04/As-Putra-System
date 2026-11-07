@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useAuth } from "@/context/AuthContext";
 import { History, RefreshCw, ChevronLeft, ChevronRight, User, Package, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { toast } from "sonner";
+import AdminPageHeader from "@/components/admin/AdminPageHeader";
 
 interface StockLogItem {
   id: string;
@@ -81,38 +82,23 @@ export default function StockLogsPage() {
 
   return (
     <div className="flex flex-col h-full overflow-hidden">
-      {/* Topbar */}
-      <div className="h-[52px] bg-white border-b border-zinc-200 flex items-center px-6 shrink-0 justify-between">
-        <div className="flex items-center gap-2 text-sm text-zinc-500">
-          <span>Admin</span>
-          <span className="text-zinc-300">/</span>
-          <span className="font-semibold text-zinc-900">Riwayat Stok</span>
-        </div>
-        <button
-          onClick={() => fetchStockLogs()}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 transition"
-        >
-          <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} /> Refresh
-        </button>
-      </div>
+      <AdminPageHeader
+        title="Audit Trail Perubahan Stok"
+        subtitle={`${total} catatan perubahan stok suku cadang`}
+        breadcrumb="Riwayat Stok"
+        icon={History}
+        actions={
+          <button
+            onClick={() => fetchStockLogs()}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-semibold text-zinc-700 transition"
+          >
+            <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} /> Refresh
+          </button>
+        }
+      />
 
-      <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-[1400px] mx-auto space-y-5">
-          {/* Header Banner */}
-          <div className="bg-white border border-zinc-200 rounded-xl p-5 flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <History className="w-5 h-5 text-[#E8272A]" />
-                <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Audit Trail Perubahan Stok</h1>
-              </div>
-              <p className="text-xs text-zinc-500 mt-1">
-                Catatan lengkap histori penambahan dan pengurangan stok suku cadang beserta akun penanggung jawabnya.
-              </p>
-            </div>
-            <div className="text-xs text-zinc-500 font-medium">
-              Total Catatan: <strong className="text-zinc-900">{total}</strong>
-            </div>
-          </div>
+      <div className="flex-1 overflow-y-auto p-5">
+        <div className="max-w-[1400px] mx-auto space-y-4">
 
           {/* Table */}
           <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden shadow-sm">
