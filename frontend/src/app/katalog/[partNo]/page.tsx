@@ -3,23 +3,20 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
   ChevronRight,
-  MessageSquare,
   CheckCircle2,
   XCircle,
   ArrowLeft,
   ShieldCheck,
   Wrench,
   Truck,
-  CalendarDays,
   Sparkles,
   HelpCircle,
   Award,
   ChevronDown,
-  Share2,
   ShoppingBag
 } from "lucide-react";
 import { fetchSparePartDetail, fetchCatalog } from "@/lib/api";
-import { formatIDR, buildWaUrl } from "@/lib/utils";
+import { formatIDR } from "@/lib/utils";
 import DetailImageGallery from "@/components/katalog/DetailImageGallery";
 import ProductCard from "@/components/katalog/ProductCard";
 import CopyPartNoButton from "@/components/katalog/CopyPartNoButton";
@@ -114,7 +111,6 @@ export default async function SparePartDetailPage({ params }: DetailPageProps) {
   }
 
   const isAvailable = part.stok > 0;
-  const waUrl = buildWaUrl(part.part_no, `${part.nama_umum || part.part_name} (${part.part_no})`);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -223,48 +219,18 @@ export default async function SparePartDetailPage({ params }: DetailPageProps) {
             </div>
           </div>
 
-          {/* Action CTAs: Booking Part, Booking Servis Pasang, WA */}
+          {/* Action CTAs: Booking Part */}
           <div className="space-y-2.5 pt-2">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              <Link
-                href={`/booking?type=sparepart&partNo=${encodeURIComponent(part.part_no)}`}
-                className="bg-[#E4002B] hover:bg-[#b00020] text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-red-600/20 active:scale-[0.99]"
-              >
-                <ShoppingBag className="w-4 h-4" />
-                <span>Booking Suku Cadang Ini</span>
-              </Link>
-              <Link
-                href={`/booking?type=servis&partNo=${encodeURIComponent(part.part_no)}`}
-                className="bg-zinc-900 hover:bg-zinc-800 text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
-              >
-                <CalendarDays className="w-4 h-4 text-[#E4002B]" />
-                <span>Booking Servis Pasang</span>
-              </Link>
-            </div>
-
-            <div className="flex gap-2.5">
-              <a
-                href={waUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-2xs"
-              >
-                <MessageSquare className="w-4 h-4 fill-current" />
-                <span>Tanya / Chat via WhatsApp</span>
-              </a>
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(`Cek ketersediaan suku cadang asli Honda: ${part.nama_umum || part.part_name} (${part.part_no}) - Harga HET ${formatIDR(part.het)} di AHASS AS Putra Kuningan: https://asputra.vercel.app/katalog/${encodeURIComponent(part.part_no)}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-12 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-3 rounded-xl font-bold text-xs flex items-center justify-center transition-all border border-zinc-200 shrink-0"
-                title="Bagikan ke WhatsApp"
-              >
-                <Share2 className="w-4 h-4" />
-              </a>
-            </div>
+            <Link
+              href={`/booking?type=sparepart&partNo=${encodeURIComponent(part.part_no)}`}
+              className="w-full bg-[#E4002B] hover:bg-[#b00020] text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-red-600/20 active:scale-[0.99]"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>Booking Suku Cadang Ini</span>
+            </Link>
           </div>
 
-          {/* Multi-item WA Inquiry CTA */}
+          {/* Multi-item Inquiry CTA */}
           <div className="pt-2">
             <AddToInquiryButton part={part} />
           </div>
@@ -357,7 +323,7 @@ export default async function SparePartDetailPage({ params }: DetailPageProps) {
               <div className="p-4 bg-white border-t border-zinc-200 text-xs text-zinc-700 space-y-3">
                 <div>
                   <p className="font-bold text-zinc-900 mb-0.5">Q: Apakah part ini cocok untuk motor Honda saya?</p>
-                  <p className="text-zinc-600">A: Setiap part AHM dibuat spesifik berdasarkan kode spare part ({part.part_no}). Jika ragu, tim mekanik kami siap membantu mencocokkan via WhatsApp.</p>
+                  <p className="text-zinc-600">A: Setiap part AHM dibuat spesifik berdasarkan kode spare part ({part.part_no}). Jika ragu, tim mekanik kami siap membantu mencocokkan secara langsung di bengkel AHASS.</p>
                 </div>
                 <hr className="border-zinc-100" />
                 <div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Plus, Check, ShoppingBag } from "lucide-react";
+import { Plus, Check } from "lucide-react";
 import { usePartInquiry } from "@/context/PartInquiryContext";
 import type { SparePart } from "@/types/spare-part";
 
@@ -37,7 +37,7 @@ export default function AddToInquiryButton({ part }: AddToInquiryButtonProps) {
       ) : (
         <>
           <Plus className="w-4 h-4 text-[#E4002B]" />
-          <span>+ Tambah ke Daftar Part WA (Multi-Item)</span>
+          <span>+ Tambah ke Daftar Part (Multi-Item)</span>
         </>
       )}
     </button>
