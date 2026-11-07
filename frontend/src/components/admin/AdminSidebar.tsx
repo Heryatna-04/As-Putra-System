@@ -97,22 +97,22 @@ export default function AdminSidebar({
         className={`
           fixed md:static inset-y-0 left-0 z-50
           flex flex-col h-screen shrink-0
-          bg-[#111318] text-white
-          border-r border-white/[0.06]
+          bg-gradient-to-b from-[#E4002B] via-[#D80028] to-[#BA0022] text-white
+          border-r border-red-800/20 shadow-xl md:shadow-none
           transition-all duration-300 ease-in-out
           ${isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
-          ${isCollapsed ? "md:w-[64px] w-[260px]" : "w-[260px]"}
+          ${isCollapsed ? "md:w-[56px] w-[210px]" : "w-[210px]"}
         `}
       >
         {/* ── HEADER: Logo + Brand ── */}
         <div
-          className={`flex items-center shrink-0 h-14 border-b border-white/[0.06] px-3 gap-3 relative`}
+          className={`flex items-center shrink-0 h-13 border-b border-white/15 px-2.5 gap-2.5 relative`}
         >
           {/* Close button mobile */}
           {onClose && (
             <button
               onClick={onClose}
-              className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/8 transition md:hidden"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/15 transition md:hidden"
               aria-label="Tutup Menu"
             >
               <X className="w-4 h-4" />
@@ -120,13 +120,13 @@ export default function AdminSidebar({
           )}
 
           {/* Logo */}
-          <div className="relative w-7 h-7 shrink-0">
+          <div className="relative w-6 h-6 shrink-0">
             <Image
               src="/honda-logo.png"
               alt="Logo Honda"
-              width={28}
-              height={28}
-              className="object-contain brightness-0 invert opacity-90"
+              width={24}
+              height={24}
+              className="object-contain brightness-0 invert"
               priority
             />
           </div>
@@ -134,10 +134,10 @@ export default function AdminSidebar({
           {/* Brand text */}
           {!isCollapsed && (
             <div className="flex flex-col min-w-0 leading-tight animate-in fade-in duration-150">
-              <span className="text-[13px] font-bold text-white tracking-tight truncate">
+              <span className="text-xs font-bold text-white tracking-tight truncate">
                 AS Putra Motor
               </span>
-              <span className="text-[10px] text-white/40 font-medium tracking-wide">
+              <span className="text-[9.5px] text-white/70 font-medium tracking-wide">
                 AHASS 10870 · Kuningan
               </span>
             </div>
@@ -147,7 +147,7 @@ export default function AdminSidebar({
           <button
             type="button"
             onClick={toggleCollapsed}
-            className={`hidden md:flex ml-auto p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/8 transition shrink-0 cursor-pointer ${
+            className={`hidden md:flex ml-auto p-1.5 rounded-lg text-white/80 hover:text-white hover:bg-white/15 transition shrink-0 cursor-pointer ${
               isCollapsed ? "mx-auto" : ""
             }`}
             title={isCollapsed ? "Perluas sidebar" : "Ciutkan sidebar"}
@@ -162,7 +162,7 @@ export default function AdminSidebar({
         </div>
 
         {/* ── NAV ── */}
-        <nav className="flex-1 overflow-y-auto py-3 px-2 space-y-0.5">
+        <nav className="flex-1 overflow-y-auto py-2.5 px-2 space-y-0.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -177,19 +177,19 @@ export default function AdminSidebar({
                 onClick={onClose}
                 title={isCollapsed ? item.label : undefined}
                 className={`
-                  group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium
+                  group flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13px] font-medium
                   transition-all duration-150 relative
                   ${
                     isActive
-                      ? "bg-white/10 text-white"
-                      : "text-white/55 hover:text-white hover:bg-white/6"
+                      ? "bg-white text-[#E4002B] font-semibold shadow-xs"
+                      : "text-white/85 hover:text-white hover:bg-white/15"
                   }
-                  ${isCollapsed ? "justify-center px-2" : ""}
+                  ${isCollapsed ? "justify-center px-1.5" : ""}
                 `}
               >
                 <Icon
-                  className={`w-[18px] h-[18px] shrink-0 transition-colors ${
-                    isActive ? "text-white" : "text-white/50 group-hover:text-white/80"
+                  className={`w-4 h-4 shrink-0 transition-colors ${
+                    isActive ? "text-[#E4002B]" : "text-white/80 group-hover:text-white"
                   }`}
                 />
 
@@ -199,12 +199,12 @@ export default function AdminSidebar({
 
                 {/* Active indicator dot */}
                 {isActive && !isCollapsed && (
-                  <ChevronRight className="w-3.5 h-3.5 ml-auto text-white/30" />
+                  <ChevronRight className="w-3.5 h-3.5 ml-auto text-[#E4002B]/60" />
                 )}
 
                 {/* Tooltip saat collapsed */}
                 {isCollapsed && (
-                  <span className="absolute left-full ml-2.5 px-2.5 py-1 rounded-md bg-zinc-800 text-white text-xs font-medium whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg border border-white/10">
+                  <span className="absolute left-full ml-2 px-2 py-1 rounded-md bg-zinc-900 text-white text-[11px] font-semibold whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50 shadow-lg border border-white/10">
                     {item.label}
                   </span>
                 )}
@@ -215,40 +215,40 @@ export default function AdminSidebar({
 
         {/* ── USER FOOTER ── */}
         <div
-          className={`shrink-0 border-t border-white/[0.06] p-2 ${
+          className={`shrink-0 border-t border-white/15 p-2 ${
             isCollapsed ? "flex flex-col items-center gap-2" : ""
           }`}
         >
           {!isCollapsed ? (
-            <div className="flex items-center gap-2.5 px-1 py-1.5">
+            <div className="flex items-center gap-2 px-1 py-1">
               {/* Avatar */}
-              <div className="w-8 h-8 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white text-xs font-bold shrink-0">
+              <div className="w-7 h-7 rounded-full bg-white text-[#E4002B] border border-white/20 flex items-center justify-center text-[11px] font-bold shrink-0 shadow-xs">
                 {userInitial}
               </div>
               {/* Info */}
               <div className="min-w-0 flex-1">
-                <div className="text-[12.5px] font-semibold text-white/90 truncate leading-tight">
+                <div className="text-xs font-semibold text-white truncate leading-tight">
                   {userName || "Admin"}
                 </div>
-                <div className="text-[10.5px] text-white/40 truncate leading-tight">
+                <div className="text-[10px] text-white/70 truncate leading-tight">
                   {displayRole}
                 </div>
               </div>
               {/* Logout */}
               <button
                 onClick={() => logout()}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/8 transition shrink-0 cursor-pointer"
+                className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/15 transition shrink-0 cursor-pointer"
                 title="Keluar Akun"
                 aria-label="Logout"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
             <>
               {/* Avatar only */}
               <div
-                className="w-8 h-8 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-white text-xs font-bold"
+                className="w-7 h-7 rounded-full bg-white text-[#E4002B] border border-white/20 flex items-center justify-center text-[11px] font-bold shadow-xs"
                 title={userName || "Admin"}
               >
                 {userInitial}
@@ -256,11 +256,11 @@ export default function AdminSidebar({
               {/* Logout icon */}
               <button
                 onClick={() => logout()}
-                className="p-1.5 rounded-lg text-white/40 hover:text-white hover:bg-white/8 transition cursor-pointer"
+                className="p-1 rounded-lg text-white/80 hover:text-white hover:bg-white/15 transition cursor-pointer"
                 title="Keluar Akun"
                 aria-label="Logout"
               >
-                <LogOut className="w-4 h-4" />
+                <LogOut className="w-3.5 h-3.5" />
               </button>
             </>
           )}

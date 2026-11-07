@@ -45,11 +45,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="bg-[#F5F6F8] font-sans text-[#0A0A0A] h-screen flex flex-col md:flex-row overflow-hidden">
       {/* Mobile Topbar */}
-      <header className="md:hidden h-14 bg-[#111318] border-b border-white/[0.06] px-4 flex items-center justify-between shrink-0 z-30">
+      <header className="md:hidden h-14 bg-[#E4002B] border-b border-black/10 px-4 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileOpen(true)}
-            className="p-1.5 -ml-1 text-white/60 hover:text-white rounded-lg hover:bg-white/8 transition"
+            className="p-1.5 -ml-1 text-white/80 hover:text-white rounded-lg hover:bg-white/10 transition"
             aria-label="Buka Menu"
           >
             <Menu className="w-5 h-5" />
@@ -63,8 +63,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             />
           </div>
         </div>
-        <span className="text-[10px] font-bold text-white/60 bg-white/10 border border-white/10 px-2 py-0.5 rounded-md">
-          AHASS
+        <span className="text-[10px] font-bold text-white bg-white/15 border border-white/20 px-2 py-0.5 rounded-md tracking-wider">
+          AHASS 10870
         </span>
       </header>
 
