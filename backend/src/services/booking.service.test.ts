@@ -35,4 +35,31 @@ describe('BookingService Tests', () => {
       assert.strictEqual(masked, '1234****4567');
     });
   });
+
+  describe('maskName', () => {
+    it('should mask multi-word customer names', () => {
+      const masked = BookingService.maskName('Budi Santoso Pratama');
+      assert.strictEqual(masked, 'Budi S*** P***');
+    });
+
+    it('should mask two-word customer names', () => {
+      const masked = BookingService.maskName('Agus Setiawan');
+      assert.strictEqual(masked, 'Agus S***');
+    });
+
+    it('should handle single word name gracefully', () => {
+      const masked = BookingService.maskName('Suharto');
+      assert.strictEqual(masked, 'Suh***');
+    });
+
+    it('should handle short single word name', () => {
+      const masked = BookingService.maskName('Ali');
+      assert.strictEqual(masked, 'Ali');
+    });
+
+    it('should handle empty or whitespace string', () => {
+      const masked = BookingService.maskName('   ');
+      assert.strictEqual(masked, 'Pelanggan');
+    });
+  });
 });

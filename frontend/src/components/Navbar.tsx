@@ -98,6 +98,7 @@ function NavbarContent() {
             <button
               type="button"
               onClick={() => setIsDrawerOpen(true)}
+              aria-label="Daftar Kebutuhan Part"
               className="relative w-11 h-11 flex items-center justify-center text-zinc-700 hover:text-zinc-900 border border-zinc-200/90 rounded-xl active:scale-95 transition-all shadow-2xs bg-white"
               title="Daftar Kebutuhan Part"
             >
@@ -110,6 +111,7 @@ function NavbarContent() {
             </button>
             <Link
               href="/admin/login"
+              aria-label="Staff Login"
               className="w-11 h-11 flex items-center justify-center text-zinc-600 hover:text-zinc-900 border border-zinc-200/90 rounded-xl active:scale-95 transition-all shadow-2xs bg-white"
               title="Staff Login"
             >
@@ -119,6 +121,7 @@ function NavbarContent() {
               href={buildWaUrl("BENGKEL", "Informasi Spare Part & Servis")}
               target="_blank"
               rel="noopener noreferrer"
+              aria-label="WhatsApp Bengkel"
               className="bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white px-3.5 h-11 rounded-xl text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all shadow-[0_4px_12px_rgba(16,185,129,0.3)]"
             >
               <MessageSquare className="w-4 h-4 fill-current" />
@@ -136,10 +139,12 @@ function NavbarContent() {
               onChange={(e) => setSearchTerm(e.target.value)}
               onFocus={() => searchTerm.trim().length >= 2 && setShowDropdown(true)}
               placeholder="Cari suku cadang, kode part..."
+              aria-label="Cari suku cadang atau kode part"
               className="w-full py-1.5 sm:py-2 px-3 text-xs sm:text-sm bg-transparent text-zinc-900 outline-none placeholder:text-zinc-400"
             />
             <button
               type="submit"
+              aria-label="Cari suku cadang"
               className="px-3 py-1.5 sm:py-2 text-zinc-400 hover:text-[#E4002B] transition-colors"
               title="Cari"
             >
@@ -282,7 +287,7 @@ function NavbarContent() {
 
 export default function Navbar() {
   return (
-    <Suspense fallback={<div className="h-[68px] bg-white border-b border-slate-200"></div>}>
+    <Suspense fallback={<div className="h-[68px] md:h-[105px] bg-white border-b border-slate-200"></div>}>
       <NavbarContent />
     </Suspense>
   );

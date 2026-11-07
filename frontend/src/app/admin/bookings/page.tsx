@@ -75,11 +75,11 @@ function getWhatsAppLink(item: Booking) {
     const totalFormatted = item.total_harga ? `Rp ${Number(item.total_harga).toLocaleString("id-ID")}` : "-";
     const metode = item.metode_layanan === "PASANG" ? "Sekalian Pasang oleh Mekanik AHASS" : "Ambil di Toko / Kasir Part";
 
-    const message = `Halo Kak *${item.nama_customer}*,\n\nInformasi reservasi *Suku Cadang Honda* Anda di *AHASS AS Putra Rahmat Kuningan*:\n• *No Tiket:* ${item.ticket_no}\n• *Jadwal Kedatangan:* ${item.tanggal_booking} (Jam ${item.jam_booking} WIB)\n• *Metode:* ${metode}\n• *Daftar Barang:*\n${itemsList}\n• *Total Estimasi:* *${totalFormatted}*\n• *Status Reservasi:* *${statusText}*\n\nSilakan tunjukkan nomor tiket ini saat tiba di bengkel/kasir kami. Terima kasih! 🙏`;
+    const message = `Halo Kak *${item.nama_customer}*,\n\nInformasi reservasi *Suku Cadang Honda* Anda di *AHASS AS Putra Rahmat Kuningan*:\n• *Kode Booking (Part):* ${item.ticket_no}\n• *Jadwal Kedatangan:* ${item.tanggal_booking} (Jam ${item.jam_booking} WIB)\n• *Metode:* ${metode}\n• *Daftar Barang:*\n${itemsList}\n• *Total Estimasi:* *${totalFormatted}*\n• *Status Reservasi:* *${statusText}*\n\nSilakan tunjukkan kode booking ini saat tiba di bengkel/kasir kami. Terima kasih! 🙏`;
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
   }
 
-  const message = `Halo Kak *${item.nama_customer}*,\n\nInformasi reservasi servis motor Honda Anda di *AHASS AS Putra Rahmat Kuningan*:\n• *No Tiket:* ${item.ticket_no}\n• *Jadwal:* ${item.tanggal_booking} (Jam ${item.jam_booking} WIB)\n• *Plat Kendaraan:* ${item.plat_kendaraan || '-'}\n• *Paket Servis:* ${item.jenis_servis}\n• *Status Reservasi:* *${statusText}*\n\nTerima kasih telah mempercayakan perawatan motor Honda Anda di AHASS AS Putra Rahmat! 🙏`;
+  const message = `Halo Kak *${item.nama_customer}*,\n\nInformasi reservasi *Servis Motor Honda* Anda di *AHASS AS Putra Rahmat Kuningan*:\n• *Kode Booking (Servis):* ${item.ticket_no}\n• *Jadwal:* ${item.tanggal_booking} (Jam ${item.jam_booking} WIB)\n• *Plat Kendaraan:* ${item.plat_kendaraan || '-'}\n• *Paket Servis:* ${item.jenis_servis}\n• *Status Reservasi:* *${statusText}*\n\nTerima kasih telah mempercayakan perawatan motor Honda Anda di AHASS AS Putra Rahmat! 🙏`;
 
   return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
 }
@@ -327,7 +327,7 @@ function AdminBookingsContent() {
               }`}
             >
               <Wrench size={13} />
-              <span>Booking Servis Motor</span>
+              <span>Servis Motor (SRV)</span>
             </button>
             <button
               type="button"
@@ -342,7 +342,7 @@ function AdminBookingsContent() {
               }`}
             >
               <ShoppingBag size={13} />
-              <span>Booking Suku Cadang</span>
+              <span>Suku Cadang (PRT)</span>
             </button>
           </div>
 
@@ -493,13 +493,22 @@ function AdminBookingsContent() {
                         <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
                           <td className="px-5 py-4">
                             <span
-                              className={`font-bold font-mono text-xs border px-2.5 py-1 rounded-lg inline-block shadow-2xs mb-1 ${
+                              className={`font-bold font-mono text-xs border px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-2xs mb-1.5 ${
                                 isPart
-                                  ? "text-emerald-800 bg-emerald-50 border-emerald-200/80"
-                                  : "text-[#E4002B] bg-red-50 border-red-200/80"
+                                  ? "text-emerald-900 bg-emerald-50 border-emerald-300"
+                                  : "text-blue-900 bg-blue-50 border-blue-300"
                               }`}
                             >
-                              {item.ticket_no}
+                              <span
+                                className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                                  isPart
+                                    ? "bg-emerald-200 text-emerald-900"
+                                    : "bg-blue-200 text-blue-900"
+                                }`}
+                              >
+                                {isPart ? "PRT" : "SRV"}
+                              </span>
+                              <span>{item.ticket_no}</span>
                             </span>
                             <div className="font-bold text-sm text-zinc-900">{item.nama_customer}</div>
                             {item.email ? (
@@ -700,7 +709,7 @@ function AdminBookingsContent() {
                 </div>
                 <div>
                   <span className="text-[10px] font-extrabold uppercase tracking-widest bg-white/20 px-2 py-0.5 rounded-full inline-block">
-                    {selectedBooking.tipe_booking === "SPAREPART" ? "Booking Suku Cadang" : "Booking Servis Motor"}
+                    {selectedBooking.tipe_booking === "SPAREPART" ? "Booking Suku Cadang (PRT)" : "Booking Servis Motor (SRV)"}
                   </span>
                   <h3 className="font-mono font-bold text-lg leading-tight mt-0.5">
                     {selectedBooking.ticket_no}

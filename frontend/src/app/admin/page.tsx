@@ -11,7 +11,12 @@ import {
   Clock,
   MessageSquare,
   Check,
-  Loader2
+  Loader2,
+  PackageCheck,
+  AlertTriangle,
+  Archive,
+  CalendarCheck,
+  ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
@@ -56,7 +61,9 @@ export default function AdminDashboardPage() {
   const getWhatsAppLink = (item: BookingSummary) => {
     let cleanPhone = (item.no_hp || item.no_telepon || "").replace(/\D/g, "");
     if (cleanPhone.startsWith("0")) cleanPhone = "62" + cleanPhone.slice(1);
-    const message = `Halo Kak *${item.nama_customer}*,\n\nReservasi servis motor Anda di *AHASS AS Putra Rahmat Kuningan*:\n• *No Tiket:* ${item.ticket_no}\n• *Jadwal:* ${item.tanggal_booking} (Jam ${item.jam_booking} WIB)\n• *Plat:* ${item.plat_kendaraan}\n• *Paket:* ${item.jenis_servis}\n• *Status:* *DIKONFIRMASI*\n\nSilakan datang tepat waktu ke bengkel kami ya Kak. Terima kasih! 🙏`;
+    const isPart = item.ticket_no?.startsWith("PRT");
+    const label = isPart ? "Suku Cadang" : "Servis Motor";
+    const message = `Halo Kak *${item.nama_customer}*,\n\nReservasi *${label}* Anda di *AHASS AS Putra Rahmat Kuningan*:\n• *Kode Booking:* ${item.ticket_no}\n• *Jadwal:* ${item.tanggal_booking} (Jam ${item.jam_booking} WIB)\n• *Plat:* ${item.plat_kendaraan || '-'}\n• *Layanan:* ${item.jenis_servis}\n• *Status:* *DIKONFIRMASI*\n\nSilakan datang tepat waktu ke bengkel kami ya Kak. Terima kasih! 🙏`;
     return `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
   };
 
@@ -202,271 +209,160 @@ export default function AdminDashboardPage() {
     : 1;
 
   return (
-    <div className="flex flex-col h-full overflow-y-auto bg-[#F1F3F6] p-4 sm:p-6 lg:p-7 font-sans text-zinc-900">
-      <div className="max-w-[1440px] w-full mx-auto space-y-5">
+    <div className="flex flex-col h-full overflow-y-auto bg-[#F4F6F8] p-4 sm:p-6 lg:p-7 font-sans text-zinc-900">
+      <div className="max-w-[1440px] w-full mx-auto space-y-6">
 
         {/* 1. WELCOME BANNER CARD */}
-        <div className="relative overflow-hidden bg-white/95 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="relative overflow-hidden bg-white/95 backdrop-blur-md rounded-2xl p-5 sm:p-6 border border-zinc-200/80 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="absolute -top-12 -right-12 w-48 h-48 bg-red-500/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="relative">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2 mb-1.5">
               <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-[#E4002B] bg-red-50 px-2.5 py-0.5 rounded-full border border-red-100">
                 <Sparkles className="w-3 h-3" /> AHASS 10870 Live Workspace
               </span>
             </div>
-            <h1 className="text-2xl font-extrabold tracking-tight text-zinc-900 font-display">
-              Hallo, Selamat datang !
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-zinc-900 font-display">
+              Hallo, Selamat datang!
             </h1>
-            <p className="text-xs sm:text-sm font-medium text-zinc-500 mt-0.5">
-              Selamat pagi {user?.nama || "Admin"}, semangat bekerja melayani pelanggan AHASS.
+            <p className="text-xs sm:text-sm font-medium text-zinc-500 mt-1">
+              Selamat bertugas <strong className="text-zinc-700">{user?.nama || "Admin"}</strong>, pantau operasional dan inventaris bengkel secara real-time.
             </p>
           </div>
 
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <Link
+              href="/admin/spare-parts?action=create"
+              className="inline-flex items-center justify-center gap-2 bg-[#E4002B] hover:bg-[#C90025] text-white font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-xs transition active:scale-95"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Part</span>
+            </Link>
+            <Link
+              href="/admin/import"
+              className="inline-flex items-center justify-center gap-2 bg-white hover:bg-zinc-50 text-zinc-700 hover:text-zinc-900 border border-zinc-200 font-bold text-xs sm:text-sm px-4 py-2.5 rounded-xl shadow-xs transition active:scale-95"
+            >
+              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
+              <span>Import Excel</span>
+            </Link>
+          </div>
+        </div>
+
+        {/* 2. TOP KPI STRIP (4 BALANCED CARDS) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Card 1: Part Tersedia */}
           <Link
-            href="/admin/import"
-            className="relative shrink-0 inline-flex items-center justify-center gap-2 bg-gradient-to-r from-[#E4002B] to-[#C90025] hover:from-[#C90025] hover:to-[#B00020] text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-[0_4px_14px_rgba(228,0,43,0.3)] hover:shadow-[0_6px_18px_rgba(228,0,43,0.4)] transition-all transform active:scale-95"
+            href="/admin/spare-parts?stock_only=true"
+            className="group bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs hover:border-emerald-300 hover:shadow-md transition-all flex flex-col justify-between"
           >
-            <FileSpreadsheet className="w-4 h-4" />
-            <span>Import Data</span>
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-xs font-semibold text-zinc-500">Part Tersedia</span>
+                <div className="text-2xl sm:text-3xl font-extrabold text-zinc-900 tracking-tight mt-1 font-display group-hover:text-emerald-700 transition-colors">
+                  {summary.totalActive.toLocaleString("id-ID")}
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+                <PackageCheck className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
+              <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md">
+                {pctReady}% Siap Jual
+              </span>
+              <span className="text-zinc-400 group-hover:text-zinc-600 group-hover:translate-x-0.5 transition-all inline-flex items-center gap-0.5">
+                Lihat <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </Link>
+
+          {/* Card 2: Part Kosong */}
+          <Link
+            href="/admin/spare-parts"
+            className="group bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs hover:border-amber-300 hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-xs font-semibold text-zinc-500">Stok Kosong</span>
+                <div className="text-2xl sm:text-3xl font-extrabold text-amber-600 tracking-tight mt-1 font-display group-hover:text-amber-700 transition-colors">
+                  {summary.outOfStock.toLocaleString("id-ID")}
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+                <AlertTriangle className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
+              <span className="font-semibold text-amber-700 bg-amber-50 px-2 py-0.5 rounded-md">
+                {pctEmpty}% Butuh Restock
+              </span>
+              <span className="text-zinc-400 group-hover:text-zinc-600 group-hover:translate-x-0.5 transition-all inline-flex items-center gap-0.5">
+                Lihat <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </Link>
+
+          {/* Card 3: Part Discontinue */}
+          <Link
+            href="/admin/spare-parts?status=DISCONTINUE"
+            className="group bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs hover:border-zinc-300 hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-xs font-semibold text-zinc-500">Part Discontinue</span>
+                <div className="text-2xl sm:text-3xl font-extrabold text-zinc-700 tracking-tight mt-1 font-display group-hover:text-zinc-900 transition-colors">
+                  {summary.totalDiscontinue.toLocaleString("id-ID")}
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-zinc-100 border border-zinc-200 flex items-center justify-center text-zinc-600 shrink-0">
+                <Archive className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
+              <span className="font-semibold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded-md">
+                {pctDisc}% Nonaktif
+              </span>
+              <span className="text-zinc-400 group-hover:text-zinc-600 group-hover:translate-x-0.5 transition-all inline-flex items-center gap-0.5">
+                Lihat <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
+          </Link>
+
+          {/* Card 4: Total Booking Bulan Ini */}
+          <Link
+            href="/admin/bookings"
+            className="group bg-white rounded-2xl p-5 border border-zinc-200/80 shadow-xs hover:border-red-300 hover:shadow-md transition-all flex flex-col justify-between"
+          >
+            <div className="flex items-start justify-between">
+              <div>
+                <span className="text-xs font-semibold text-zinc-500">Booking Bulan Ini</span>
+                <div className="text-2xl sm:text-3xl font-extrabold text-[#E4002B] tracking-tight mt-1 font-display">
+                  {bookingStats.total}
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center text-[#E4002B] shrink-0">
+                <CalendarCheck className="w-5 h-5" />
+              </div>
+            </div>
+            <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
+              <span className="font-semibold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-md">
+                {bookingStats.done} Selesai ({bookingCompletionPct}%)
+              </span>
+              <span className="text-zinc-400 group-hover:text-zinc-600 group-hover:translate-x-0.5 transition-all inline-flex items-center gap-0.5">
+                Kelola <ChevronRight className="w-3.5 h-3.5" />
+              </span>
+            </div>
           </Link>
         </div>
 
-        {/* 3. ROW 1: STATUS INVENTARIS (KIRI) | BOOKING MERAH KOMPAK (TENGAH) | 3 MINI KPI CARDS (SEBELAH KANAN) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-5 items-stretch">
+        {/* 3. MAIN DASHBOARD GRID (7 COLS OPERASIONAL | 5 COLS ANALITIK) */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
 
-          {/* 3A. Status Inventaris (Lg: col-span-3) */}
-          <div className="lg:col-span-3 bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between">
-            <div>
-              <h2 className="text-sm font-bold text-zinc-900">Status inventaris</h2>
-              <p className="text-[11px] text-zinc-500 mt-0.5">Distribusi ketersediaan stok</p>
+          {/* LEFT COLUMN: OPERASIONAL BOOKING & TOP KATEGORI (7 COLS) */}
+          <div className="lg:col-span-7 space-y-5">
 
-              {/* Gauge Semi-Circle */}
-              <div className="relative w-full h-[135px] flex items-center justify-center mt-2">
-                <ResponsiveContainer width="100%" height={135}>
-                  <PieChart>
-                    <Pie
-                      data={gaugeData}
-                      cx="50%"
-                      cy="88%"
-                      startAngle={180}
-                      endAngle={0}
-                      innerRadius={54}
-                      outerRadius={78}
-                      paddingAngle={3}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {gaugeData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.color} />
-                      ))}
-                    </Pie>
-                  </PieChart>
-                </ResponsiveContainer>
-
-                <div className="absolute bottom-2 inset-x-0 flex flex-col items-center justify-center pointer-events-none">
-                  <span className="text-2xl font-extrabold text-zinc-900 tracking-tight leading-none font-display">
-                    {totalSku.toLocaleString("id-ID")}
-                  </span>
-                  <span className="text-[9px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
-                    TOTAL
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* List Breakdown */}
-            <div className="mt-3 pt-3 border-t border-zinc-100 space-y-1.5 text-xs font-semibold">
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-600">Part tersedia</span>
-                <span className="text-zinc-900 font-bold">
-                  {summary.totalActive.toLocaleString("id-ID")}{" "}
-                  <span className="text-zinc-400 font-normal text-[11px]">{pctReady}%</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-600">Part kosong</span>
-                <span className="text-zinc-900 font-bold">
-                  {summary.outOfStock.toLocaleString("id-ID")}{" "}
-                  <span className="text-zinc-400 font-normal text-[11px]">{pctEmpty}%</span>
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-zinc-600">Discontinue</span>
-                <span className="text-zinc-900 font-bold">
-                  {summary.totalDiscontinue.toLocaleString("id-ID")}{" "}
-                  <span className="text-zinc-400 font-normal text-[11px]">{pctDisc}%</span>
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* 3B. Booking Kotak Merah Kompak (Lg: col-span-4) */}
-          <div className="lg:col-span-4 bg-gradient-to-br from-[#E4002B] via-[#D50028] to-[#B00020] text-white rounded-3xl p-5 shadow-[0_6px_24px_rgba(228,0,43,0.3)] relative overflow-hidden flex flex-col justify-between">
-            <div className="absolute top-0 right-0 w-60 h-60 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-
-            <div>
-              <div className="flex items-center justify-between mb-3">
-                <div>
-                  <h2 className="text-base font-extrabold tracking-tight">Booking</h2>
-                  <p className="text-[11px] text-white/80 font-medium">Total booking servis</p>
-                </div>
-
-                {/* Interactive Month & Year Selector */}
-                <div className="flex items-center gap-1.5 bg-black/20 backdrop-blur-md px-2.5 py-1 rounded-xl border border-white/20 text-white text-[11px] font-bold">
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => {
-                      const m = parseInt(e.target.value, 10);
-                      setSelectedMonth(m);
-                      fetchBookingsForMonth(m, selectedYear);
-                    }}
-                    className="bg-transparent text-white font-bold cursor-pointer outline-none [color-scheme:dark]"
-                    aria-label="Filter Bulan"
-                  >
-                    <option value={1} className="bg-zinc-900 text-white">Jan</option>
-                    <option value={2} className="bg-zinc-900 text-white">Feb</option>
-                    <option value={3} className="bg-zinc-900 text-white">Mar</option>
-                    <option value={4} className="bg-zinc-900 text-white">Apr</option>
-                    <option value={5} className="bg-zinc-900 text-white">Mei</option>
-                    <option value={6} className="bg-zinc-900 text-white">Jun</option>
-                    <option value={7} className="bg-zinc-900 text-white">Jul</option>
-                    <option value={8} className="bg-zinc-900 text-white">Agu</option>
-                    <option value={9} className="bg-zinc-900 text-white">Sep</option>
-                    <option value={10} className="bg-zinc-900 text-white">Okt</option>
-                    <option value={11} className="bg-zinc-900 text-white">Nov</option>
-                    <option value={12} className="bg-zinc-900 text-white">Des</option>
-                  </select>
-
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => {
-                      const y = parseInt(e.target.value, 10);
-                      setSelectedYear(y);
-                      fetchBookingsForMonth(selectedMonth, y);
-                    }}
-                    className="bg-transparent text-white font-bold cursor-pointer outline-none [color-scheme:dark]"
-                    aria-label="Filter Tahun"
-                  >
-                    <option value={2025} className="bg-zinc-900 text-white">2025</option>
-                    <option value={2026} className="bg-zinc-900 text-white">2026</option>
-                    <option value={2027} className="bg-zinc-900 text-white">2027</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 my-3">
-                <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10">
-                  <div className="text-[11px] font-semibold text-white/80">Selesai</div>
-                  <div className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-0.5 font-display">
-                    {bookingStats.done}
-                  </div>
-                  <div className="text-[10px] text-white/70">booking selesai</div>
-                </div>
-                <div className="p-3 rounded-2xl bg-white/10 backdrop-blur-xs border border-white/10 text-right">
-                  <div className="text-[11px] font-semibold text-white/80">Batal / Tertunda</div>
-                  <div className="text-2xl sm:text-3xl font-extrabold tracking-tight mt-0.5 font-display">
-                    {bookingStats.pending}
-                  </div>
-                  <div className="text-[10px] text-white/70">booking tertunda</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Progress Bar */}
-            <div className="mt-1">
-              <div className="h-2.5 w-full bg-black/20 rounded-full overflow-hidden p-0.5 backdrop-blur-xs">
-                <div
-                  className="h-full bg-white rounded-full transition-all duration-700"
-                  style={{ width: `${Math.min(Math.max(bookingCompletionPct, 6), 100)}%` }}
-                />
-              </div>
-              <div className="flex justify-between items-center text-[10px] font-bold text-white/80 mt-1.5 px-0.5">
-                <span>0%</span>
-                <span>50%</span>
-                <span>100%</span>
-              </div>
-            </div>
-          </div>
-
-          {/* 3C. 3 MINI KPI CARDS DI SEBELAH KANAN (Lg: col-span-5) */}
-          <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-
-            {/* Total Part Tersedia */}
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4.5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
-              <div>
-                <h3 className="text-xs font-semibold text-zinc-600">Total Part Tersedia</h3>
-                <div className="text-xl sm:text-2xl font-extrabold text-zinc-900 tracking-tight mt-1.5 font-display group-hover:text-[#E4002B] transition-colors">
-                  {summary.totalActive.toLocaleString("id-ID")}
-                </div>
-                <div className="text-[10px] text-zinc-400 font-medium">SKU tersedia</div>
-              </div>
-              <div className="mt-3">
-                <span className="inline-block px-2.5 py-0.5 bg-red-50 text-[#E4002B] text-[10px] font-bold rounded-md border border-red-100 mb-2.5">
-                  Tersedia
-                </span>
-                <Link
-                  href="/admin/spare-parts?stock_only=true"
-                  className="block w-full py-1.5 bg-[#E4002B] hover:bg-red-700 text-white text-[11px] font-bold rounded-xl transition text-center shadow-xs"
-                >
-                  Lihat Semua
-                </Link>
-              </div>
-            </div>
-
-            {/* Part Kosong */}
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4.5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
-              <div>
-                <h3 className="text-xs font-semibold text-zinc-600">Part Kosong</h3>
-                <div className="text-xl sm:text-2xl font-extrabold text-[#F97316] tracking-tight mt-1.5 font-display group-hover:text-amber-600 transition-colors">
-                  {summary.outOfStock.toLocaleString("id-ID")}
-                </div>
-                <div className="text-[10px] text-zinc-400 font-medium">Segera restock</div>
-              </div>
-              <div className="mt-3">
-                <span className="inline-block px-2.5 py-0.5 bg-orange-50 text-orange-600 text-[10px] font-bold rounded-md border border-orange-100 mb-2.5">
-                  Kosong
-                </span>
-                <Link
-                  href="/admin/spare-parts"
-                  className="block w-full py-1.5 bg-[#F97316] hover:bg-orange-600 text-white text-[11px] font-bold rounded-xl transition text-center shadow-xs"
-                >
-                  Lihat Semua
-                </Link>
-              </div>
-            </div>
-
-            {/* Part Discontinue */}
-            <div className="bg-white/95 backdrop-blur-md rounded-3xl p-4.5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] hover:shadow-md transition-all flex flex-col justify-between text-center group">
-              <div>
-                <h3 className="text-xs font-semibold text-zinc-600">Part Discontinue</h3>
-                <div className="text-xl sm:text-2xl font-extrabold text-emerald-600 tracking-tight mt-1.5 font-display">
-                  {summary.totalDiscontinue.toLocaleString("id-ID")}
-                </div>
-                <div className="text-[10px] text-zinc-400 font-medium">Tidak dijual</div>
-              </div>
-              <div className="mt-3">
-                <span className="inline-block px-2.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded-md border border-emerald-100 mb-2.5">
-                  Discontinue
-                </span>
-                <Link
-                  href="/admin/spare-parts?status=DISCONTINUE"
-                  className="block w-full py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold rounded-xl transition text-center shadow-xs"
-                >
-                  Lihat Semua
-                </Link>
-              </div>
-            </div>
-
-          </div>
-
-        </div>
-
-        {/* 4. ROW 2: FILE IMPORT PROGRESS (KIRI) | TOP KATEGORI PART (TENGAH) | TAMBAH SPAREPART (KANAN) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-stretch">
-
-          {/* 4A. Antrean Booking Terkini (Lg: col-span-4) */}
-          <div className="lg:col-span-4 bg-white/95 backdrop-blur-md rounded-3xl p-5 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between">
+            {/* Antrean Reservasi Terkini */}
+            <div className="bg-white rounded-2xl p-5 sm:p-6 border border-zinc-200/80 shadow-xs">
             <div>
               <div className="flex items-center justify-between mb-3.5">
                 <div>
@@ -489,9 +385,16 @@ export default function AdminDashboardPage() {
                       className="p-3 rounded-2xl bg-zinc-50/80 border border-zinc-100 flex items-center justify-between gap-3 hover:bg-zinc-100/80 transition"
                     >
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 flex-wrap">
                           <span className="text-xs font-bold text-zinc-900 truncate">
                             {b.nama_customer}
+                          </span>
+                          <span className={`text-[9px] font-mono font-black px-1.5 py-0.5 rounded border ${
+                            b.ticket_no?.startsWith("PRT")
+                              ? "bg-emerald-50 text-emerald-800 border-emerald-200"
+                              : "bg-blue-50 text-blue-800 border-blue-200"
+                          }`}>
+                            {b.ticket_no?.startsWith("PRT") ? "PRT" : "SRV"}
                           </span>
                           <span className="text-[10px] font-mono font-bold text-zinc-600 bg-white px-1.5 py-0.5 rounded border border-zinc-200">
                             {b.plat_kendaraan}
@@ -561,53 +464,54 @@ export default function AdminDashboardPage() {
               </div>
             </div>
 
-            <div className="pt-3 mt-3 border-t border-zinc-100">
+            <div className="pt-3.5 mt-3 border-t border-zinc-100 flex items-center justify-between text-xs font-semibold">
+              <span className="text-zinc-500">Operasional Bengkel AHASS</span>
               <Link
                 href="/admin/bookings"
-                className="w-full py-2 bg-zinc-100 hover:bg-zinc-200 text-zinc-800 text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition"
+                className="text-[#E4002B] hover:underline flex items-center gap-1 group"
               >
                 <span>Buka Jadwal &amp; Slip Mekanik</span>
-                <ArrowUpRight className="w-3.5 h-3.5" />
+                <ArrowUpRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
               </Link>
             </div>
           </div>
 
-          {/* 4B. Top Kategori Part (Lg: col-span-5) */}
-          <div className="lg:col-span-5 bg-white/95 backdrop-blur-md rounded-3xl p-5 sm:p-6 border border-zinc-200/80 shadow-[0_4px_20px_rgba(0,0,0,0.02)] flex flex-col justify-between hover:shadow-md transition-all">
+          {/* Top 5 Kategori Part */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-zinc-200/80 shadow-xs">
             <div>
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-base font-bold text-zinc-900">Top Kategori Part</h2>
-                  <p className="text-xs text-zinc-500 mt-0.5">Berdasarkan jumlah SKU aktif</p>
+                  <h2 className="text-base font-bold text-zinc-900">Top Kategori Suku Cadang</h2>
+                  <p className="text-xs text-zinc-500 mt-0.5">Berdasarkan volume SKU aktif</p>
                 </div>
                 <span className="text-[10px] font-bold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-md">
                   AHM Parts
                 </span>
               </div>
 
-              <div className="mt-5 space-y-3.5">
+              <div className="mt-4 space-y-3">
                 {categories.length > 0 ? (
                   categories.map((cat, idx) => {
                     const widthPct = Math.max(Math.round((cat.count / maxCategoryCount) * 100), 12);
                     return (
                       <div key={idx} className="flex items-center gap-3">
-                        <span className="w-20 text-xs font-bold text-zinc-700 truncate" title={cat.name}>
+                        <span className="w-24 text-xs font-bold text-zinc-700 truncate" title={cat.name}>
                           {cat.name}
                         </span>
-                        <div className="flex-1 bg-zinc-100 rounded-full h-4 overflow-hidden relative">
+                        <div className="flex-1 bg-zinc-100 rounded-full h-3 overflow-hidden relative">
                           <div
                             className="bg-[#E4002B] h-full rounded-full transition-all duration-700"
                             style={{ width: `${widthPct}%` }}
                           />
                         </div>
-                        <span className="w-12 text-right text-[11px] font-mono font-bold text-zinc-600">
-                          {cat.count}
+                        <span className="w-14 text-right text-[11px] font-mono font-bold text-zinc-600">
+                          {cat.count.toLocaleString("id-ID")}
                         </span>
                       </div>
                     );
                   })
                 ) : (
-                  <div className="py-8 text-center text-xs text-zinc-400">
+                  <div className="py-6 text-center text-xs text-zinc-400">
                     Belum ada kategori terdata
                   </div>
                 )}
@@ -622,27 +526,189 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* 4C. Tambah Sparepart Big Red CTA (Lg: col-span-3) */}
-          <div className="lg:col-span-3">
-            <Link
-              href="/admin/spare-parts?action=create"
-              className="relative overflow-hidden w-full h-full min-h-[200px] bg-gradient-to-br from-[#E4002B] via-[#D50028] to-[#99001B] hover:opacity-95 text-white rounded-3xl p-6 shadow-[0_6px_24px_rgba(228,0,43,0.35)] hover:shadow-[0_10px_30px_rgba(228,0,43,0.45)] transition-all flex flex-col items-center justify-center text-center group active:scale-98"
-            >
-              <div className="absolute top-0 inset-x-0 h-1/2 bg-gradient-to-b from-white/15 to-transparent pointer-events-none" />
+        </div>
 
-              <div className="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-md group-hover:scale-110 group-hover:bg-white/30 transition-all flex items-center justify-center mb-3.5 shadow-inner border border-white/25">
-                <Plus className="w-9 h-9 text-white stroke-[2.5]" />
+        {/* RIGHT COLUMN: ANALITIK DISTRIBUSI & PERFORMA BOOKING (5 COLS) */}
+        <div className="lg:col-span-5 space-y-5">
+
+          {/* Card C: Status Distribusi Inventaris */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-zinc-200/80 shadow-xs">
+            <div className="pb-3 border-b border-zinc-100">
+              <h2 className="text-base font-bold text-zinc-900">Distribusi Stok Inventaris</h2>
+              <p className="text-xs text-zinc-500 mt-0.5">Kondisi ketersediaan seluruh suku cadang AHM</p>
+            </div>
+
+            {/* Gauge Semi-Circle */}
+            <div className="relative w-full h-[140px] flex items-center justify-center mt-3">
+              <ResponsiveContainer width="100%" height={140}>
+                <PieChart>
+                  <Pie
+                    data={gaugeData}
+                    cx="50%"
+                    cy="88%"
+                    startAngle={180}
+                    endAngle={0}
+                    innerRadius={55}
+                    outerRadius={80}
+                    paddingAngle={3}
+                    dataKey="value"
+                    stroke="none"
+                  >
+                    {gaugeData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ResponsiveContainer>
+
+              <div className="absolute bottom-2 inset-x-0 flex flex-col items-center justify-center pointer-events-none">
+                <span className="text-2xl font-extrabold text-zinc-900 tracking-tight leading-none font-display">
+                  {totalSku.toLocaleString("id-ID")}
+                </span>
+                <span className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest mt-1">
+                  TOTAL SKU
+                </span>
               </div>
-              <span className="text-lg font-black tracking-tight drop-shadow-xs">
-                Tambah Sparepart
-              </span>
-              <span className="text-xs text-white/80 font-medium mt-0.5">
-                Input master SKU manual
-              </span>
-            </Link>
+            </div>
+
+            {/* List Breakdown */}
+            <div className="mt-4 pt-3 border-t border-zinc-100 space-y-2 text-xs">
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50/70 border border-zinc-100">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#E4002B]" />
+                  <span className="text-zinc-700 font-medium">Part Tersedia</span>
+                </div>
+                <span className="font-bold text-zinc-900">
+                  {summary.totalActive.toLocaleString("id-ID")}{" "}
+                  <span className="text-zinc-400 font-normal">({pctReady}%)</span>
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50/70 border border-zinc-100">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-[#F59E0B]" />
+                  <span className="text-zinc-700 font-medium">Part Kosong</span>
+                </div>
+                <span className="font-bold text-amber-700">
+                  {summary.outOfStock.toLocaleString("id-ID")}{" "}
+                  <span className="text-zinc-400 font-normal">({pctEmpty}%)</span>
+                </span>
+              </div>
+
+              <div className="flex items-center justify-between p-2 rounded-xl bg-zinc-50/70 border border-zinc-100">
+                <div className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-slate-400" />
+                  <span className="text-zinc-700 font-medium">Discontinue</span>
+                </div>
+                <span className="font-bold text-zinc-700">
+                  {summary.totalDiscontinue.toLocaleString("id-ID")}{" "}
+                  <span className="text-zinc-400 font-normal">({pctDisc}%)</span>
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Card D: Performa & Filter Booking */}
+          <div className="bg-white rounded-2xl p-5 sm:p-6 border border-zinc-200/80 shadow-xs">
+            <div className="flex items-center justify-between pb-4 border-b border-zinc-100">
+              <div>
+                <h2 className="text-base font-bold text-zinc-900">Performa Booking</h2>
+                <p className="text-xs text-zinc-500 mt-0.5">Rasio penyelesaian servis</p>
+              </div>
+
+              {/* Filter Bulan & Tahun */}
+              <div className="flex items-center gap-1.5 bg-zinc-100 px-2 py-1 rounded-xl text-xs font-bold text-zinc-700">
+                <select
+                  value={selectedMonth}
+                  onChange={(e) => {
+                    const m = parseInt(e.target.value, 10);
+                    setSelectedMonth(m);
+                    fetchBookingsForMonth(m, selectedYear);
+                  }}
+                  className="bg-transparent cursor-pointer outline-none"
+                  aria-label="Filter Bulan"
+                >
+                  <option value={1}>Jan</option>
+                  <option value={2}>Feb</option>
+                  <option value={3}>Mar</option>
+                  <option value={4}>Apr</option>
+                  <option value={5}>Mei</option>
+                  <option value={6}>Jun</option>
+                  <option value={7}>Jul</option>
+                  <option value={8}>Agu</option>
+                  <option value={9}>Sep</option>
+                  <option value={10}>Okt</option>
+                  <option value={11}>Nov</option>
+                  <option value={12}>Des</option>
+                </select>
+
+                <select
+                  value={selectedYear}
+                  onChange={(e) => {
+                    const y = parseInt(e.target.value, 10);
+                    setSelectedYear(y);
+                    fetchBookingsForMonth(selectedMonth, y);
+                  }}
+                  className="bg-transparent cursor-pointer outline-none"
+                  aria-label="Filter Tahun"
+                >
+                  <option value={2025}>2025</option>
+                  <option value={2026}>2026</option>
+                  <option value={2027}>2027</option>
+                </select>
+              </div>
+            </div>
+
+            {/* 3 Metric Mini Boxes */}
+            <div className="grid grid-cols-3 gap-2.5 my-4">
+              <div className="p-3 rounded-xl bg-emerald-50/70 border border-emerald-100 text-center">
+                <div className="text-[11px] font-semibold text-emerald-800">Selesai</div>
+                <div className="text-xl sm:text-2xl font-black text-emerald-700 font-display mt-0.5">
+                  {bookingStats.done}
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-amber-50/70 border border-amber-100 text-center">
+                <div className="text-[11px] font-semibold text-amber-800">Tertunda</div>
+                <div className="text-xl sm:text-2xl font-black text-amber-700 font-display mt-0.5">
+                  {bookingStats.pending}
+                </div>
+              </div>
+              <div className="p-3 rounded-xl bg-zinc-100/70 border border-zinc-200 text-center">
+                <div className="text-[11px] font-semibold text-zinc-600">Batal</div>
+                <div className="text-xl sm:text-2xl font-black text-zinc-700 font-display mt-0.5">
+                  {bookingStats.cancelled}
+                </div>
+              </div>
+            </div>
+
+            {/* Progress Bar Penyelesaian */}
+            <div className="space-y-1.5 pt-1">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-semibold text-zinc-600">Tingkat Penyelesaian</span>
+                <span className="font-bold text-zinc-900">{bookingCompletionPct}%</span>
+              </div>
+              <div className="h-2.5 w-full bg-zinc-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-emerald-600 rounded-full transition-all duration-700"
+                  style={{ width: `${Math.min(Math.max(bookingCompletionPct, 4), 100)}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 mt-4 border-t border-zinc-100">
+              <Link
+                href="/admin/bookings"
+                className="w-full py-2.5 bg-zinc-900 hover:bg-zinc-800 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5 transition shadow-xs active:scale-95"
+              >
+                <span>Buka Manajemen Booking</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
           </div>
 
         </div>
+
+      </div>
 
       </div>
     </div>

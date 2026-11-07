@@ -17,6 +17,22 @@ const bookingLimiter = rateLimit({
   legacyHeaders: false,
 });
 
+// Rate limiter for tracking lookup (max 60 queries per 15 minutes)
+const trackLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 60,
+  message: {
+    success: false,
+    message: 'Terlalu banyak permintaan pengecekan tiket. Silakan coba lagi beberapa saat.',
+    errors: [],
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+// GET /api/v1/bookings/track/:ticketNo
+router.get('/track/:ticketNo', trackLimiter, BookingController.track);
+
 // POST /api/v1/bookings
 router.post('/', bookingLimiter, validateCreateBooking, BookingController.create);
 

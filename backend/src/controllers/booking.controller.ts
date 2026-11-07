@@ -26,6 +26,34 @@ export class BookingController {
   }
 
   /**
+   * GET /api/v1/bookings/track/:ticketNo
+   * Public customer ticket tracking
+   */
+  public static async track(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const { ticketNo } = req.params;
+      const data = await BookingService.trackBooking(String(ticketNo));
+      res.status(200).json({
+        success: true,
+        data,
+      });
+    } catch (err: any) {
+      if (err.message?.includes('tidak ditemukan')) {
+        res.status(404).json({
+          success: false,
+          data: null,
+          error: {
+            code: 'NOT_FOUND',
+            message: err.message,
+          },
+        });
+        return;
+      }
+      next(err);
+    }
+  }
+
+  /**
    * GET /api/v1/admin/bookings
    */
   public static async getListAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {

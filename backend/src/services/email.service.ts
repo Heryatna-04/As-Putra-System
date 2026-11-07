@@ -131,9 +131,9 @@ export class EmailService {
           <p style="font-size: 16px; font-weight: bold; margin-top: 0;">Halo, ${safeCustomer}!</p>
           <p style="font-size: 14px; color: #475569;">${introText}</p>
 
-          <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 20px 0;">
-            <p style="margin: 0 0 8px; font-size: 11px; color: #64748b; font-weight: bold; text-transform: uppercase;">NOMOR TIKET ${titleText}</p>
-            <p style="margin: 0; font-size: 22px; font-weight: bold; color: #E4002B; font-family: monospace;">${safeTicket}</p>
+          <div style="background-color: ${isSparepart ? '#ecfdf5' : '#f8fafc'}; border: 1px solid ${isSparepart ? '#a7f3d0' : '#e2e8f0'}; border-radius: 8px; padding: 16px; margin: 20px 0;">
+            <p style="margin: 0 0 8px; font-size: 11px; color: ${isSparepart ? '#065f46' : '#64748b'}; font-weight: bold; text-transform: uppercase;">KODE TIKET ${titleText}</p>
+            <p style="margin: 0; font-size: 24px; font-weight: bold; color: ${isSparepart ? '#047857' : '#E4002B'}; font-family: monospace;">${safeTicket}</p>
           </div>
 
           ${detailSectionHtml}
@@ -157,7 +157,9 @@ export class EmailService {
           body: JSON.stringify({
             from: 'AS Putra Rahmat <booking@asputramotor.com>',
             to: [dto.email],
-            subject: `[TIKET RESERVASI] ${dto.ticket_no} - AS Putra Rahmat`,
+            subject: isSparepart
+              ? `[TIKET SUKU CADANG: ${dto.ticket_no}] Pesanan AHM AS Putra Rahmat`
+              : `[TIKET SERVIS MOTOR: ${dto.ticket_no}] Reservasi AHASS AS Putra Rahmat`,
             html: htmlContent,
           }),
         });

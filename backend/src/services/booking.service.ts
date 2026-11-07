@@ -49,15 +49,30 @@ export class BookingService {
   }
 
   /**
+   * Helper mask customer name for public tracking privacy (e.g., "Budi Santoso" -> "Budi S***")
+   */
+  public static maskName(name: string): string {
+    const trimmed = name.trim();
+    if (!trimmed) return 'Pelanggan';
+    const parts = trimmed.split(/\s+/);
+    if (parts.length === 1) {
+      const single = parts[0];
+      if (single.length <= 3) return single;
+      return single.slice(0, 3) + '***';
+    }
+    return parts[0] + ' ' + parts.slice(1).map(p => p.charAt(0) + '***').join(' ');
+  }
+
+  /**
    * Generate ticket number:
-   * ASP-YYYYMMDD-XXXX (Servis) or PRT-YYYYMMDD-XXXX (Spare Part)
+   * SRV-YYYYMMDD-XXXX (Servis Motor) or PRT-YYYYMMDD-XXXX (Suku Cadang)
    */
   private static async generateTicketNo(dateStr: string, tipeBooking: string = 'SERVIS', attempt: number = 0): Promise<string> {
     const rawDate = new Date(dateStr);
     const yyyy = rawDate.getFullYear();
     const mm = String(rawDate.getMonth() + 1).padStart(2, '0');
     const dd = String(rawDate.getDate()).padStart(2, '0');
-    const prefix = tipeBooking === 'SPAREPART' ? `PRT-${yyyy}${mm}${dd}-` : `ASP-${yyyy}${mm}${dd}-`;
+    const prefix = tipeBooking === 'SPAREPART' ? `PRT-${yyyy}${mm}${dd}-` : `SRV-${yyyy}${mm}${dd}-`;
 
     const { count } = await supabase
       .from('bookings')
@@ -233,6 +248,43 @@ export class BookingService {
     return {
       ...data,
       no_hp: data.no_hp,
+    };
+  }
+
+  /**
+   * Public Ticket Status Tracking (Self-service by Customer)
+   */
+  public static async trackBooking(ticketNo: string) {
+    const cleanTicket = ticketNo.trim().toUpperCase();
+    if (!cleanTicket) {
+      throw new Error('Nomor tiket wajib diisi');
+    }
+
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('id, ticket_no, tipe_booking, status, nama_customer, no_hp, plat_kendaraan, tipe_motor, tanggal_booking, jam_booking, jenis_servis, metode_layanan, items_json, total_harga, created_at')
+      .ilike('ticket_no', cleanTicket)
+      .maybeSingle();
+
+    if (error || !data) {
+      throw new Error('Tiket tidak ditemukan. Pastikan nomor tiket yang Anda masukkan sudah benar.');
+    }
+
+    return {
+      ticket_no: data.ticket_no,
+      tipe_booking: data.tipe_booking || 'SERVIS',
+      status: data.status,
+      nama_customer: this.maskName(data.nama_customer),
+      no_hp: this.maskPhone(data.no_hp),
+      plat_kendaraan: data.plat_kendaraan || '-',
+      tipe_motor: data.tipe_motor || '-',
+      tanggal_booking: data.tanggal_booking,
+      jam_booking: data.jam_booking,
+      jenis_servis: data.jenis_servis,
+      metode_layanan: data.metode_layanan || 'AMBIL',
+      items: data.items_json,
+      total_harga: data.total_harga,
+      created_at: data.created_at,
     };
   }
 

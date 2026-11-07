@@ -106,7 +106,7 @@ const LOCAL_BUSINESS_JSONLD = {
           name: "Bagaimana menghindari antrean saat servis?",
           acceptedAnswer: {
             "@type": "Answer",
-            text: "Buat reservasi lewat menu Booking Servis di website, pilih tanggal dan jam datang, lalu tunjukkan kode tiket (format ASP-YYYYMMDD-XXXX) ke petugas pendaftaran.",
+            text: "Buat reservasi lewat menu Booking Servis di website, pilih tanggal dan jam datang, lalu tunjukkan kode tiket (format SRV-YYYYMMDD-XXXX untuk servis atau PRT-YYYYMMDD-XXXX untuk suku cadang) ke petugas pendaftaran.",
           },
         },
         {
@@ -212,7 +212,7 @@ const FAQS = [
   },
   {
     q: "Bagaimana menghindari antrean saat servis?",
-    a: "Buat reservasi lewat menu Booking Servis, pilih tanggal dan jam datang, lalu tunjukkan kode tiket (format ASP-YYYYMMDD-XXXX) ke petugas pendaftaran.",
+    a: "Buat reservasi lewat menu Booking Servis, pilih tanggal dan jam datang, lalu tunjukkan kode tiket (format SRV-YYYYMMDD-XXXX untuk servis atau PRT-YYYYMMDD-XXXX untuk suku cadang) ke petugas pendaftaran.",
   },
   {
     q: "Part yang saya cari sedang habis. Apa yang bisa dilakukan?",
@@ -247,6 +247,8 @@ export default async function Home() {
             alt="Gedung dealer dan bengkel resmi Honda AS Putra Motor di Kuningan"
             fill
             priority
+            loading="eager"
+            fetchPriority="high"
             sizes="100vw"
             className="-z-20 object-cover object-right"
           />

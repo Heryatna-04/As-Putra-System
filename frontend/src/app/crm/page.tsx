@@ -377,13 +377,22 @@ export default function CrmBookingsPage() {
                     <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
                       <td className="px-5 py-4 whitespace-nowrap">
                         <span
-                          className={`font-bold font-mono text-xs border px-2.5 py-1 rounded-lg inline-block shadow-2xs ${
+                          className={`font-bold font-mono text-xs border px-2.5 py-1 rounded-lg inline-flex items-center gap-1.5 shadow-2xs ${
                             isPart
-                              ? "text-emerald-800 bg-emerald-50 border-emerald-200/80"
-                              : "text-[#E4002B] bg-red-50 border-red-200/80"
+                              ? "text-emerald-900 bg-emerald-50 border-emerald-300"
+                              : "text-blue-900 bg-blue-50 border-blue-300"
                           }`}
                         >
-                          {item.ticket_no}
+                          <span
+                            className={`text-[9px] font-black uppercase px-1.5 py-0.5 rounded ${
+                              isPart
+                                ? "bg-emerald-200 text-emerald-900"
+                                : "bg-blue-200 text-blue-900"
+                            }`}
+                          >
+                            {isPart ? "PRT" : "SRV"}
+                          </span>
+                          <span>{item.ticket_no}</span>
                         </span>
                       </td>
 

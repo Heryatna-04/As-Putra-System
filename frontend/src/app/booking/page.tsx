@@ -22,8 +22,10 @@ import {
   Store,
   ShieldCheck,
   ArrowRight,
+  Search,
 } from "lucide-react";
 import Navbar from "@/components/Navbar";
+import LazyMap from "@/components/LazyMap";
 import { buildBookingWaUrl, buildSparePartBookingWaUrl, formatIDR } from "@/lib/utils";
 import { usePartInquiry } from "@/context/PartInquiryContext";
 import { fetchSparePartDetail } from "@/lib/api";
@@ -310,12 +312,84 @@ function BookingContent() {
   const searchParams = useSearchParams();
   const initialType = searchParams.get("type");
   const partNoParam = searchParams.get("partNo");
+  const ticketParam = searchParams.get("ticket");
 
-  const [activeTab, setActiveTab] = useState<"servis" | "sparepart">(
-    initialType === "sparepart" || (Boolean(partNoParam) && initialType !== "servis")
+  const [activeTab, setActiveTab] = useState<"servis" | "sparepart" | "tracking">(
+    Boolean(ticketParam)
+      ? "tracking"
+      : initialType === "sparepart" || (Boolean(partNoParam) && initialType !== "servis")
       ? "sparepart"
       : "servis"
   );
+
+  // State: Tracking Cek Tiket
+  const [trackTicketNo, setTrackTicketNo] = useState(ticketParam || "");
+  const [trackLoading, setTrackLoading] = useState(false);
+  const [trackError, setTrackError] = useState<string | null>(null);
+  const [trackResult, setTrackResult] = useState<{
+    ticket_no: string;
+    tipe_booking: string;
+    status: string;
+    nama_customer: string;
+    no_hp: string;
+    plat_kendaraan: string;
+    tipe_motor: string;
+    tanggal_booking: string;
+    jam_booking: string;
+    jenis_servis: string;
+    metode_layanan: string;
+    items?: Array<{ part_no: string; part_name: string; quantity: number; het: number }>;
+    total_harga?: number;
+    created_at?: string;
+  } | null>(null);
+
+  const fetchTrackTicket = async (ticketCode: string) => {
+    const clean = ticketCode.trim().toUpperCase();
+    if (!clean) {
+      setTrackError("Masukkan nomor tiket Anda (misal: SRV-... atau PRT-...)");
+      return;
+    }
+    setTrackLoading(true);
+    setTrackError(null);
+    setTrackResult(null);
+
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
+      const res = await fetch(`${baseUrl}/bookings/track/${encodeURIComponent(clean)}`);
+      const json = await res.json();
+      if (!res.ok || !json.success) {
+        throw new Error(json.error?.message || json.message || "Tiket tidak ditemukan. Pastikan nomor tiket sudah benar.");
+      }
+      setTrackResult(json.data);
+    } catch (err) {
+      setTrackError(err instanceof Error ? err.message : "Terjadi kesalahan saat memeriksa tiket");
+    } finally {
+      setTrackLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (ticketParam) {
+      fetchTrackTicket(ticketParam);
+    }
+  }, [ticketParam]);
+
+  const handleTrackSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    fetchTrackTicket(trackTicketNo);
+  };
+
+  const [trackCopied, setTrackCopied] = useState(false);
+  const copyTrackTicket = async () => {
+    if (!trackResult?.ticket_no) return;
+    try {
+      await navigator.clipboard.writeText(trackResult.ticket_no);
+      setTrackCopied(true);
+      setTimeout(() => setTrackCopied(false), 2000);
+    } catch {
+      setTrackCopied(false);
+    }
+  };
 
   const {
     items: inquiryItems,
@@ -445,7 +519,11 @@ function BookingContent() {
       const res = await fetch(`${baseUrl}/bookings`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...formData, email: formData.email.trim().toLowerCase() }),
+        body: JSON.stringify({
+          ...formData,
+          tipe_booking: "SERVIS",
+          email: formData.email.trim().toLowerCase(),
+        }),
       });
       const resData = await res.json();
       if (!res.ok || !resData.success) {
@@ -623,7 +701,7 @@ function BookingContent() {
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-20 md:pt-[110px] sm:px-6">
         {/* Mode Switcher Banner */}
         {!successData && !sparePartSuccessData && (
-          <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-3 p-1.5 bg-zinc-200/70 rounded-2xl border border-zinc-300">
+          <div className="mb-8 grid grid-cols-1 md:grid-cols-3 gap-3 p-1.5 bg-zinc-200/70 rounded-2xl border border-zinc-300">
             <button
               type="button"
               onClick={() => setActiveTab("servis")}
@@ -678,6 +756,30 @@ function BookingContent() {
                 </div>
               </div>
             </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("tracking")}
+              className={`flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all text-left ${
+                activeTab === "tracking"
+                  ? "bg-white text-zinc-900 shadow-md border border-zinc-200"
+                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/50"
+              }`}
+            >
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  activeTab === "tracking" ? "bg-blue-50 text-blue-700" : "bg-zinc-200/70 text-zinc-500"
+                }`}
+              >
+                <Search className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-display font-extrabold text-base">Cek Status Tiket</div>
+                <div className="text-xs font-normal text-zinc-500 line-clamp-1">
+                  Lacak jadwal &amp; progres reservasi Anda
+                </div>
+              </div>
+            </button>
           </div>
         )}
 
@@ -704,7 +806,7 @@ function BookingContent() {
                 <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-zinc-50 border-r border-zinc-200"></div>
                 <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-zinc-50 border-l border-zinc-200"></div>
 
-                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nomor Tiket Suku Cadang</p>
+                <p className="text-xs font-bold text-emerald-800 uppercase tracking-wider">Kode Tiket Suku Cadang (Part)</p>
                 <div className="mt-1 flex items-center justify-center gap-3">
                   <span className="font-mono text-3xl font-black tracking-wider text-emerald-800">{sparePartSuccessData.ticket_no}</span>
                   <button
@@ -800,6 +902,19 @@ function BookingContent() {
                   <MessageSquare size={20} />
                   Kirim Tiket Suku Cadang ke WhatsApp Admin
                 </a>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("tracking");
+                    setTrackTicketNo(sparePartSuccessData.ticket_no);
+                    fetchTrackTicket(sparePartSuccessData.ticket_no);
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+                >
+                  <Search className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Lacak Status Tiket Ini</span>
+                </button>
 
                 <div className="grid grid-cols-2 gap-3 pt-1">
                   <button
@@ -1220,7 +1335,7 @@ function BookingContent() {
               <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-zinc-50 border-r border-zinc-200"></div>
               <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-zinc-50 border-l border-zinc-200"></div>
               
-              <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nomor Tiket Reservasi</p>
+              <p className="text-xs font-bold text-red-700 uppercase tracking-wider">Kode Tiket Servis Motor (Servis)</p>
               <div className="mt-1 flex items-center justify-center gap-3">
                 <span className="font-mono text-3xl font-black tracking-wider text-zinc-900">{successData.ticket_no}</span>
                 <button
@@ -1287,6 +1402,19 @@ function BookingContent() {
                 <MessageSquare size={20} />
                 Kirim Tiket ke WhatsApp Admin
               </a>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab("tracking");
+                  setTrackTicketNo(successData.ticket_no);
+                  fetchTrackTicket(successData.ticket_no);
+                }}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-xs font-bold text-zinc-700 hover:bg-zinc-50 transition"
+              >
+                <Search className="w-3.5 h-3.5 text-blue-600" />
+                <span>Lacak Status Tiket Ini</span>
+              </button>
 
               <div className="grid grid-cols-2 gap-3 pt-1">
                 <button
@@ -1687,13 +1815,7 @@ function BookingContent() {
                     Jl. Siliwangi 126 Kasturi, Sebelah Utara Taman Cirendang, Kuningan, Jawa Barat 45518
                   </p>
                   <div className="h-32 rounded-lg overflow-hidden border border-zinc-200 relative mb-3">
-                    <iframe
-                      src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d319.7268610197772!2d108.48832525312899!3d-6.9516689375066765!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2e6f16edc0e25e75%3A0x5a4162116590d82d!2sDealer%20Honda%20AS%20Putra%20Motor%20Kuningan!5e1!3m2!1sen!2sid!4v1790916002596!5m2!1sen!2sid"
-                      className="w-full h-full border-0"
-                      allowFullScreen
-                      loading="lazy"
-                      title="Peta Lokasi AHASS"
-                    />
+                    <LazyMap heightClass="h-full" title="Peta Lokasi AHASS" />
                   </div>
                   <a
                     href="https://maps.google.com/?q=Dealer+Honda+AS+Putra+Motor+Kuningan"
@@ -1709,6 +1831,271 @@ function BookingContent() {
             </div>
           </>
         )
+      )}
+
+      {/* Tab 3: Cek Status Tiket Reservasi (Self-Service) */}
+      {activeTab === "tracking" && (
+        <div className="mx-auto max-w-2xl space-y-6">
+          {/* Form Pencarian Tiket */}
+          <div className="rounded-2xl border border-zinc-200 bg-white p-6 sm:p-8 shadow-sm">
+            <div className="mb-6 text-center sm:text-left">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-blue-50 px-3 py-1 text-xs font-bold text-blue-700 border border-blue-200/60 mb-2">
+                <Search className="w-3.5 h-3.5" />
+                Lacak Mandiri
+              </span>
+              <h1 className="font-display text-2xl sm:text-3xl font-black text-zinc-900">
+                Cek Status Tiket Reservasi
+              </h1>
+              <p className="mt-1 text-xs sm:text-sm text-zinc-500">
+                Ketik nomor tiket reservasi servis (SRV-...) atau suku cadang (PRT-...) untuk mengetahui progres konfirmasi bengkel.
+              </p>
+            </div>
+
+            <form onSubmit={handleTrackSubmit} className="space-y-4">
+              <div>
+                <label htmlFor="track_ticket_no" className="block text-xs font-bold text-zinc-700 mb-1.5 uppercase tracking-wider">
+                  Nomor Tiket Booking
+                </label>
+                <div className="relative">
+                  <input
+                    id="track_ticket_no"
+                    type="text"
+                    value={trackTicketNo}
+                    onChange={(e) => setTrackTicketNo(e.target.value.toUpperCase())}
+                    placeholder="Contoh: SRV-20261107-0001 atau PRT-20261107-0001"
+                    className="w-full rounded-xl border border-zinc-300 bg-zinc-50/50 px-4 py-3.5 font-mono text-base font-bold uppercase tracking-wider text-zinc-900 placeholder:normal-case placeholder:font-sans placeholder:font-normal placeholder:text-zinc-400 focus:border-blue-600 focus:bg-white focus:outline-hidden focus:ring-3 focus:ring-blue-100 transition"
+                    required
+                  />
+                  {trackTicketNo && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setTrackTicketNo("");
+                        setTrackResult(null);
+                        setTrackError(null);
+                      }}
+                      className="absolute right-3.5 top-1/2 -translate-y-1/2 rounded-full p-1 text-zinc-400 hover:bg-zinc-100 hover:text-zinc-600 transition"
+                      title="Hapus input"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={trackLoading || !trackTicketNo.trim()}
+                className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3.5 text-sm font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 disabled:opacity-60 disabled:cursor-not-allowed transition active:scale-[0.99]"
+              >
+                {trackLoading ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Memeriksa Tiket...</span>
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4" />
+                    <span>Periksa Status Tiket</span>
+                  </>
+                )}
+              </button>
+            </form>
+
+            {trackError && (
+              <div className="mt-4 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 p-4 text-xs text-red-800 animate-in fade-in duration-200">
+                <AlertCircle className="w-4 h-4 shrink-0 text-red-600 mt-0.5" />
+                <div className="space-y-1">
+                  <span className="font-bold">Tiket Tidak Ditemukan:</span>
+                  <p className="text-red-700 leading-relaxed">{trackError}</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Kartu Hasil Pelacakan Tiket */}
+          {trackResult && (
+            <div className="overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-lg animate-in fade-in slide-in-from-bottom-2 duration-300">
+              {/* Header Card Hasil */}
+              <div
+                className={`p-6 text-white relative ${
+                  trackResult.status === "SELESAI"
+                    ? "bg-gradient-to-r from-emerald-600 to-teal-700"
+                    : trackResult.status === "DIKONFIRMASI"
+                    ? "bg-gradient-to-r from-blue-600 to-indigo-700"
+                    : trackResult.status === "DIBATALKAN"
+                    ? "bg-gradient-to-r from-zinc-600 to-zinc-800"
+                    : "bg-gradient-to-r from-amber-600 to-orange-700"
+                }`}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <span className="text-[10px] font-black uppercase tracking-widest bg-white/20 px-2.5 py-1 rounded-full text-white inline-block mb-1.5">
+                      {trackResult.tipe_booking === "SPAREPART" ? "Suku Cadang Honda" : "Servis Motor AHASS"}
+                    </span>
+                    <h2 className="font-display text-2xl font-black">
+                      Status: {trackResult.status}
+                    </h2>
+                  </div>
+
+                  <div className="rounded-xl bg-white/10 backdrop-blur-md px-3.5 py-1.5 border border-white/20 text-right">
+                    <div className="text-[10px] uppercase font-bold text-white/80">Kode Tiket</div>
+                    <div className="font-mono text-lg font-black tracking-wider text-white">
+                      {trackResult.ticket_no}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Garis Tiket */}
+              <div className="relative border-b-2 border-dashed border-zinc-200 bg-zinc-50 py-3 px-6 text-center">
+                <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-zinc-50 border-r border-zinc-200"></div>
+                <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-zinc-50 border-l border-zinc-200"></div>
+                
+                <div className="flex items-center justify-center gap-3">
+                  <span className="font-mono text-xl sm:text-2xl font-black tracking-wider text-zinc-900">
+                    {trackResult.ticket_no}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={copyTrackTicket}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-2.5 py-1 text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition shadow-2xs"
+                    title="Salin Nomor Tiket"
+                  >
+                    {trackCopied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                    {trackCopied ? "Tersalin" : "Salin"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Rincian Tiket */}
+              <div className="p-6 space-y-4 text-sm text-zinc-800">
+                <div className="rounded-xl border border-zinc-200/80 bg-zinc-50 p-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-200">
+                    <span className="text-zinc-500">Nama Pelanggan:</span>
+                    <span className="font-bold text-zinc-900">{trackResult.nama_customer}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-200">
+                    <span className="text-zinc-500">Nomor WhatsApp:</span>
+                    <span className="font-mono font-bold text-zinc-800">{trackResult.no_hp}</span>
+                  </div>
+
+                  <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-200">
+                    <span className="text-zinc-500">Jadwal Kedatangan:</span>
+                    <span className="font-bold text-zinc-900">
+                      {formatDate(trackResult.tanggal_booking)} ({trackResult.jam_booking} WIB)
+                    </span>
+                  </div>
+
+                  {trackResult.tipe_booking === "SPAREPART" ? (
+                    <>
+                      <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-200">
+                        <span className="text-zinc-500">Metode Pengambilan:</span>
+                        <span className="font-bold text-emerald-800">
+                          {trackResult.metode_layanan === "PASANG"
+                            ? "Sekalian Pasang oleh Mekanik AHASS"
+                            : "Ambil di Toko / Kasir Part"}
+                        </span>
+                      </div>
+
+                      {trackResult.items && trackResult.items.length > 0 && (
+                        <div className="pt-1">
+                          <div className="text-xs font-bold text-zinc-700 mb-2">
+                            Item Suku Cadang ({trackResult.items.length}):
+                          </div>
+                          <div className="space-y-2">
+                            {trackResult.items.map((it, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center justify-between text-xs bg-white p-2.5 rounded-lg border border-zinc-200"
+                              >
+                                <div className="min-w-0 pr-2">
+                                  <div className="font-bold text-zinc-900 truncate">
+                                    {it.part_name}
+                                  </div>
+                                  <div className="font-mono text-[11px] text-zinc-500">
+                                    {it.part_no} &bull; {it.quantity} pcs
+                                  </div>
+                                </div>
+                                <div className="font-bold text-emerald-700 shrink-0">
+                                  {formatIDR((it.het || 0) * (it.quantity || 1))}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          {trackResult.total_harga ? (
+                            <div className="flex items-center justify-between text-sm font-extrabold text-zinc-900 pt-3 border-t border-zinc-200 mt-3">
+                              <span>Total Estimasi HET:</span>
+                              <span className="text-base text-emerald-800">
+                                {formatIDR(trackResult.total_harga)}
+                              </span>
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-200">
+                        <span className="text-zinc-500">Kendaraan:</span>
+                        <span className="font-bold text-zinc-900">
+                          {trackResult.tipe_motor || "-"} ({trackResult.plat_kendaraan || "-"})
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-200">
+                        <span className="text-zinc-500">Paket Servis:</span>
+                        <span className="font-bold text-[#E4002B]">
+                          {trackResult.jenis_servis || "-"}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Hubungi WhatsApp CS Bengkel */}
+                <div className="pt-2">
+                  <a
+                    href={`https://wa.me/${process.env.NEXT_PUBLIC_WA_NUMBER || "6281111116408"}?text=${encodeURIComponent(
+                      `Halo Admin AHASS AS Putra, saya ingin menanyakan progres tiket reservasi *${trackResult.ticket_no}* atas nama *${trackResult.nama_customer}*. Mohon informasinya, terima kasih!`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-4 py-3 text-sm font-bold text-white hover:bg-emerald-700 transition shadow-sm active:scale-[0.99]"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    <span>Tanya / Konfirmasi ke Admin via WhatsApp</span>
+                  </a>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Panduan & Info Tiket */}
+          {!trackResult && (
+            <div className="rounded-2xl border border-zinc-200 bg-white p-6 text-zinc-600 text-xs space-y-3">
+              <h3 className="font-bold text-zinc-900 text-sm flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-blue-600" />
+                Informasi Nomor Tiket
+              </h3>
+              <ul className="list-disc list-inside space-y-1.5 leading-relaxed text-zinc-600">
+                <li>
+                  Nomor tiket diterbitkan otomatis setelah Anda mengisi formulir <strong>Booking Servis</strong> atau <strong>Booking Suku Cadang</strong>.
+                </li>
+                <li>
+                  Format tiket servis motor: <code className="font-mono bg-zinc-100 px-1.5 py-0.5 rounded text-zinc-800">SRV-YYYYMMDD-XXXX</code>.
+                </li>
+                <li>
+                  Format tiket suku cadang: <code className="font-mono bg-zinc-100 px-1.5 py-0.5 rounded text-emerald-800">PRT-YYYYMMDD-XXXX</code>.
+                </li>
+                <li>
+                  Bukti tiket dan jadwal kedatangan juga otomatis dikirimkan ke alamat email yang Anda daftarkan saat reservasi.
+                </li>
+              </ul>
+            </div>
+          )}
+        </div>
       )}
       </main>
     </div>
