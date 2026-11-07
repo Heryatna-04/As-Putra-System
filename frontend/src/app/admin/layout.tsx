@@ -43,13 +43,13 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="bg-[#FAFAFA] font-sans text-[#0A0A0A] h-screen flex flex-col md:flex-row overflow-hidden">
-      {/* Mobile Topbar with Hamburger Toggle */}
-      <header className="md:hidden h-14 bg-white border-b border-zinc-200 px-4 flex items-center justify-between shrink-0 z-30">
+    <div className="bg-[#F5F6F8] font-sans text-[#0A0A0A] h-screen flex flex-col md:flex-row overflow-hidden">
+      {/* Mobile Topbar */}
+      <header className="md:hidden h-14 bg-[#111318] border-b border-white/[0.06] px-4 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileOpen(true)}
-            className="p-1.5 -ml-1 text-zinc-600 hover:text-zinc-900 rounded-lg hover:bg-zinc-100 transition"
+            className="p-1.5 -ml-1 text-white/60 hover:text-white rounded-lg hover:bg-white/8 transition"
             aria-label="Buka Menu"
           >
             <Menu className="w-5 h-5" />
@@ -59,11 +59,11 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               src="/logo.png"
               alt="AS Putra Motor"
               fill
-              className="object-contain object-left"
+              className="object-contain object-left brightness-0 invert"
             />
           </div>
         </div>
-        <span className="text-[10px] font-bold text-[#B00020] bg-red-50 border border-red-200/60 px-2 py-0.5 rounded">
+        <span className="text-[10px] font-bold text-white/60 bg-white/10 border border-white/10 px-2 py-0.5 rounded-md">
           AHASS
         </span>
       </header>
@@ -74,7 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         isOpen={isMobileOpen}
         onClose={() => setIsMobileOpen(false)}
       />
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#FAFAFA]">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F5F6F8]">
         <Toaster position="bottom-right" />
         {children}
       </main>
