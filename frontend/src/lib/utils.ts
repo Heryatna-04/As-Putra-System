@@ -56,6 +56,46 @@ export function buildBookingWaUrl(data: {
   return `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
 }
 
+/** Build WhatsApp URL for spare part booking confirmation */
+export function buildSparePartBookingWaUrl(data: {
+  ticketNo?: string;
+  nama: string;
+  noHp: string;
+  tipeMotor?: string;
+  items: Array<{ part_name: string; part_no: string; quantity: number; het: number }>;
+  totalHarga: number;
+  metodeLayanan: string;
+  tanggal?: string;
+  jam?: string;
+  catatan?: string;
+}): string {
+  const waNumber = process.env.NEXT_PUBLIC_WA_NUMBER ?? '6281111116408';
+  const lines: string[] = [
+    "RESERVASI BOOKING SUKU CADANG (AHASS AS PUTRA)",
+    "====================================",
+  ];
+
+  if (data.ticketNo) lines.push(`No. Tiket: ${data.ticketNo}`);
+  lines.push(`Nama Pemesan: ${data.nama}`);
+  lines.push(`No. WhatsApp: ${data.noHp}`);
+  if (data.tipeMotor) lines.push(`Motor: ${data.tipeMotor}`);
+  lines.push(`Metode: ${data.metodeLayanan === 'PASANG' ? 'Sekalian Pasang di Bengkel' : 'Ambil di Toko / Bengkel'}`);
+  if (data.tanggal || data.jam) {
+    lines.push(`Jadwal Ambil: ${data.tanggal || '-'} jam ${data.jam || '-'}`);
+  }
+  lines.push("\nDaftar Suku Cadang:");
+  data.items.forEach((it, idx) => {
+    lines.push(`${idx + 1}. ${it.part_name} (${it.part_no}) x${it.quantity} - Rp ${(it.het * it.quantity).toLocaleString('id-ID')}`);
+  });
+  lines.push(`\n*Total Estimasi: Rp ${data.totalHarga.toLocaleString('id-ID')}*`);
+  if (data.catatan) lines.push(`Catatan: ${data.catatan}`);
+  lines.push("====================================");
+  lines.push("Halo Admin AHASS AS Putra, mohon konfirmasi pesanan suku cadang di atas. Terima kasih!");
+
+  const msg = lines.join("\n");
+  return `https://wa.me/${waNumber}?text=${encodeURIComponent(msg)}`;
+}
+
 /** Clamp string with ellipsis */
 export function clamp(str: string, maxLen: number): string {
   return str.length > maxLen ? str.slice(0, maxLen) + '…' : str;

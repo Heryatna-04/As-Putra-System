@@ -12,7 +12,9 @@ import {
   Clock,
   FileSpreadsheet,
   Mail,
-  MessageSquare
+  MessageSquare,
+  Wrench,
+  ShoppingBag
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,14 +24,19 @@ interface BookingCRM {
   nama_customer: string;
   email?: string;
   no_hp: string;
-  no_mesin: string;
-  plat_kendaraan: string;
+  no_mesin?: string;
+  plat_kendaraan?: string;
+  tipe_motor?: string;
   tanggal_booking: string;
   jam_booking: string;
   jenis_servis: string;
   detail_lainnya?: string;
   status: "PENDING" | "CONFIRMED" | "IN_PROGRESS" | "DONE" | "CANCELLED";
   catatan_admin?: string;
+  tipe_booking?: "SERVIS" | "SPAREPART";
+  items_json?: any[] | null;
+  total_harga?: number;
+  metode_layanan?: "AMBIL" | "PASANG";
   created_at: string;
 }
 
@@ -41,6 +48,7 @@ export default function CrmBookingsPage() {
   const [limit] = useState(15);
   const [totalPages, setTotalPages] = useState(1);
   const [statusFilter, setStatusFilter] = useState("ALL");
+  const [typeFilter, setTypeFilter] = useState<"ALL" | "SERVIS" | "SPAREPART">("ALL");
   const [tanggalFrom, setTanggalFrom] = useState("");
   const [tanggalTo, setTanggalTo] = useState("");
   const [search, setSearch] = useState("");
@@ -48,7 +56,7 @@ export default function CrmBookingsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
 
-  const hasActiveFilters = Boolean(search || debouncedSearch || tanggalFrom || tanggalTo || statusFilter !== "ALL");
+  const hasActiveFilters = Boolean(search || debouncedSearch || tanggalFrom || tanggalTo || statusFilter !== "ALL" || typeFilter !== "ALL");
 
   const resetAllFilters = () => {
     setSearch("");
@@ -56,6 +64,7 @@ export default function CrmBookingsPage() {
     setTanggalFrom("");
     setTanggalTo("");
     setStatusFilter("ALL");
+    setTypeFilter("ALL");
     setPage(1);
   };
 
@@ -78,6 +87,7 @@ export default function CrmBookingsPage() {
       });
 
       if (statusFilter !== "ALL") params.append("status", statusFilter);
+      if (typeFilter !== "ALL") params.append("tipe_booking", typeFilter);
       if (debouncedSearch) params.append("q", debouncedSearch);
       if (tanggalFrom) params.append("tanggal_from", tanggalFrom);
       if (tanggalTo) params.append("tanggal_to", tanggalTo);
@@ -100,7 +110,7 @@ export default function CrmBookingsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, authFetch, page, limit, statusFilter, debouncedSearch, tanggalFrom, tanggalTo]);
+  }, [token, authFetch, page, limit, statusFilter, typeFilter, debouncedSearch, tanggalFrom, tanggalTo]);
 
   useEffect(() => {
     fetchCrmBookings();
@@ -113,6 +123,7 @@ export default function CrmBookingsPage() {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
       const params = new URLSearchParams();
       if (statusFilter !== "ALL") params.append("status", statusFilter);
+      if (typeFilter !== "ALL") params.append("tipe_booking", typeFilter);
       if (debouncedSearch) params.append("q", debouncedSearch);
       if (tanggalFrom) params.append("tanggal_from", tanggalFrom);
       if (tanggalTo) params.append("tanggal_to", tanggalTo);
@@ -191,6 +202,54 @@ export default function CrmBookingsPage() {
             <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} /> Refresh
           </button>
         </div>
+      </div>
+
+      {/* Tipe Booking Filter Tabs */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button
+          type="button"
+          onClick={() => {
+            setTypeFilter("ALL");
+            setPage(1);
+          }}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            typeFilter === "ALL"
+              ? "bg-zinc-900 text-white shadow-xs"
+              : "bg-white text-zinc-600 hover:text-zinc-900 border border-zinc-200"
+          }`}
+        >
+          Semua Reservasi
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setTypeFilter("SERVIS");
+            setPage(1);
+          }}
+          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            typeFilter === "SERVIS"
+              ? "bg-[#E4002B] text-white shadow-xs"
+              : "bg-white text-zinc-600 hover:text-zinc-900 border border-zinc-200"
+          }`}
+        >
+          <Wrench size={13} />
+          <span>Booking Servis</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setTypeFilter("SPAREPART");
+            setPage(1);
+          }}
+          className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+            typeFilter === "SPAREPART"
+              ? "bg-emerald-700 text-white shadow-xs"
+              : "bg-white text-zinc-600 hover:text-zinc-900 border border-zinc-200"
+          }`}
+        >
+          <ShoppingBag size={13} />
+          <span>Booking Suku Cadang</span>
+        </button>
       </div>
 
       {/* Filter Bar */}
@@ -272,10 +331,11 @@ export default function CrmBookingsPage() {
             <thead>
               <tr className="bg-gradient-to-r from-zinc-50 via-zinc-100/60 to-zinc-50 border-b border-zinc-200 text-xs font-bold text-zinc-500 uppercase tracking-wide">
                 <th className="px-5 py-4">No. Tiket</th>
+                <th className="px-4 py-4">Tipe</th>
                 <th className="px-4 py-4">Customer &amp; Kontak</th>
-                <th className="px-4 py-4">No. Mesin &amp; Plat</th>
-                <th className="px-4 py-4">Jadwal Servis</th>
-                <th className="px-4 py-4">Jenis Servis</th>
+                <th className="px-4 py-4">Identitas / Detail</th>
+                <th className="px-4 py-4">Jadwal</th>
+                <th className="px-4 py-4">Layanan / Suku Cadang</th>
                 <th className="px-4 py-4 text-center">Status</th>
                 <th className="px-4 py-4 text-center">Aksi WA</th>
               </tr>
@@ -283,14 +343,14 @@ export default function CrmBookingsPage() {
             <tbody className="divide-y divide-zinc-200/70">
               {isLoading ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-14 text-zinc-400">
+                  <td colSpan={8} className="text-center py-14 text-zinc-400">
                     <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-zinc-400" />
                     Memuat data CRM...
                   </td>
                 </tr>
               ) : bookings.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-14 text-center">
+                  <td colSpan={8} className="py-14 text-center">
                     <div className="flex flex-col items-center justify-center max-w-sm mx-auto text-center px-4">
                       <div className="w-12 h-12 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mb-3 shadow-inner">
                         <Search size={20} />
@@ -311,76 +371,135 @@ export default function CrmBookingsPage() {
                   </td>
                 </tr>
               ) : (
-                bookings.map((item) => (
-                  <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
-                    <td className="px-5 py-4 whitespace-nowrap">
-                      <span className="font-bold font-mono text-xs text-[#E4002B] bg-gradient-to-r from-red-50 to-red-100/60 border border-red-200/80 px-2.5 py-1 rounded-lg inline-block shadow-2xs">
-                        {item.ticket_no}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="font-bold text-sm text-zinc-900">{item.nama_customer}</div>
-                      {item.email ? (
-                        <div className="text-xs text-zinc-600 flex items-center gap-1 mt-1" title="Akun Gmail Bukti Customer">
-                          <Mail size={12} className="text-zinc-400 shrink-0" />
-                          <span className="text-xs text-zinc-600 font-medium">{item.email}</span>
+                bookings.map((item) => {
+                  const isPart = item.tipe_booking === "SPAREPART";
+                  return (
+                    <tr key={item.id} className="hover:bg-zinc-50/80 transition-colors">
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <span
+                          className={`font-bold font-mono text-xs border px-2.5 py-1 rounded-lg inline-block shadow-2xs ${
+                            isPart
+                              ? "text-emerald-800 bg-emerald-50 border-emerald-200/80"
+                              : "text-[#E4002B] bg-red-50 border-red-200/80"
+                          }`}
+                        >
+                          {item.ticket_no}
+                        </span>
+                      </td>
+
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        {isPart ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-emerald-50 text-emerald-800 border border-emerald-300">
+                            <ShoppingBag size={11} className="text-emerald-700" />
+                            <span>Part</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-extrabold bg-blue-50 text-blue-800 border border-blue-300">
+                            <Wrench size={11} className="text-blue-700" />
+                            <span>Servis</span>
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-4">
+                        <div className="font-bold text-sm text-zinc-900">{item.nama_customer}</div>
+                        {item.email ? (
+                          <div className="text-xs text-zinc-600 flex items-center gap-1 mt-1" title="Akun Gmail Bukti Customer">
+                            <Mail size={12} className="text-zinc-400 shrink-0" />
+                            <span className="text-xs text-zinc-600 font-medium">{item.email}</span>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-zinc-400 italic mt-0.5">Email tidak tercatat</div>
+                        )}
+                        <div className="text-xs text-zinc-600 font-mono font-semibold flex items-center gap-1 mt-1">
+                          <Phone size={12} className="text-zinc-400" /> {item.no_hp}
                         </div>
-                      ) : (
-                        <div className="text-xs text-zinc-400 italic mt-0.5">Email tidak tercatat</div>
-                      )}
-                      <div className="text-xs text-zinc-600 font-mono font-semibold flex items-center gap-1 mt-1">
-                        <Phone size={12} className="text-zinc-400" /> {item.no_hp}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 border border-zinc-200/80 rounded-lg text-zinc-900 shadow-2xs">
-                        {item.plat_kendaraan}
-                      </span>
-                      <div className="text-xs text-zinc-500 font-mono mt-1">
-                        Mesin: <span className="font-semibold text-zinc-700">{item.no_mesin}</span>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 whitespace-nowrap">
-                      <div className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
-                        <Clock size={12} className="text-[#E8272A]" /> {item.jam_booking} WIB
-                      </div>
-                      <div className="text-[11px] text-zinc-400 font-medium mt-0.5">
-                        {item.tanggal_booking}
-                      </div>
-                    </td>
-                    <td className="px-4 py-4 max-w-sm">
-                      <span className="inline-block text-xs font-bold px-2.5 py-0.5 rounded-lg bg-zinc-100 text-zinc-800 border border-zinc-200 shadow-2xs">
-                        {item.jenis_servis}
-                      </span>
-                      {item.detail_lainnya && (
-                        <p className="text-xs text-zinc-600 line-clamp-2 mt-1 leading-relaxed" title={item.detail_lainnya}>
-                          Ket: {item.detail_lainnya}
-                        </p>
-                      )}
-                    </td>
-                    <td className="px-5 py-4 text-center whitespace-nowrap">
-                      {getStatusBadge(item.status)}
-                    </td>
-                    <td className="px-4 py-4 text-center whitespace-nowrap">
-                      {(() => {
-                        const cleanPhone = item.no_hp.replace(/\D/g, "");
-                        const waNum = cleanPhone.startsWith("0") ? "62" + cleanPhone.slice(1) : cleanPhone;
-                        return (
-                          <a
-                            href={`https://wa.me/${waNum}?text=${encodeURIComponent(`Halo ${item.nama_customer}, kami dari CRM AHASS Honda AS Putra Motor Kuningan mengonfirmasi tiket booking servis Anda (${item.ticket_no}) jadwal ${item.tanggal_booking} jam ${item.jam_booking}.`)}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-bold shadow-[0_4px_12px_rgba(16,185,129,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-emerald-400/30 transition-transform active:scale-95"
-                            title={`Follow up ${item.nama_customer} (${item.no_hp}) via WA`}
-                          >
-                            <MessageSquare size={13} />
-                            <span>Chat WA</span>
-                          </a>
-                        );
-                      })()}
-                    </td>
-                  </tr>
-                ))
+                      </td>
+
+                      <td className="px-4 py-4">
+                        {isPart ? (
+                          <div>
+                            <span className="inline-block text-xs font-bold text-zinc-800 bg-zinc-100 px-2 py-0.5 rounded border border-zinc-200">
+                              {item.tipe_motor || "Motor Honda"}
+                            </span>
+                            <div className="text-xs text-zinc-500 font-medium mt-1">
+                              {item.metode_layanan === "PASANG" ? "Pasang Mekanik" : "Ambil Toko"}
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="font-mono text-xs font-bold px-2.5 py-1 bg-zinc-100 border border-zinc-200/80 rounded-lg text-zinc-900 shadow-2xs">
+                              {item.plat_kendaraan || "-"}
+                            </span>
+                            <div className="text-xs text-zinc-500 font-mono mt-1">
+                              Mesin: <span className="font-semibold text-zinc-700">{item.no_mesin || "-"}</span>
+                            </div>
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <div className="text-xs font-bold text-zinc-900 flex items-center gap-1.5">
+                          <Clock size={12} className={isPart ? "text-emerald-700" : "text-[#E8272A]"} /> {item.jam_booking} WIB
+                        </div>
+                        <div className="text-[11px] text-zinc-400 font-medium mt-0.5">
+                          {item.tanggal_booking}
+                        </div>
+                      </td>
+
+                      <td className="px-4 py-4 max-w-sm">
+                        {isPart && Array.isArray(item.items_json) && item.items_json.length > 0 ? (
+                          <div>
+                            <div className="text-xs font-bold text-emerald-800 mb-0.5">
+                              {item.items_json.length} Jenis Part &bull; Total: Rp {Number(item.total_harga || 0).toLocaleString("id-ID")}
+                            </div>
+                            <div className="text-xs text-zinc-600 line-clamp-2">
+                              {item.items_json.map((it: any) => `${it.part_name} (${it.quantity}x)`).join(", ")}
+                            </div>
+                          </div>
+                        ) : (
+                          <div>
+                            <span className="inline-block text-xs font-bold px-2.5 py-0.5 rounded-lg bg-zinc-100 text-zinc-800 border border-zinc-200 shadow-2xs">
+                              {item.jenis_servis}
+                            </span>
+                            {item.detail_lainnya && (
+                              <p className="text-xs text-zinc-600 line-clamp-2 mt-1 leading-relaxed" title={item.detail_lainnya}>
+                                Ket: {item.detail_lainnya}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </td>
+
+                      <td className="px-5 py-4 text-center whitespace-nowrap">
+                        {getStatusBadge(item.status)}
+                      </td>
+
+                      <td className="px-4 py-4 text-center whitespace-nowrap">
+                        {(() => {
+                          const cleanPhone = item.no_hp.replace(/\D/g, "");
+                          const waNum = cleanPhone.startsWith("0") ? "62" + cleanPhone.slice(1) : cleanPhone;
+                          const waText = isPart
+                            ? `Halo ${item.nama_customer}, kami dari CRM AHASS Honda AS Putra Motor Kuningan mengonfirmasi tiket booking suku cadang Anda (${item.ticket_no}) untuk jadwal ${item.tanggal_booking} jam ${item.jam_booking} WIB.`
+                            : `Halo ${item.nama_customer}, kami dari CRM AHASS Honda AS Putra Motor Kuningan mengonfirmasi tiket booking servis Anda (${item.ticket_no}) jadwal ${item.tanggal_booking} jam ${item.jam_booking}.`;
+
+                          return (
+                            <a
+                              href={`https://wa.me/${waNum}?text=${encodeURIComponent(waText)}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 text-white text-xs font-bold shadow-[0_4px_12px_rgba(16,185,129,0.35),inset_0_1px_1px_rgba(255,255,255,0.4)] border border-emerald-400/30 transition-transform active:scale-95"
+                              title={`Follow up ${item.nama_customer} (${item.no_hp}) via WA`}
+                            >
+                              <MessageSquare size={13} />
+                              <span>Chat WA</span>
+                            </a>
+                          );
+                        })()}
+                      </td>
+                    </tr>
+                  );
+                })
               )}
             </tbody>
           </table>

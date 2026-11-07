@@ -30,7 +30,7 @@ export class BookingController {
    */
   public static async getListAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { page, limit, status, q, tanggal_from, tanggal_to } = req.query;
+      const { page, limit, status, q, tanggal_from, tanggal_to, tipe_booking } = req.query;
       const result = await BookingService.getBookings(
         {
           page: page ? parseInt(String(page), 10) : undefined,
@@ -39,6 +39,7 @@ export class BookingController {
           q: q ? String(q) : undefined,
           tanggal_from: tanggal_from ? String(tanggal_from) : undefined,
           tanggal_to: tanggal_to ? String(tanggal_to) : undefined,
+          tipe_booking: tipe_booking ? String(tipe_booking) : undefined,
         },
         false // Full data for admin
       );
@@ -77,7 +78,7 @@ export class BookingController {
    */
   public static async getListCrm(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { page, limit, status, q, tanggal_from, tanggal_to } = req.query;
+      const { page, limit, status, q, tanggal_from, tanggal_to, tipe_booking } = req.query;
       const result = await BookingService.getBookings(
         {
           page: page ? parseInt(String(page), 10) : undefined,
@@ -86,6 +87,7 @@ export class BookingController {
           q: q ? String(q) : undefined,
           tanggal_from: tanggal_from ? String(tanggal_from) : undefined,
           tanggal_to: tanggal_to ? String(tanggal_to) : undefined,
+          tipe_booking: tipe_booking ? String(tipe_booking) : undefined,
         },
         true // Mask phone for CRM
       );
@@ -120,13 +122,14 @@ export class BookingController {
    */
   public static async exportExcelAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { status, q, tanggal_from, tanggal_to } = req.query;
+      const { status, q, tanggal_from, tanggal_to, tipe_booking } = req.query;
       const buffer = await BookingService.exportExcel(
         {
           status: status ? String(status) : undefined,
           q: q ? String(q) : undefined,
           tanggal_from: tanggal_from ? String(tanggal_from) : undefined,
           tanggal_to: tanggal_to ? String(tanggal_to) : undefined,
+          tipe_booking: tipe_booking ? String(tipe_booking) : undefined,
         },
         false
       );
@@ -145,13 +148,14 @@ export class BookingController {
    */
   public static async exportExcelCrm(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const { status, q, tanggal_from, tanggal_to } = req.query;
+      const { status, q, tanggal_from, tanggal_to, tipe_booking } = req.query;
       const buffer = await BookingService.exportExcel(
         {
           status: status ? String(status) : undefined,
           q: q ? String(q) : undefined,
           tanggal_from: tanggal_from ? String(tanggal_from) : undefined,
           tanggal_to: tanggal_to ? String(tanggal_to) : undefined,
+          tipe_booking: tipe_booking ? String(tipe_booking) : undefined,
         },
         true
       );

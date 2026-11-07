@@ -15,7 +15,8 @@ import {
   HelpCircle,
   Award,
   ChevronDown,
-  Share2
+  Share2,
+  ShoppingBag
 } from "lucide-react";
 import { fetchSparePartDetail, fetchCatalog } from "@/lib/api";
 import { formatIDR, buildWaUrl } from "@/lib/utils";
@@ -222,34 +223,45 @@ export default async function SparePartDetailPage({ params }: DetailPageProps) {
             </div>
           </div>
 
-          {/* Action CTAs: WA & Booking & Share */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-2">
-            <a
-              href={waUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white py-3.5 px-5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-sm"
-            >
-              <MessageSquare className="w-4 h-4 fill-current" />
-              <span>Tanya &amp; Pesan via WhatsApp</span>
-            </a>
-            <Link
-              href={`/booking?partNo=${encodeURIComponent(part.part_no)}`}
-              className="flex-1 bg-zinc-900 hover:bg-zinc-800 text-white py-3.5 px-5 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all"
-            >
-              <CalendarDays className="w-4 h-4 text-[#E4002B]" />
-              <span>Booking Servis Pasang</span>
-            </Link>
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(`Cek ketersediaan suku cadang asli Honda: ${part.nama_umum || part.part_name} (${part.part_no}) - Harga HET ${formatIDR(part.het)} di AHASS AS Putra Kuningan: https://asputra.vercel.app/katalog/${encodeURIComponent(part.part_no)}`)}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="sm:w-14 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center transition-all border border-zinc-200"
-              title="Bagikan ke WhatsApp"
-            >
-              <Share2 className="w-4 h-4" />
-              <span className="sm:hidden ml-2">Bagikan</span>
-            </a>
+          {/* Action CTAs: Booking Part, Booking Servis Pasang, WA */}
+          <div className="space-y-2.5 pt-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <Link
+                href={`/booking?type=sparepart&partNo=${encodeURIComponent(part.part_no)}`}
+                className="bg-[#E4002B] hover:bg-[#b00020] text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-red-600/20 active:scale-[0.99]"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Booking Suku Cadang Ini</span>
+              </Link>
+              <Link
+                href={`/booking?type=servis&partNo=${encodeURIComponent(part.part_no)}`}
+                className="bg-zinc-900 hover:bg-zinc-800 text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.99]"
+              >
+                <CalendarDays className="w-4 h-4 text-[#E4002B]" />
+                <span>Booking Servis Pasang</span>
+              </Link>
+            </div>
+
+            <div className="flex gap-2.5">
+              <a
+                href={waUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 bg-emerald-700 hover:bg-emerald-800 text-white py-3 px-4 rounded-xl font-bold text-xs sm:text-sm flex items-center justify-center gap-2 transition-all shadow-2xs"
+              >
+                <MessageSquare className="w-4 h-4 fill-current" />
+                <span>Tanya / Chat via WhatsApp</span>
+              </a>
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(`Cek ketersediaan suku cadang asli Honda: ${part.nama_umum || part.part_name} (${part.part_no}) - Harga HET ${formatIDR(part.het)} di AHASS AS Putra Kuningan: https://asputra.vercel.app/katalog/${encodeURIComponent(part.part_no)}`)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-12 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-3 rounded-xl font-bold text-xs flex items-center justify-center transition-all border border-zinc-200 shrink-0"
+                title="Bagikan ke WhatsApp"
+              >
+                <Share2 className="w-4 h-4" />
+              </a>
+            </div>
           </div>
 
           {/* Multi-item WA Inquiry CTA */}

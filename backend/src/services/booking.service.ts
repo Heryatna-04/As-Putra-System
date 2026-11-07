@@ -2,17 +2,30 @@ import xlsx from 'xlsx';
 import { supabase } from '../config/supabase';
 import { EmailService } from './email.service';
 
+export interface BookingSparePartItem {
+  part_no: string;
+  part_name: string;
+  nama_umum?: string | null;
+  quantity: number;
+  het: number;
+  gambar_url?: string | null;
+}
+
 export interface CreateBookingDTO {
   nama_customer: string;
   email: string;
   no_hp: string;
-  no_mesin: string;
-  plat_kendaraan: string;
+  no_mesin?: string;
+  plat_kendaraan?: string;
   tipe_motor?: string;
   tanggal_booking: string;
   jam_booking: string;
-  jenis_servis: string;
+  jenis_servis?: string | string[];
   detail_lainnya?: string;
+  tipe_booking?: 'SERVIS' | 'SPAREPART';
+  items?: BookingSparePartItem[];
+  total_harga?: number;
+  metode_layanan?: 'AMBIL' | 'PASANG';
 }
 
 export interface BookingQueryFilters {
@@ -22,6 +35,7 @@ export interface BookingQueryFilters {
   q?: string;
   tanggal_from?: string;
   tanggal_to?: string;
+  tipe_booking?: string;
 }
 
 export class BookingService {
@@ -35,14 +49,15 @@ export class BookingService {
   }
 
   /**
-   * Generate ticket number: ASP-YYYYMMDD-XXXX
+   * Generate ticket number:
+   * ASP-YYYYMMDD-XXXX (Servis) or PRT-YYYYMMDD-XXXX (Spare Part)
    */
-  private static async generateTicketNo(dateStr: string, attempt: number = 0): Promise<string> {
+  private static async generateTicketNo(dateStr: string, tipeBooking: string = 'SERVIS', attempt: number = 0): Promise<string> {
     const rawDate = new Date(dateStr);
     const yyyy = rawDate.getFullYear();
     const mm = String(rawDate.getMonth() + 1).padStart(2, '0');
     const dd = String(rawDate.getDate()).padStart(2, '0');
-    const prefix = `ASP-${yyyy}${mm}${dd}-`;
+    const prefix = tipeBooking === 'SPAREPART' ? `PRT-${yyyy}${mm}${dd}-` : `ASP-${yyyy}${mm}${dd}-`;
 
     const { count } = await supabase
       .from('bookings')
@@ -61,32 +76,47 @@ export class BookingService {
   }
 
   /**
-   * Public Customer Booking creation
+   * Public Customer Booking creation (Servis & Spare Part)
    */
   public static async createBooking(dto: CreateBookingDTO) {
-    const jenisServisString = Array.isArray(dto.jenis_servis)
-      ? dto.jenis_servis.join(', ')
-      : String(dto.jenis_servis);
+    const isSparepart = dto.tipe_booking === 'SPAREPART';
+
+    let calculatedTotal = dto.total_harga ?? 0;
+    if (isSparepart && (!calculatedTotal || calculatedTotal <= 0) && dto.items && dto.items.length > 0) {
+      calculatedTotal = dto.items.reduce((acc, it) => acc + (it.het || 0) * (it.quantity || 1), 0);
+    }
+
+    const defaultServiceTitle = isSparepart
+      ? `Pemesanan Suku Cadang (${dto.items?.length || 0} Item)`
+      : 'Servis Kendaraan';
+
+    const jenisServisString = dto.jenis_servis
+      ? (Array.isArray(dto.jenis_servis) ? dto.jenis_servis.join(', ') : String(dto.jenis_servis))
+      : defaultServiceTitle;
 
     const bookingPayload = {
       nama_customer: dto.nama_customer.trim(),
       email: dto.email.trim().toLowerCase(),
       no_hp: dto.no_hp.trim(),
-      no_mesin: dto.no_mesin.trim().toUpperCase(),
-      plat_kendaraan: dto.plat_kendaraan.trim().toUpperCase(),
+      no_mesin: dto.no_mesin?.trim() ? dto.no_mesin.trim().toUpperCase() : '-',
+      plat_kendaraan: dto.plat_kendaraan?.trim() ? dto.plat_kendaraan.trim().toUpperCase() : '-',
       tipe_motor: dto.tipe_motor?.trim() || null,
       tanggal_booking: dto.tanggal_booking,
       jam_booking: dto.jam_booking,
       jenis_servis: jenisServisString,
       detail_lainnya: dto.detail_lainnya?.trim() || null,
       status: 'PENDING' as const,
+      tipe_booking: isSparepart ? 'SPAREPART' : 'SERVIS',
+      items_json: isSparepart && dto.items ? dto.items : null,
+      total_harga: calculatedTotal,
+      metode_layanan: dto.metode_layanan || 'AMBIL',
     };
 
     let data: any = null;
     let insertError: any = null;
 
     for (let attempt = 0; attempt < 3; attempt++) {
-      const ticketNo = await this.generateTicketNo(dto.tanggal_booking, attempt);
+      const ticketNo = await this.generateTicketNo(dto.tanggal_booking, bookingPayload.tipe_booking, attempt);
       const res = await supabase
         .from('bookings')
         .insert({ ...bookingPayload, ticket_no: ticketNo })
@@ -119,6 +149,10 @@ export class BookingService {
       tanggal_booking: data.tanggal_booking,
       jam_booking: data.jam_booking,
       jenis_servis: data.jenis_servis,
+      tipe_booking: data.tipe_booking,
+      items: data.items_json || undefined,
+      total_harga: data.total_harga || undefined,
+      metode_layanan: data.metode_layanan || undefined,
     }).catch((err) => console.error('[BookingService] Failed sending confirmation email:', err));
 
     return data;
@@ -140,6 +174,10 @@ export class BookingService {
       query = query.eq('status', filters.status);
     }
 
+    if (filters.tipe_booking && filters.tipe_booking !== 'ALL') {
+      query = query.eq('tipe_booking', filters.tipe_booking);
+    }
+
     if (filters.tanggal_from) {
       query = query.gte('tanggal_booking', filters.tanggal_from);
     }
@@ -151,7 +189,7 @@ export class BookingService {
     if (filters.q) {
       const q = filters.q.replace(/[,()]/g, '').trim();
       if (q) {
-        query = query.or(`nama_customer.ilike.%${q}%,ticket_no.ilike.%${q}%,plat_kendaraan.ilike.%${q}%`);
+        query = query.or(`nama_customer.ilike.%${q}%,ticket_no.ilike.%${q}%,plat_kendaraan.ilike.%${q}%,email.ilike.%${q}%`);
       }
     }
 
@@ -231,6 +269,10 @@ export class BookingService {
       query = query.eq('status', filters.status);
     }
 
+    if (filters.tipe_booking && filters.tipe_booking !== 'ALL') {
+      query = query.eq('tipe_booking', filters.tipe_booking);
+    }
+
     if (filters.tanggal_from) {
       query = query.gte('tanggal_booking', filters.tanggal_from);
     }
@@ -255,17 +297,25 @@ export class BookingService {
 
     const rows = (data || []).map((b: any) => {
       const formattedDate = b.created_at ? new Date(b.created_at).toLocaleString('id-ID') : '-';
+      const isPart = b.tipe_booking === 'SPAREPART';
+      const itemsSummary = Array.isArray(b.items_json)
+        ? b.items_json.map((it: any) => `${it.part_name} (${it.part_no}) x${it.quantity}`).join('; ')
+        : (b.jenis_servis || '-');
+
       if (isCrm) {
         return {
           'No. Tiket': b.ticket_no,
+          'Tipe Booking': isPart ? 'Suku Cadang' : 'Servis Motor',
           'Nama Customer': b.nama_customer,
           'Email / Gmail': b.email || '-',
           'No. Telepon / WA': b.no_hp,
-          'No. Mesin': b.no_mesin,
-          'Plat Kendaraan': b.plat_kendaraan,
-          'Tanggal Servis': b.tanggal_booking,
-          'Jam Servis': `${b.jam_booking} WIB`,
-          'Jenis Servis': b.jenis_servis,
+          'Tipe Motor': b.tipe_motor || '-',
+          'Plat Kendaraan': b.plat_kendaraan || '-',
+          'No. Mesin': b.no_mesin || '-',
+          'Jadwal Booking': `${b.tanggal_booking} (${b.jam_booking} WIB)`,
+          'Layanan / Suku Cadang': isPart ? itemsSummary : b.jenis_servis,
+          'Metode Layanan': isPart ? (b.metode_layanan === 'PASANG' ? 'Pasang di Bengkel' : 'Ambil di Toko') : 'Servis di Bengkel',
+          'Total Biaya': isPart && b.total_harga ? `Rp ${Number(b.total_harga).toLocaleString('id-ID')}` : '-',
           'Keterangan Tambahan': b.detail_lainnya || '-',
           'Status': b.status,
           'Tanggal Reservasi': formattedDate,
@@ -274,14 +324,17 @@ export class BookingService {
 
       return {
         'No. Tiket': b.ticket_no,
+        'Tipe Booking': isPart ? 'Suku Cadang' : 'Servis Motor',
         'Nama Customer': b.nama_customer,
         'Email / Gmail': b.email || '-',
         'No. Telepon / WA': b.no_hp,
-        'No. Mesin': b.no_mesin,
-        'Plat Kendaraan': b.plat_kendaraan,
-        'Tanggal Servis': b.tanggal_booking,
-        'Jam Servis': `${b.jam_booking} WIB`,
-        'Jenis Servis': b.jenis_servis,
+        'Tipe Motor': b.tipe_motor || '-',
+        'Plat Kendaraan': b.plat_kendaraan || '-',
+        'No. Mesin': b.no_mesin || '-',
+        'Jadwal Booking': `${b.tanggal_booking} (${b.jam_booking} WIB)`,
+        'Layanan / Suku Cadang': isPart ? itemsSummary : b.jenis_servis,
+        'Metode Layanan': isPart ? (b.metode_layanan === 'PASANG' ? 'Pasang di Bengkel' : 'Ambil di Toko') : 'Servis di Bengkel',
+        'Total Biaya': isPart && b.total_harga ? `Rp ${Number(b.total_harga).toLocaleString('id-ID')}` : '-',
         'Keterangan Tambahan': b.detail_lainnya || '-',
         'Status': b.status,
         'Catatan Admin': b.catatan_admin || '-',

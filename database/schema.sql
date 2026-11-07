@@ -109,8 +109,8 @@ CREATE TABLE IF NOT EXISTS bookings (
     ticket_no TEXT NOT NULL UNIQUE,
     nama_customer TEXT NOT NULL,
     no_hp TEXT NOT NULL,
-    no_mesin TEXT NOT NULL,
-    plat_kendaraan TEXT NOT NULL,
+    no_mesin TEXT,
+    plat_kendaraan TEXT,
     tanggal_booking DATE NOT NULL,
     jam_booking TEXT NOT NULL,
     jenis_servis TEXT NOT NULL,
@@ -119,6 +119,10 @@ CREATE TABLE IF NOT EXISTS bookings (
     catatan_admin TEXT,
     email TEXT,
     tipe_motor TEXT,
+    tipe_booking TEXT NOT NULL DEFAULT 'SERVIS',
+    items_json JSONB,
+    total_harga NUMERIC DEFAULT 0,
+    metode_layanan TEXT DEFAULT 'AMBIL',
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -133,6 +137,7 @@ EXECUTE FUNCTION trigger_set_timestamp();
 CREATE INDEX IF NOT EXISTS idx_bookings_status ON bookings(status);
 CREATE INDEX IF NOT EXISTS idx_bookings_tanggal ON bookings(tanggal_booking);
 CREATE INDEX IF NOT EXISTS idx_bookings_ticket_no ON bookings(ticket_no);
+CREATE INDEX IF NOT EXISTS idx_bookings_tipe_booking ON bookings(tipe_booking);
 CREATE INDEX IF NOT EXISTS idx_bookings_nama_trgm ON bookings USING GIN (nama_customer gin_trgm_ops);
 CREATE INDEX IF NOT EXISTS idx_bookings_plat_kendaraan_trgm ON bookings USING GIN (plat_kendaraan gin_trgm_ops);
 

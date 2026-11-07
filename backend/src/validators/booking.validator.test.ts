@@ -120,6 +120,45 @@ describe('Booking Validator Tests', () => {
       assert.strictEqual(getStatus(), 400);
       assert.ok(getData().errors?.some((e) => e.includes('Lainnya')));
     });
+
+    it('should accept valid spare part booking payload without requiring no_mesin', () => {
+      const sparePartPayload = {
+        tipe_booking: 'SPAREPART',
+        nama_customer: 'Ahmad Dahlan',
+        email: 'ahmad@gmail.com',
+        no_hp: '085712345678',
+        tanggal_booking: '2026-10-20',
+        jam_booking: '10:00',
+        items: [
+          {
+            part_no: '06455-KVB-T01',
+            part_name: 'Kampas Rem Depan',
+            quantity: 2,
+            het: 55000,
+          },
+        ],
+      };
+      const { req, res, next, isNextCalled } = createMockReqRes(sparePartPayload);
+      validateCreateBooking(req, res, next);
+      assert.strictEqual(isNextCalled(), true);
+    });
+
+    it('should reject spare part booking with empty items', () => {
+      const emptyItemsPayload = {
+        tipe_booking: 'SPAREPART',
+        nama_customer: 'Ahmad Dahlan',
+        email: 'ahmad@gmail.com',
+        no_hp: '085712345678',
+        tanggal_booking: '2026-10-20',
+        jam_booking: '10:00',
+        items: [],
+      };
+      const { req, res, next, getStatus, getData, isNextCalled } = createMockReqRes(emptyItemsPayload);
+      validateCreateBooking(req, res, next);
+      assert.strictEqual(isNextCalled(), false);
+      assert.strictEqual(getStatus(), 400);
+      assert.ok(getData().errors?.some((e) => e.includes('minimal satu suku cadang')));
+    });
   });
 
   describe('validateUpdateBookingStatus', () => {

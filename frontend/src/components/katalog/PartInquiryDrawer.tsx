@@ -2,6 +2,7 @@
 
 import React, { useEffect } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import {
   X,
   Trash2,
@@ -207,15 +208,24 @@ export default function PartInquiryDrawer() {
                 <span>Harga mengacu pada HET resmi AHM (belum termasuk ongkos pasang).</span>
               </div>
 
+              <Link
+                href="/booking?type=sparepart"
+                onClick={() => setIsDrawerOpen(false)}
+                className="w-full bg-[#E4002B] hover:bg-[#b00020] text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-md shadow-red-600/20 transition-all active:scale-[0.99]"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Langsung Booking Suku Cadang Ini</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+
               <a
                 href={generateWaUrl()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 shadow-sm transition-all active:scale-[0.99]"
+                className="w-full bg-emerald-700 hover:bg-emerald-800 text-white py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all active:scale-[0.99]"
               >
-                <MessageSquare className="w-4 h-4 fill-current" />
-                <span>Kirim Daftar Part ke WhatsApp AHASS</span>
-                <ArrowRight className="w-4 h-4" />
+                <MessageSquare className="w-3.5 h-3.5 fill-current" />
+                <span>Tanya / Cek Ketersediaan via WhatsApp</span>
               </a>
 
               <button

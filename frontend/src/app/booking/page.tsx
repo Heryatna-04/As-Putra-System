@@ -1,10 +1,32 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect, Suspense } from "react";
 import Link from "next/link";
-import { CheckCircle2, AlertCircle, Loader2, Copy, Check, Clock, MapPin, Navigation, MessageSquare } from "lucide-react";
+import Image from "next/image";
+import { useSearchParams } from "next/navigation";
+import {
+  CheckCircle2,
+  AlertCircle,
+  Loader2,
+  Copy,
+  Check,
+  Clock,
+  MapPin,
+  Navigation,
+  MessageSquare,
+  Wrench,
+  ShoppingBag,
+  Plus,
+  Minus,
+  Trash2,
+  Store,
+  ShieldCheck,
+  ArrowRight,
+} from "lucide-react";
 import Navbar from "@/components/Navbar";
-import { buildBookingWaUrl } from "@/lib/utils";
+import { buildBookingWaUrl, buildSparePartBookingWaUrl, formatIDR } from "@/lib/utils";
+import { usePartInquiry } from "@/context/PartInquiryContext";
+import { fetchSparePartDetail } from "@/lib/api";
 
 interface ServicePackage {
   id: string;
@@ -18,6 +40,19 @@ interface SuccessData {
   nama_customer: string;
   email: string;
   tanggal_booking: string;
+}
+
+interface SparePartSuccessData {
+  ticket_no: string;
+  nama_customer: string;
+  email: string;
+  no_hp: string;
+  tipe_motor?: string;
+  tanggal_booking: string;
+  jam_booking: string;
+  metode_layanan: string;
+  items: Array<{ part_no: string; part_name: string; nama_umum?: string | null; quantity: number; het: number; gambar_url?: string | null }>;
+  total_harga: number;
 }
 
 const REGULAR_PACKAGES: ServicePackage[] = [
@@ -271,7 +306,59 @@ function formatDate(iso: string): string {
   return dateObj.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
 }
 
-export default function BookingPage() {
+function BookingContent() {
+  const searchParams = useSearchParams();
+  const initialType = searchParams.get("type");
+  const partNoParam = searchParams.get("partNo");
+
+  const [activeTab, setActiveTab] = useState<"servis" | "sparepart">(
+    initialType === "sparepart" || (Boolean(partNoParam) && initialType !== "servis")
+      ? "sparepart"
+      : "servis"
+  );
+
+  const {
+    items: inquiryItems,
+    addItem,
+    removeItem,
+    updateQuantity,
+    clearItems,
+    totalEstimate,
+    totalCount: inquiryTotalCount,
+    isInInquiry,
+  } = usePartInquiry();
+
+  // Load part detail if partNo is passed in query
+  useEffect(() => {
+    if (partNoParam && !isInInquiry(partNoParam)) {
+      fetchSparePartDetail(partNoParam)
+        .then((res) => {
+          if (res.success && res.data) {
+            addItem(res.data, 1);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [partNoParam]);
+
+  // State: Booking Suku Cadang
+  const [sparePartForm, setSparePartForm] = useState({
+    nama_customer: "",
+    email: "",
+    no_hp: "",
+    tipe_motor: "",
+    metode_layanan: "AMBIL" as "AMBIL" | "PASANG",
+    tanggal_booking: "",
+    jam_booking: "",
+    detail_lainnya: "",
+  });
+  const [sparePartLoading, setSparePartLoading] = useState(false);
+  const [sparePartError, setSparePartError] = useState<string | null>(null);
+  const [sparePartSuccessData, setSparePartSuccessData] = useState<SparePartSuccessData | null>(null);
+  const [sparePartCopied, setSparePartCopied] = useState(false);
+  const sparePartErrorRef = useRef<HTMLDivElement>(null);
+
+  // State: Booking Servis (Existing)
   const [formData, setFormData] = useState({
     nama_customer: "",
     email: "",
@@ -304,6 +391,7 @@ export default function BookingPage() {
   const selectedService = formData.jenis_servis[0];
 
   const availableSlots = getAvailableTimeSlots(formData.tanggal_booking);
+  const sparePartSlots = getAvailableTimeSlots(sparePartForm.tanggal_booking);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -399,12 +487,721 @@ export default function BookingPage() {
     });
   };
 
+  const handleSparePartChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    if (name === "tanggal_booking") {
+      const validSlots = getAvailableTimeSlots(value);
+      const firstAvailable = validSlots.find((s) => !s.disabled)?.slot || "";
+      setSparePartForm((prev) => ({
+        ...prev,
+        tanggal_booking: value,
+        jam_booking: firstAvailable,
+      }));
+      return;
+    }
+    setSparePartForm((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const failSparePart = (msg: string) => {
+    setSparePartError(msg);
+    requestAnimationFrame(() => sparePartErrorRef.current?.scrollIntoView({ behavior: "smooth", block: "center" }));
+  };
+
+  const handleSparePartSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSparePartError(null);
+
+    if (inquiryItems.length === 0) {
+      return failSparePart("Pilih minimal satu suku cadang dari katalog untuk dibooking.");
+    }
+    if (!sparePartForm.tanggal_booking) {
+      return failSparePart("Pilih tanggal pengambilan / kedatangan.");
+    }
+
+    const slots = getAvailableTimeSlots(sparePartForm.tanggal_booking);
+    const chosenSlot = slots.find((s) => s.slot === sparePartForm.jam_booking);
+    if (!sparePartForm.jam_booking || !chosenSlot || chosenSlot.disabled) {
+      return failSparePart("Jam pengambilan yang dipilih tidak valid atau sudah terlewat.");
+    }
+
+    if (!sparePartForm.nama_customer.trim()) {
+      return failSparePart("Nama lengkap pemesan wajib diisi.");
+    }
+    if (!sparePartForm.no_hp.trim()) {
+      return failSparePart("Nomor WhatsApp wajib diisi untuk konfirmasi stok.");
+    }
+    if (!EMAIL_REGEX.test(sparePartForm.email.trim())) {
+      return failSparePart("Masukkan alamat email yang valid. Bukti tiket booking dikirim ke email ini.");
+    }
+
+    setSparePartLoading(true);
+    try {
+      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
+      const payload = {
+        tipe_booking: "SPAREPART",
+        nama_customer: sparePartForm.nama_customer.trim(),
+        email: sparePartForm.email.trim().toLowerCase(),
+        no_hp: sparePartForm.no_hp.trim(),
+        tipe_motor: sparePartForm.tipe_motor.trim() || undefined,
+        metode_layanan: sparePartForm.metode_layanan,
+        tanggal_booking: sparePartForm.tanggal_booking,
+        jam_booking: sparePartForm.jam_booking,
+        items: inquiryItems.map((it) => ({
+          part_no: it.part_no,
+          part_name: it.nama_umum || it.part_name,
+          nama_umum: it.nama_umum,
+          quantity: it.quantity,
+          het: it.het,
+          gambar_url: it.gambar_url,
+        })),
+        total_harga: totalEstimate,
+        jenis_servis: `Booking Suku Cadang (${inquiryItems.length} Item)`,
+        detail_lainnya: sparePartForm.detail_lainnya.trim() || undefined,
+      };
+
+      const res = await fetch(`${baseUrl}/bookings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.errors?.[0] || resData.message || "Gagal melakukan reservasi suku cadang.");
+      }
+
+      setSparePartSuccessData({
+        ticket_no: resData.data.ticket_no,
+        nama_customer: sparePartForm.nama_customer.trim(),
+        email: sparePartForm.email.trim().toLowerCase(),
+        no_hp: sparePartForm.no_hp.trim(),
+        tipe_motor: sparePartForm.tipe_motor.trim(),
+        tanggal_booking: resData.data.tanggal_booking || sparePartForm.tanggal_booking,
+        jam_booking: sparePartForm.jam_booking,
+        metode_layanan: sparePartForm.metode_layanan,
+        items: [...inquiryItems],
+        total_harga: totalEstimate,
+      });
+
+      clearItems();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (err) {
+      failSparePart(err instanceof Error ? err.message : "Terjadi kesalahan koneksi server.");
+    } finally {
+      setSparePartLoading(false);
+    }
+  };
+
+  const copySparePartTicket = async () => {
+    if (!sparePartSuccessData) return;
+    try {
+      await navigator.clipboard.writeText(sparePartSuccessData.ticket_no);
+      setSparePartCopied(true);
+      setTimeout(() => setSparePartCopied(false), 2000);
+    } catch {
+      setSparePartCopied(false);
+    }
+  };
+
+  const resetSparePartForm = () => {
+    setSparePartSuccessData(null);
+    setSparePartForm({
+      nama_customer: "",
+      email: "",
+      no_hp: "",
+      tipe_motor: "",
+      metode_layanan: "AMBIL",
+      tanggal_booking: "",
+      jam_booking: "",
+      detail_lainnya: "",
+    });
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-zinc-50 font-sans text-zinc-900">
       <Navbar />
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-16 pt-20 md:pt-[110px] sm:px-6">
-        {successData ? (
+        {/* Mode Switcher Banner */}
+        {!successData && !sparePartSuccessData && (
+          <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-3 p-1.5 bg-zinc-200/70 rounded-2xl border border-zinc-300">
+            <button
+              type="button"
+              onClick={() => setActiveTab("servis")}
+              className={`flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all text-left ${
+                activeTab === "servis"
+                  ? "bg-white text-zinc-900 shadow-md border border-zinc-200"
+                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/50"
+              }`}
+            >
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  activeTab === "servis" ? "bg-red-50 text-[#E4002B]" : "bg-zinc-200/70 text-zinc-500"
+                }`}
+              >
+                <Wrench className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-display font-extrabold text-base">Booking Servis Kendaraan</div>
+                <div className="text-xs font-normal text-zinc-500 line-clamp-1">
+                  Perawatan rutin, ganti oli, tune up, atau KPB
+                </div>
+              </div>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setActiveTab("sparepart")}
+              className={`flex items-center gap-3 p-3.5 rounded-xl font-bold text-sm transition-all text-left ${
+                activeTab === "sparepart"
+                  ? "bg-white text-zinc-900 shadow-md border border-zinc-200"
+                  : "text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100/50"
+              }`}
+            >
+              <div
+                className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${
+                  activeTab === "sparepart" ? "bg-emerald-50 text-emerald-700" : "bg-zinc-200/70 text-zinc-500"
+                }`}
+              >
+                <ShoppingBag className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-display font-extrabold text-base flex items-center gap-2">
+                  <span>Booking Suku Cadang</span>
+                  {inquiryItems.length > 0 && (
+                    <span className="px-2 py-0.5 rounded-full bg-emerald-600 text-white text-[11px] font-bold">
+                      {inquiryTotalCount} item
+                    </span>
+                  )}
+                </div>
+                <div className="text-xs font-normal text-zinc-500 line-clamp-1">
+                  Pesan &amp; reservasi suku cadang asli Honda AHM
+                </div>
+              </div>
+            </button>
+          </div>
+        )}
+
+        {/* Tab 1: Booking Suku Cadang */}
+        {activeTab === "sparepart" && (
+          sparePartSuccessData ? (
+            <div className="mx-auto max-w-xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl transition-all">
+              {/* Ticket Header Banner */}
+              <div className="bg-gradient-to-r from-emerald-600 to-teal-800 p-6 text-white text-center relative">
+                <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white">
+                  <CheckCircle2 size={28} />
+                </div>
+                <span className="text-[10px] font-extrabold uppercase tracking-widest bg-white/20 px-2.5 py-1 rounded-full text-white inline-block mb-1">
+                  AHASS AS Putra Motor Kuningan
+                </span>
+                <h1 className="font-display text-2xl font-black">Booking Suku Cadang Berhasil!</h1>
+                <p className="mt-1 text-xs text-emerald-100">
+                  Simpan atau tunjukkan nomor tiket ini ke kasir suku cadang saat tiba di bengkel.
+                </p>
+              </div>
+
+              {/* Ticket Cutout Line */}
+              <div className="relative border-b-2 border-dashed border-zinc-200 bg-zinc-50 py-4 px-6 text-center">
+                <div className="absolute -left-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-zinc-50 border-r border-zinc-200"></div>
+                <div className="absolute -right-3 top-1/2 -translate-y-1/2 h-6 w-6 rounded-full bg-zinc-50 border-l border-zinc-200"></div>
+
+                <p className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Nomor Tiket Suku Cadang</p>
+                <div className="mt-1 flex items-center justify-center gap-3">
+                  <span className="font-mono text-3xl font-black tracking-wider text-emerald-800">{sparePartSuccessData.ticket_no}</span>
+                  <button
+                    type="button"
+                    onClick={copySparePartTicket}
+                    className="inline-flex items-center gap-1.5 rounded-md border border-zinc-300 bg-white px-2.5 py-1 text-xs font-bold text-zinc-700 hover:bg-zinc-100 transition shadow-sm"
+                    title="Salin Nomor Tiket"
+                  >
+                    {sparePartCopied ? <Check size={14} className="text-emerald-600" /> : <Copy size={14} />}
+                    {sparePartCopied ? "Tersalin" : "Salin"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Ticket Details */}
+              <div className="p-6 space-y-4 text-sm text-zinc-800">
+                <div className="rounded-xl border border-zinc-200/80 bg-zinc-50 p-4 space-y-3">
+                  <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-200">
+                    <span className="text-zinc-500">Nama Pemesan:</span>
+                    <span className="font-bold text-zinc-900">{sparePartSuccessData.nama_customer}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-200">
+                    <span className="text-zinc-500">Jadwal Pengambilan:</span>
+                    <span className="font-bold text-zinc-900">
+                      {formatDate(sparePartSuccessData.tanggal_booking)} ({sparePartSuccessData.jam_booking} WIB)
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-200">
+                    <span className="text-zinc-500">Metode Layanan:</span>
+                    <span className="font-bold text-emerald-700">
+                      {sparePartSuccessData.metode_layanan === "PASANG" ? "Sekalian Pasang oleh Mekanik AHASS" : "Ambil Sendiri di Toko / Kasir"}
+                    </span>
+                  </div>
+                  {sparePartSuccessData.tipe_motor && (
+                    <div className="flex items-center justify-between text-xs pb-2 border-b border-zinc-200">
+                      <span className="text-zinc-500">Tipe Motor:</span>
+                      <span className="font-bold text-zinc-900">{sparePartSuccessData.tipe_motor}</span>
+                    </div>
+                  )}
+
+                  {/* List of items */}
+                  <div className="pt-1">
+                    <div className="text-xs font-bold text-zinc-700 mb-2">Daftar Suku Cadang ({sparePartSuccessData.items.length} item):</div>
+                    <div className="space-y-2">
+                      {sparePartSuccessData.items.map((it) => (
+                        <div key={it.part_no} className="flex items-center justify-between text-xs bg-white p-2.5 rounded-lg border border-zinc-200">
+                          <div className="min-w-0 pr-2">
+                            <div className="font-bold text-zinc-900 truncate">{it.nama_umum || it.part_name}</div>
+                            <div className="font-mono text-[11px] text-zinc-500">{it.part_no} &bull; {it.quantity} pcs</div>
+                          </div>
+                          <div className="font-bold text-emerald-700 shrink-0">
+                            {formatIDR(it.het * it.quantity)}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm font-extrabold text-zinc-900 pt-3 border-t border-zinc-200 mt-3">
+                      <span>Total Estimasi HET:</span>
+                      <span className="text-base text-emerald-800">{formatIDR(sparePartSuccessData.total_harga)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between text-xs text-zinc-500 px-1 pt-1">
+                  <span>Email Tiket: <strong className="text-zinc-700">{sparePartSuccessData.email}</strong></span>
+                  <span className="inline-flex items-center gap-1 text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    Terdaftar
+                  </span>
+                </div>
+              </div>
+
+              {/* Action Buttons Footer */}
+              <div className="p-6 pt-0 space-y-3">
+                <a
+                  href={buildSparePartBookingWaUrl({
+                    ticketNo: sparePartSuccessData.ticket_no,
+                    nama: sparePartSuccessData.nama_customer,
+                    noHp: sparePartSuccessData.no_hp,
+                    tipeMotor: sparePartSuccessData.tipe_motor,
+                    items: sparePartSuccessData.items,
+                    totalHarga: sparePartSuccessData.total_harga,
+                    metodeLayanan: sparePartSuccessData.metode_layanan,
+                    tanggal: formatDate(sparePartSuccessData.tanggal_booking),
+                    jam: sparePartSuccessData.jam_booking,
+                    catatan: sparePartForm.detail_lainnya,
+                  })}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3.5 text-base font-bold text-white hover:bg-emerald-700 transition shadow-lg shadow-emerald-600/20 active:scale-[0.99]"
+                >
+                  <MessageSquare size={20} />
+                  Kirim Tiket Suku Cadang ke WhatsApp Admin
+                </a>
+
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <button
+                    type="button"
+                    onClick={resetSparePartForm}
+                    className="w-full rounded-xl border border-zinc-300 bg-white py-2.5 text-xs font-bold text-zinc-800 hover:bg-zinc-50 transition"
+                  >
+                    Booking Part Baru
+                  </button>
+                  <Link
+                    href="/katalog"
+                    className="w-full text-center rounded-xl border border-zinc-300 bg-white py-2.5 text-xs font-bold text-zinc-800 hover:bg-zinc-50 transition"
+                  >
+                    Kembali ke Katalog
+                  </Link>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <>
+              <header className="mb-8 max-w-2xl">
+                <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 text-xs font-bold border border-emerald-200 mb-2">
+                  <ShoppingBag className="w-3.5 h-3.5" />
+                  <span>Reservasi Suku Cadang Resmi AHM</span>
+                </div>
+                <h1 className="font-display text-3xl font-extrabold [text-wrap:balance] md:text-4xl text-zinc-900">
+                  Booking Suku Cadang
+                </h1>
+                <p className="mt-2 text-base text-zinc-600">
+                  Pesan dan amankan suku cadang asli Honda langsung dari bengkel resmi AHASS AS Putra Rahmat. Anda dapat mengambilnya langsung di kasir toko atau meminta dipasangkan oleh mekanik kami.
+                </p>
+              </header>
+
+              <div className="grid gap-8 lg:grid-cols-[1fr_340px] lg:items-start">
+                <form onSubmit={handleSparePartSubmit} className="space-y-8">
+                  {/* Step 1: Daftar Suku Cadang */}
+                  <Step n={1} title="Suku Cadang yang Dipesan">
+                    {inquiryItems.length === 0 ? (
+                      <div className="rounded-2xl border-2 border-dashed border-zinc-200 p-8 text-center bg-white">
+                        <div className="w-14 h-14 rounded-full bg-zinc-100 flex items-center justify-center text-zinc-400 mx-auto mb-3">
+                          <ShoppingBag className="w-6 h-6" />
+                        </div>
+                        <h3 className="font-bold text-base text-zinc-900 mb-1">Belum Ada Suku Cadang yang Dipilih</h3>
+                        <p className="text-xs text-zinc-500 max-w-sm mx-auto mb-5">
+                          Jelajahi katalog suku cadang Honda kami dan pilih barang yang Anda butuhkan sebelum mengisi form booking.
+                        </p>
+                        <Link
+                          href="/katalog"
+                          className="inline-flex items-center gap-2 rounded-xl bg-zinc-900 px-5 py-2.5 text-xs font-bold text-white hover:bg-zinc-800 transition"
+                        >
+                          <span>Buka Katalog Suku Cadang</span>
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {inquiryItems.map((item) => (
+                          <div
+                            key={item.part_no}
+                            className="p-4 rounded-2xl border border-zinc-200 bg-white flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-2xs"
+                          >
+                            <div className="flex items-center gap-3.5 min-w-0">
+                              <div className="w-14 h-14 rounded-xl bg-zinc-50 border border-zinc-200 flex items-center justify-center shrink-0 overflow-hidden relative">
+                                {item.gambar_url ? (
+                                  <Image
+                                    src={item.gambar_url}
+                                    alt={item.part_name}
+                                    fill
+                                    sizes="56px"
+                                    className="object-contain p-1"
+                                  />
+                                ) : (
+                                  <span className="text-[9px] font-bold text-zinc-400 text-center leading-tight">
+                                    AHM<br />PARTS
+                                  </span>
+                                )}
+                              </div>
+                              <div className="min-w-0">
+                                <h4 className="text-sm font-bold text-zinc-900 truncate">
+                                  {item.nama_umum || item.part_name}
+                                </h4>
+                                <div className="text-xs font-mono font-medium text-zinc-500">
+                                  {item.part_no}
+                                </div>
+                                <div className="text-xs font-bold text-emerald-700 mt-0.5">
+                                  {formatIDR(item.het)} / pcs
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-zinc-100">
+                              <div className="flex items-center border border-zinc-300 rounded-lg bg-zinc-50 overflow-hidden">
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(item.part_no, -1)}
+                                  className="p-1.5 px-2.5 text-zinc-600 hover:bg-zinc-200 transition-colors"
+                                  aria-label="Kurangi jumlah"
+                                >
+                                  <Minus className="w-3.5 h-3.5" />
+                                </button>
+                                <span className="px-3 text-xs font-bold text-zinc-900 tabular-nums">
+                                  {item.quantity}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => updateQuantity(item.part_no, 1)}
+                                  className="p-1.5 px-2.5 text-zinc-600 hover:bg-zinc-200 transition-colors"
+                                  aria-label="Tambah jumlah"
+                                >
+                                  <Plus className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+
+                              <div className="text-right min-w-[90px]">
+                                <div className="text-[10px] text-zinc-500 uppercase font-semibold">Subtotal</div>
+                                <div className="text-sm font-extrabold text-zinc-900">
+                                  {formatIDR(item.het * item.quantity)}
+                                </div>
+                              </div>
+
+                              <button
+                                type="button"
+                                onClick={() => removeItem(item.part_no)}
+                                className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                                title="Hapus suku cadang"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                          <Link
+                            href="/katalog"
+                            className="text-xs font-bold text-[#E4002B] hover:underline inline-flex items-center gap-1.5"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Tambah Suku Cadang Lain dari Katalog</span>
+                          </Link>
+                          <div className="text-xs text-zinc-500">
+                            Total Estimasi: <strong className="text-zinc-900 text-sm font-extrabold">{formatIDR(totalEstimate)}</strong>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </Step>
+
+                  {/* Step 2: Pilihan Layanan */}
+                  <Step n={2} title="Metode Layanan">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                      <button
+                        type="button"
+                        onClick={() => setSparePartForm((prev) => ({ ...prev, metode_layanan: "AMBIL" }))}
+                        className={`p-4 rounded-2xl border text-left transition-all ${
+                          sparePartForm.metode_layanan === "AMBIL"
+                            ? "border-[#E4002B] bg-red-50/20 ring-2 ring-[#E4002B]/20"
+                            : "border-zinc-200 bg-white hover:border-zinc-300"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Store className={`w-5 h-5 ${sparePartForm.metode_layanan === "AMBIL" ? "text-[#E4002B]" : "text-zinc-500"}`} />
+                          <span className="font-bold text-sm text-zinc-900">Ambil Sendiri di Toko / Kasir</span>
+                        </div>
+                        <p className="text-xs text-zinc-500 leading-relaxed">
+                          Ambil langsung di kasir spare part AHASS AS Putra Rahmat Kuningan saat Anda tiba. Tanpa biaya pasang.
+                        </p>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setSparePartForm((prev) => ({ ...prev, metode_layanan: "PASANG" }))}
+                        className={`p-4 rounded-2xl border text-left transition-all ${
+                          sparePartForm.metode_layanan === "PASANG"
+                            ? "border-[#E4002B] bg-red-50/20 ring-2 ring-[#E4002B]/20"
+                            : "border-zinc-200 bg-white hover:border-zinc-300"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2 mb-2">
+                          <Wrench className={`w-5 h-5 ${sparePartForm.metode_layanan === "PASANG" ? "text-[#E4002B]" : "text-zinc-500"}`} />
+                          <span className="font-bold text-sm text-zinc-900">Sekalian Pasang oleh Mekanik AHASS</span>
+                        </div>
+                        <p className="text-xs text-zinc-500 leading-relaxed">
+                          Pemasangan langsung oleh teknisi resmi Honda di pit servis. Ongkos pasang dibayarkan di bengkel sesuai tarif AHASS.
+                        </p>
+                      </button>
+                    </div>
+                  </Step>
+
+                  {/* Step 3: Jadwal Pengambilan */}
+                  <Step n={3} title="Jadwal Kedatangan / Pengambilan">
+                    <div className="space-y-4">
+                      <Field id="sp_tanggal" label="Tanggal Kedatangan / Pengambilan" hint="Pilih tanggal kunjungan ke AHASS (Senin s.d Minggu)">
+                        <input
+                          type="date"
+                          id="sp_tanggal"
+                          name="tanggal_booking"
+                          min={today}
+                          value={sparePartForm.tanggal_booking}
+                          onChange={handleSparePartChange}
+                          required
+                          className={INPUT_CLASS}
+                        />
+                      </Field>
+
+                      <div>
+                        <label className="mb-2 block text-sm font-semibold text-zinc-800">
+                          Pilih Jam Kedatangan
+                        </label>
+                        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+                          {sparePartSlots.map(({ slot, disabled }) => {
+                            const isSelected = sparePartForm.jam_booking === slot;
+                            return (
+                              <button
+                                key={slot}
+                                type="button"
+                                disabled={disabled}
+                                onClick={() => setSparePartForm((prev) => ({ ...prev, jam_booking: slot }))}
+                                className={`py-2 px-3 rounded-lg text-xs font-bold transition-all border ${
+                                  disabled
+                                    ? "bg-zinc-100 text-zinc-400 border-zinc-200 cursor-not-allowed"
+                                    : isSelected
+                                    ? "bg-[#E4002B] text-white border-[#E4002B] shadow-sm"
+                                    : "bg-white text-zinc-800 border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50"
+                                }`}
+                              >
+                                {slot} WIB
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </Step>
+
+                  {/* Step 4: Identitas Pemesan */}
+                  <Step n={4} title="Data Pemesan">
+                    <div className="grid gap-4 sm:grid-cols-2">
+                      <Field id="sp_nama" label="Nama Lengkap Pemesan">
+                        <input
+                          type="text"
+                          id="sp_nama"
+                          name="nama_customer"
+                          value={sparePartForm.nama_customer}
+                          onChange={handleSparePartChange}
+                          placeholder="Contoh: Budi Santoso"
+                          required
+                          className={INPUT_CLASS}
+                        />
+                      </Field>
+
+                      <Field id="sp_hp" label="Nomor WhatsApp" hint="Untuk konfirmasi stok & notifikasi siap diambil">
+                        <input
+                          type="tel"
+                          id="sp_hp"
+                          name="no_hp"
+                          value={sparePartForm.no_hp}
+                          onChange={handleSparePartChange}
+                          placeholder="081234567890"
+                          required
+                          className={INPUT_CLASS}
+                        />
+                      </Field>
+
+                      <Field id="sp_email" label="Alamat Email / Gmail" hint="Tiket bukti pemesanan dikirim ke email ini">
+                        <input
+                          type="email"
+                          id="sp_email"
+                          name="email"
+                          value={sparePartForm.email}
+                          onChange={handleSparePartChange}
+                          placeholder="nama@gmail.com"
+                          required
+                          className={INPUT_CLASS}
+                        />
+                      </Field>
+
+                      <Field id="sp_motor" label="Tipe Motor Honda (Opsional)" hint="Membantu kami memastikan part 100% cocok">
+                        <select
+                          id="sp_motor"
+                          name="tipe_motor"
+                          value={sparePartForm.tipe_motor}
+                          onChange={handleSparePartChange}
+                          className={INPUT_CLASS}
+                        >
+                          <option value="">Pilih Tipe Motor (Opsional)</option>
+                          {HONDA_MOTOR_GROUPS.map((grp) => (
+                            <optgroup key={grp.group} label={grp.group}>
+                              {grp.items.map((m) => (
+                                <option key={m} value={m}>
+                                  {m}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ))}
+                        </select>
+                      </Field>
+
+                      <div className="sm:col-span-2">
+                        <Field id="sp_catatan" label="Catatan Tambahan (Opsional)">
+                          <textarea
+                            id="sp_catatan"
+                            name="detail_lainnya"
+                            rows={2}
+                            value={sparePartForm.detail_lainnya}
+                            onChange={handleSparePartChange}
+                            placeholder="Contoh: Tolong disiapkan lebih awal..."
+                            className={INPUT_CLASS}
+                          />
+                        </Field>
+                      </div>
+                    </div>
+                  </Step>
+
+                  {sparePartError && (
+                    <div ref={sparePartErrorRef} className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700 flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+                      <span>{sparePartError}</span>
+                    </div>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={sparePartLoading || inquiryItems.length === 0}
+                    className="w-full rounded-xl bg-[#E4002B] py-4 text-sm font-bold text-white shadow-lg shadow-red-600/20 hover:bg-[#b00020] transition active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+                  >
+                    {sparePartLoading ? (
+                      <>
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                        <span>Memproses Reservasi Suku Cadang...</span>
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingBag className="w-4 h-4" />
+                        <span>Konfirmasi Booking Suku Cadang</span>
+                      </>
+                    )}
+                  </button>
+                </form>
+
+                {/* Sidebar Summary for Spare Part */}
+                <aside className="rounded-2xl border border-zinc-200 bg-white p-5 lg:sticky lg:top-[120px] space-y-4">
+                  <h2 className="font-display text-lg font-bold">Ringkasan Suku Cadang</h2>
+                  <dl className="divide-y divide-zinc-200 text-sm">
+                    <div className="py-2.5 flex justify-between">
+                      <dt className="text-zinc-600">Jumlah Part</dt>
+                      <dd className="font-bold text-zinc-900">{inquiryTotalCount} pcs ({inquiryItems.length} jenis)</dd>
+                    </div>
+                    <div className="py-2.5 flex justify-between">
+                      <dt className="text-zinc-600">Metode</dt>
+                      <dd className="font-bold text-zinc-900">
+                        {sparePartForm.metode_layanan === "PASANG" ? "Pasang di Bengkel" : "Ambil di Kasir"}
+                      </dd>
+                    </div>
+                    <div className="py-2.5 flex justify-between">
+                      <dt className="text-zinc-600">Jadwal</dt>
+                      <dd className="font-bold text-zinc-900 text-right">
+                        {sparePartForm.tanggal_booking ? formatDate(sparePartForm.tanggal_booking) : "Belum dipilih"}
+                        {sparePartForm.jam_booking ? ` (${sparePartForm.jam_booking} WIB)` : ""}
+                      </dd>
+                    </div>
+                    <div className="py-3 flex justify-between items-baseline">
+                      <dt className="text-sm font-bold text-zinc-900">Estimasi Total</dt>
+                      <dd className="text-lg font-extrabold text-[#E4002B]">
+                        {formatIDR(totalEstimate)}
+                      </dd>
+                    </div>
+                  </dl>
+
+                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 text-xs text-emerald-900 flex items-start gap-2">
+                    <ShieldCheck className="w-4 h-4 text-emerald-700 shrink-0 mt-0.5" />
+                    <span>100% Suku Cadang Asli Honda (AHM Genuine Parts) dengan jaminan keaslian.</span>
+                  </div>
+
+                  {/* Location card */}
+                  <div className="rounded-xl border border-zinc-200 bg-zinc-50 p-4">
+                    <div className="flex items-center gap-2 mb-1.5 font-bold text-xs text-zinc-900">
+                      <MapPin className="w-4 h-4 text-[#E4002B]" />
+                      <span>Lokasi Pengambilan AHASS 10870</span>
+                    </div>
+                    <p className="text-[11px] text-zinc-600 mb-2.5 leading-snug">
+                      Jl. Siliwangi 126 Kasturi, Sebelah Utara Taman Cirendang, Kuningan, Jawa Barat 45518
+                    </p>
+                    <a
+                      href="https://maps.google.com/?q=Dealer+Honda+AS+Putra+Motor+Kuningan"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-zinc-900 px-3 py-2 text-xs font-semibold text-white hover:bg-zinc-800 transition"
+                    >
+                      <Navigation className="w-3.5 h-3.5" />
+                      Buka Rute di Google Maps
+                    </a>
+                  </div>
+                </aside>
+              </div>
+            </>
+          )
+        )}
+
+        {/* Tab 2: Booking Servis Kendaraan */}
+        {activeTab === "servis" && (
+          successData ? (
           <div className="mx-auto max-w-xl overflow-hidden rounded-2xl border border-zinc-200 bg-white shadow-xl transition-all">
             {/* Ticket Header Banner */}
             <div className="bg-gradient-to-r from-[#E4002B] to-[#99001C] p-6 text-white text-center relative">
@@ -911,8 +1708,26 @@ export default function BookingPage() {
               </aside>
             </div>
           </>
-        )}
+        )
+      )}
       </main>
     </div>
+  );
+}
+
+export default function BookingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-zinc-50 font-sans">
+          <div className="flex items-center gap-2 text-zinc-500 text-sm">
+            <Loader2 className="w-5 h-5 animate-spin text-[#E4002B]" />
+            <span>Memuat halaman booking...</span>
+          </div>
+        </div>
+      }
+    >
+      <BookingContent />
+    </Suspense>
   );
 }
