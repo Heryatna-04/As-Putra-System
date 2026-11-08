@@ -70,12 +70,12 @@ function NavbarContent() {
   };
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-zinc-200/80 shadow-xs font-sans">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t-3 border-t-[#E4002B] border-b border-zinc-200/80 shadow-xs font-sans">
       {/* Top Header Row */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2.5 sm:gap-4">
         {/* Brand Logo & Tagline */}
         <div className="flex items-center justify-between w-full sm:w-auto gap-3">
-          <Link href="/" className="flex items-center gap-2">
+          <Link href="/" className="flex items-center gap-2.5">
             <div className="relative h-7 sm:h-8 w-28 sm:w-32 shrink-0">
               <Image
                 src="/logo.png"
@@ -88,9 +88,11 @@ function NavbarContent() {
           </Link>
 
           <div className="hidden md:block h-4 w-px bg-zinc-200" />
-          <span className="hidden md:inline-flex items-center gap-1.5 text-xs font-medium text-[#B00020] bg-red-50 border border-red-200/60 px-2.5 py-1 rounded-md">
-            <span className="w-1.5 h-1.5 rounded-full bg-[#E4002B]" />
-            Dealer & Bengkel Resmi Honda
+          <span className="hidden md:inline-flex items-center gap-2 text-xs font-bold text-[#E4002B] bg-red-50 border border-red-200/80 px-2.5 py-1 rounded-md">
+            <span className="rounded bg-[#E4002B] px-1.5 py-0.2 text-[10px] font-black text-white tracking-wider">
+              AHASS 10870
+            </span>
+            <span>Resmi Honda · Satu Hati</span>
           </span>
 
           {/* Mobile Right Buttons (WA & List & Staff) */}

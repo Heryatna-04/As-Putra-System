@@ -3,7 +3,6 @@ import Link from "next/link";
 import Image from "next/image";
 import {
   ArrowRight,
-  Bike,
   CalendarDays,
   CheckCircle,
   ChevronRight,
@@ -240,8 +239,9 @@ export default async function Home() {
       <Navbar />
 
       <main className="flex-1 pt-20 md:pt-[105px]">
-        {/* ── Hero ─────────────────────────────────────────────────── */}
-        <section className="relative isolate overflow-hidden bg-[#E4002B] text-white">
+        {/* ── Hero: Iconic Honda Red & Wing Fascia ───────────────────── */}
+        <section className="relative isolate overflow-hidden bg-[#E4002B] text-white border-b-4 border-[#A3001D]">
+          {/* Real Dealer Background Image */}
           <Image
             src="/as-putra-dealer.png"
             alt="Gedung dealer dan bengkel resmi Honda AS Putra Motor di Kuningan"
@@ -250,160 +250,381 @@ export default async function Home() {
             loading="eager"
             fetchPriority="high"
             sizes="100vw"
-            className="-z-20 object-cover object-right"
+            className="-z-20 object-cover object-right opacity-45 sm:opacity-65"
+          />
+
+          {/* Iconic Honda Red Gradient & Diagonal Speed Slash */}
+          <div
+            aria-hidden
+            className="absolute inset-0 -z-10 bg-gradient-to-b from-[#E4002B]/95 via-[#D50027]/90 to-[#B00020]/95 sm:bg-gradient-to-r sm:from-[#E4002B] sm:from-35% sm:via-[#E4002B]/88 sm:via-65% sm:to-black/45"
           />
           <div
             aria-hidden
-            className="absolute inset-0 -z-10 bg-gradient-to-b from-[#E4002B]/95 via-[#E4002B]/80 to-[#E4002B]/40 sm:bg-gradient-to-r sm:from-[#E4002B] sm:from-25% sm:via-[#E4002B]/70 sm:via-55% sm:to-[#E4002B]/0"
+            className="hidden lg:block absolute -right-24 top-0 bottom-0 w-[420px] -skew-x-12 bg-gradient-to-b from-white/10 via-white/5 to-transparent border-l border-white/15 -z-10 pointer-events-none"
           />
 
-          <div className="mx-auto max-w-6xl px-6 sm:px-10 pt-16 pb-16 lg:pt-24 lg:pb-28">
-            <div className="max-w-xl">
-              <p className="inline-flex items-center gap-2 text-sm font-medium text-white">
-                <Bike className="w-4 h-4" aria-hidden />
-                Dealer dan bengkel resmi Honda di Kuningan
-              </p>
+          {/* Giant Faint Honda Wing Watermark */}
+          <div
+            aria-hidden
+            className="pointer-events-none select-none absolute -right-16 -bottom-16 w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] opacity-[0.08] -z-10"
+          >
+            <Image
+              src="/honda-logo.png"
+              alt=""
+              fill
+              className="object-contain brightness-0 invert"
+            />
+          </div>
 
-              <h1 className="font-display mt-4 text-4xl sm:text-5xl font-extrabold leading-[1.1] tracking-tight text-balance">
-                Cari spare part Honda asli, langsung cek stok dan harganya.
-              </h1>
+          <div className="mx-auto max-w-6xl px-6 sm:px-10 pt-12 pb-14 lg:pt-20 lg:pb-24">
+            <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+              {/* Left Column: Headline & Search */}
+              <div className="lg:col-span-7">
+                {/* Official Honda Fascia Badge */}
+                <div className="inline-flex flex-wrap items-center gap-2 rounded-full bg-black/25 backdrop-blur-xs border border-white/25 pl-2.5 pr-3.5 py-1 text-xs font-bold tracking-wide text-white">
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-[#E4002B]">
+                    AHASS 10870
+                  </span>
+                  <span>Dealer &amp; Bengkel Resmi Honda Kuningan</span>
+                  <span className="text-white/50">•</span>
+                  <span className="italic font-extrabold tracking-wider">Satu Hati.</span>
+                </div>
 
-              <p className="mt-5 text-base sm:text-lg leading-relaxed text-white max-w-md">
-                {totalParts > 0
-                  ? `${totalParts.toLocaleString("id-ID")} suku cadang`
-                  : "Ribuan suku cadang"}{" "}
-                genuine AHM dengan harga HET resmi. Ketik kode part atau nama barang.
-              </p>
+                <h1 className="font-display mt-5 text-4xl sm:text-5xl lg:text-[52px] font-black leading-[1.06] tracking-tight text-balance drop-shadow-xs">
+                  Suku Cadang Asli Honda &amp; Servis Resmi AHASS.
+                </h1>
 
-              {/* Pencarian utama: GET ke /katalog */}
-              <form action="/katalog" method="get" role="search" className="mt-8">
-                <label htmlFor="hero-search" className="sr-only">
-                  Cari spare part Honda di Kuningan
-                </label>
-                <div className="flex items-stretch rounded-lg bg-white shadow-lg shadow-black/10 focus-within:ring-4 focus-within:ring-white/40">
-                  <div className="flex items-center pl-4 text-zinc-500">
-                    <Search className="w-5 h-5" aria-hidden />
+                <p className="mt-4 text-base sm:text-lg leading-relaxed text-white/95 max-w-xl">
+                  Cek langsung{" "}
+                  <strong className="font-extrabold text-white underline decoration-white/50 underline-offset-4">
+                    {totalParts > 0
+                      ? `${totalParts.toLocaleString("id-ID")} SKU Honda Genuine Parts`
+                      : "ribuan SKU Honda Genuine Parts"}
+                  </strong>{" "}
+                  dengan harga HET resmi PT Astra Honda Motor, atau booking antrean pit servis tanpa antre.
+                </p>
+
+                {/* Pencarian utama: bergaya Katalog Elektronik Resmi AHM */}
+                <form action="/katalog" method="get" role="search" className="mt-7">
+                  <label htmlFor="hero-search" className="sr-only">
+                    Cari spare part Honda di Kuningan
+                  </label>
+                  <div className="rounded-xl bg-white p-1.5 shadow-2xl shadow-black/25 ring-1 ring-white/40 focus-within:ring-4 focus-within:ring-white/50">
+                    <div className="flex items-stretch">
+                      <div className="flex items-center pl-3.5 pr-1 text-[#E4002B]">
+                        <Search className="w-5 h-5 stroke-[2.5]" aria-hidden />
+                      </div>
+                      <input
+                        id="hero-search"
+                        name="search"
+                        type="search"
+                        autoComplete="off"
+                        placeholder="Ketik nama part atau kode AHM (contoh: Kampas Rem, 23100-KZR)..."
+                        className="min-w-0 flex-1 bg-transparent px-2.5 py-3 text-sm sm:text-base font-medium text-zinc-900 placeholder:text-zinc-400 outline-none"
+                      />
+                      <button
+                        type="submit"
+                        className="rounded-lg bg-[#E4002B] hover:bg-[#B8001F] px-5 sm:px-6 text-xs sm:text-sm font-extrabold uppercase tracking-wider text-white transition-colors cursor-pointer shrink-0 shadow-sm"
+                      >
+                        Cari Part
+                      </button>
+                    </div>
                   </div>
-                  <input
-                    id="hero-search"
-                    name="search"
-                    type="search"
-                    autoComplete="off"
-                    placeholder="Contoh: roller vario, 23100-KZR"
-                    className="min-w-0 flex-1 bg-transparent px-3 py-4 text-base text-zinc-900 placeholder:text-zinc-500 outline-none"
-                  />
-                  <button
-                    type="submit"
-                    className="m-1.5 rounded-md bg-zinc-900 px-5 text-sm font-semibold text-white transition-colors hover:bg-zinc-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-900"
+
+                  {/* Quick Search Chips */}
+                  <div className="mt-3.5 flex flex-wrap items-center gap-1.5 text-xs text-white">
+                    <span className="font-bold uppercase tracking-wider text-[11px] text-white/85 mr-1">
+                      Pencarian Cepat:
+                    </span>
+                    {[
+                      { label: "Oli AHM MPX2", query: "Oli MPX2" },
+                      { label: "Kampas Rem", query: "Kampas Rem" },
+                      { label: "V-Belt Kit", query: "Belt" },
+                      { label: "Busi NGK/Denso", query: "Busi" },
+                      { label: "Filter Udara", query: "Filter" },
+                    ].map((chip) => (
+                      <Link
+                        key={chip.label}
+                        href={`/katalog?search=${encodeURIComponent(chip.query)}`}
+                        className="inline-flex items-center rounded-md bg-black/25 hover:bg-white hover:text-[#E4002B] px-2.5 py-1 font-semibold text-white transition-all border border-white/25 active:scale-95"
+                      >
+                        {chip.label}
+                      </Link>
+                    ))}
+                  </div>
+                </form>
+
+                {/* Bottom Hero Action & Trust */}
+                <div className="mt-8 pt-6 border-t border-white/20 flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-white">
+                  <Link
+                    href="/booking"
+                    className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs sm:text-sm font-extrabold text-[#E4002B] shadow-md hover:bg-zinc-100 transition"
                   >
-                    Cari part
-                  </button>
+                    <CalendarDays className="w-4 h-4" aria-hidden />
+                    Booking Servis Tanpa Antre
+                  </Link>
+                  <Link
+                    href="/booking?tab=track"
+                    className="inline-flex items-center gap-1.5 font-bold text-white/95 hover:text-white underline underline-offset-4 decoration-white/60 hover:decoration-white"
+                  >
+                    Cek Status Tiket Booking
+                    <ArrowRight className="w-4 h-4" aria-hidden />
+                  </Link>
+                  <span className="inline-flex items-center gap-1.5 text-xs font-bold bg-black/25 px-3 py-1.5 rounded-lg border border-white/15">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" aria-hidden />
+                    4,5 Google Review Kuningan
+                  </span>
                 </div>
+              </div>
 
-                {/* Quick Search Chips */}
-                <div className="mt-3 flex flex-wrap items-center gap-1.5 text-xs text-white/90">
-                  <span className="font-semibold text-white/80 mr-0.5">Populer:</span>
-                  {[
-                    { label: "Oli MPX2", query: "Oli MPX2" },
-                    { label: "Kampas Rem", query: "Kampas Rem" },
-                    { label: "V-Belt Kit", query: "Belt" },
-                    { label: "Busi", query: "Busi" },
-                    { label: "Filter Udara", query: "Filter" },
-                  ].map((chip) => (
-                    <Link
-                      key={chip.label}
-                      href={`/katalog?search=${encodeURIComponent(chip.query)}`}
-                      className="inline-flex items-center rounded-full bg-white/20 hover:bg-white/30 backdrop-blur-xs px-2.5 py-0.5 font-medium text-white transition-all border border-white/25 active:scale-95"
-                    >
-                      {chip.label}
-                    </Link>
-                  ))}
+              {/* Right Column: Iconic Honda Genuine Parts & Wing Emblem Card */}
+              <div className="lg:col-span-5">
+                <div className="relative rounded-2xl bg-white text-zinc-900 shadow-2xl border-2 border-white/80 overflow-hidden">
+                  {/* Top Red Honda Genuine Parts Fascia Header */}
+                  <div className="bg-[#E4002B] px-5 py-4 text-white flex items-center justify-between border-b-2 border-[#B00020]">
+                    <div className="flex items-center gap-3">
+                      <div className="relative w-10 h-10 bg-white rounded-lg p-1.5 shrink-0 shadow-xs">
+                        <Image
+                          src="/honda-logo.png"
+                          alt="Logo Sayap Honda"
+                          fill
+                          className="object-contain p-1"
+                        />
+                      </div>
+                      <div>
+                        <div className="text-[10px] font-black tracking-[0.2em] uppercase text-white/85">
+                          HONDA GENUINE PARTS
+                        </div>
+                        <div className="text-base font-black tracking-tight leading-tight">
+                          AS PUTRA MOTOR
+                        </div>
+                      </div>
+                    </div>
+                    <span className="rounded bg-white/15 border border-white/30 px-2 py-1 font-mono text-[11px] font-black tracking-wider">
+                      AHASS 10870
+                    </span>
+                  </div>
+
+                  {/* Body: Authentic HGP Sticker Specification Look */}
+                  <div className="p-5 sm:p-6 space-y-4 bg-gradient-to-b from-white to-zinc-50">
+                    <div className="flex items-center justify-between border-b border-dashed border-zinc-200 pb-3">
+                      <div>
+                        <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
+                          Jaminan Keaslian Suku Cadang
+                        </div>
+                        <div className="text-sm font-extrabold text-zinc-900 mt-0.5">
+                          PT Astra Honda Motor (AHM)
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
+                        <CheckCircle className="w-3.5 h-3.5" /> 100% Original
+                      </span>
+                    </div>
+
+                    {/* Sample Genuine Part Label Preview */}
+                    <div className="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-2xs">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-[#E4002B] uppercase tracking-widest border-b border-zinc-100 pb-1.5 mb-2">
+                        <span>CONTOH LABEL PART AHM</span>
+                        <span className="font-mono text-zinc-500">QTY: 1</span>
+                      </div>
+                      <div className="font-mono text-xs font-black text-zinc-900 tracking-wide">
+                        BELT, DRIVE KIT (V-BELT + ROLLER)
+                      </div>
+                      <div className="mt-1 flex items-center justify-between">
+                        <span className="font-mono text-sm font-black text-[#E4002B]">
+                          23100-KZR-BA0
+                        </span>
+                        <span className="text-[11px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded">
+                          Harga Sesuai HET Resmi
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Quick Links Grid */}
+                    <div className="grid grid-cols-2 gap-2.5 pt-1">
+                      <Link
+                        href="/katalog"
+                        className="group rounded-xl border border-zinc-200 bg-white hover:border-[#E4002B] p-3 transition flex flex-col justify-between"
+                      >
+                        <span className="text-[11px] font-bold text-zinc-400 uppercase">
+                          Katalog Online
+                        </span>
+                        <span className="mt-1 text-xs font-extrabold text-zinc-900 group-hover:text-[#E4002B] flex items-center justify-between">
+                          Cek Stok &amp; HET
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
+                      </Link>
+                      <Link
+                        href="/booking"
+                        className="group rounded-xl border border-zinc-200 bg-white hover:border-[#E4002B] p-3 transition flex flex-col justify-between"
+                      >
+                        <span className="text-[11px] font-bold text-zinc-400 uppercase">
+                          Pit Express
+                        </span>
+                        <span className="mt-1 text-xs font-extrabold text-zinc-900 group-hover:text-[#E4002B] flex items-center justify-between">
+                          Booking Servis
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
+                      </Link>
+                    </div>
+                  </div>
+
+                  {/* Bottom Satu Hati Strip */}
+                  <div className="bg-zinc-900 px-5 py-2.5 text-white flex items-center justify-between text-[11px]">
+                    <span className="font-semibold text-zinc-300">
+                      Jl. Siliwangi 126 Kasturi, Kuningan
+                    </span>
+                    <span className="font-black tracking-widest uppercase text-[#E4002B]">
+                      ONE HEART.
+                    </span>
+                  </div>
                 </div>
-              </form>
-
-              <div className="mt-10 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-white">
-                <Link
-                  href="/booking"
-                  className="inline-flex items-center gap-2 font-semibold underline underline-offset-4 decoration-white/60 hover:decoration-white focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white"
-                >
-                  <CalendarDays className="w-4 h-4" aria-hidden />
-                  Booking servis
-                </Link>
-                <span className="inline-flex items-center gap-2">
-                  <Star className="w-4 h-4 fill-current" aria-hidden />
-                  Rating Google Maps 4,5
-                </span>
               </div>
             </div>
           </div>
         </section>
 
-        {/* ── Keunggulan ───────────────────────────────────────────── */}
-        <section className="px-6 sm:px-10 py-20">
+        {/* ── Official Honda Fascia Stats Strip ────────────────────── */}
+        <section className="bg-zinc-900 text-white border-b border-zinc-800">
+          <div className="mx-auto max-w-6xl px-6 sm:px-10 py-6 grid grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
+            <div className="pt-3 sm:pt-0 sm:px-4 first:pl-0 first:pt-0">
+              <div className="text-[11px] font-bold uppercase tracking-widest text-[#E4002B]">
+                KODE BENGKEL RESMI
+              </div>
+              <div className="font-display text-xl sm:text-2xl font-black tracking-tight mt-0.5">
+                AHASS 10870
+              </div>
+              <div className="text-xs text-zinc-400 mt-0.5">
+                Terdaftar Resmi PT AHM
+              </div>
+            </div>
+            <div className="pt-3 sm:pt-0 sm:px-4">
+              <div className="text-[11px] font-bold uppercase tracking-widest text-[#E4002B]">
+                DATABASE SUKU CADANG
+              </div>
+              <div className="font-display text-xl sm:text-2xl font-black tracking-tight mt-0.5">
+                {totalParts > 0 ? `${totalParts.toLocaleString("id-ID")}+` : "44.000+"} SKU
+              </div>
+              <div className="text-xs text-zinc-400 mt-0.5">
+                Honda Genuine Parts &amp; Oil
+              </div>
+            </div>
+            <div className="pt-3 sm:pt-0 sm:px-4">
+              <div className="text-[11px] font-bold uppercase tracking-widest text-[#E4002B]">
+                TRANSPARANSI HARGA
+              </div>
+              <div className="font-display text-xl sm:text-2xl font-black tracking-tight mt-0.5">
+                100% HET AHM
+              </div>
+              <div className="text-xs text-zinc-400 mt-0.5">
+                Harga Eceran Tertinggi Resmi
+              </div>
+            </div>
+            <div className="pt-3 sm:pt-0 sm:px-4">
+              <div className="text-[11px] font-bold uppercase tracking-widest text-[#E4002B]">
+                STANDAR TEKNISI
+              </div>
+              <div className="font-display text-xl sm:text-2xl font-black tracking-tight mt-0.5">
+                Tersertifikasi
+              </div>
+              <div className="text-xs text-zinc-400 mt-0.5">
+                Peralatan Standar Pit Honda
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ── Keunggulan Standar Honda ─────────────────────────────── */}
+        <section className="px-6 sm:px-10 py-20 bg-white">
           <div className="mx-auto max-w-6xl grid gap-12 lg:grid-cols-12">
             <div className="lg:col-span-4">
-              <h2 className="font-display text-3xl font-extrabold tracking-tight text-balance">
-                Kenapa beli dan servis di AS Putra Rahmat
+              <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#E4002B] mb-2">
+                <span className="h-2 w-2 rounded-full bg-[#E4002B]" />
+                Standar Resmi AHASS
+              </div>
+              <h2 className="font-display text-3xl font-extrabold tracking-tight text-balance text-zinc-900">
+                Kenapa beli part &amp; servis di AS Putra Rahmat
               </h2>
               <p className="mt-4 text-base leading-relaxed text-zinc-600">
-                Satu tempat untuk cari part, pasang, dan servis. Semuanya resmi, semuanya
-                bisa dicek dulu dari rumah.
+                Satu tempat resmi Honda untuk cari suku cadang asli, pasang di pit standar AHASS,
+                dan servis berkala. Semua stok dan harga bisa Anda cek dulu dari rumah.
               </p>
               <Link
                 href="/katalog"
-                className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-[#C20026] hover:underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#E4002B]"
+                className="mt-6 inline-flex items-center gap-2 rounded-lg bg-[#E4002B] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#B8001F] transition shadow-xs"
               >
-                Lihat katalog spare part
+                Buka Katalog Honda Genuine Parts
                 <ArrowRight className="w-4 h-4" aria-hidden />
               </Link>
             </div>
 
-            <dl className="lg:col-span-8 grid gap-x-10 gap-y-10 sm:grid-cols-2">
+            <dl className="lg:col-span-8 grid gap-6 sm:grid-cols-2">
               {STRENGTHS.map(({ icon: Icon, title, text }) => (
-                <div key={title} className="border-t border-zinc-200 pt-6">
-                  <dt className="flex items-center gap-3 text-lg font-semibold text-zinc-900">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-red-50 text-[#C20026]">
+                <div
+                  key={title}
+                  className="rounded-xl border border-zinc-200 bg-zinc-50/60 p-6 border-t-4 border-t-[#E4002B] hover:bg-white hover:shadow-md transition"
+                >
+                  <dt className="flex items-center gap-3 text-lg font-bold text-zinc-900">
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#E4002B] text-white shadow-xs">
                       <Icon className="w-5 h-5" aria-hidden />
                     </span>
                     {title}
                   </dt>
-                  <dd className="mt-3 text-base leading-relaxed text-zinc-600">{text}</dd>
+                  <dd className="mt-3 text-sm sm:text-base leading-relaxed text-zinc-600">
+                    {text}
+                  </dd>
                 </div>
               ))}
             </dl>
           </div>
         </section>
 
-        {/* ── Layanan servis ───────────────────────────────────────── */}
+        {/* ── Layanan Servis PIT AHASS ─────────────────────────────── */}
         <section className="bg-zinc-50 border-y border-zinc-200 px-6 sm:px-10 py-16">
           <div className="mx-auto max-w-6xl">
             <div className="flex flex-wrap items-end justify-between gap-4">
               <div>
-                <h2 className="font-display text-3xl font-extrabold tracking-tight">
-                  Layanan servis bengkel
+                <div className="inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-[#E4002B] mb-1.5">
+                  <span className="h-2 w-2 rounded-full bg-[#E4002B]" />
+                  Layanan Bengkel Resmi AHASS 10870
+                </div>
+                <h2 className="font-display text-3xl font-extrabold tracking-tight text-zinc-900">
+                  Paket Servis &amp; Perawatan Berkala Honda
                 </h2>
                 <p className="mt-2 text-base text-zinc-600">
-                  Pilih paket saat booking. Pekerjaan tambahan baru dikerjakan setelah Anda setuju.
+                  Pilih paket saat booking. Pekerjaan atau pergantian part tambahan hanya dilakukan setelah Anda setuju.
                 </p>
               </div>
+              <Link
+                href="/booking"
+                className="inline-flex items-center gap-2 rounded-lg border border-[#E4002B] bg-white px-4 py-2 text-xs sm:text-sm font-bold text-[#E4002B] hover:bg-[#E4002B] hover:text-white transition"
+              >
+                <CalendarDays className="w-4 h-4" />
+                Reservasi Jadwal Pit
+              </Link>
             </div>
 
-            <ul className="mt-8 divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white">
-              {SERVICE_PACKAGES.map((pkg) => (
+            <ul className="mt-8 divide-y divide-zinc-200 rounded-xl border border-zinc-200 bg-white overflow-hidden shadow-2xs">
+              {SERVICE_PACKAGES.map((pkg, idx) => (
                 <li
                   key={pkg.title}
-                  className="grid gap-3 px-5 py-5 md:grid-cols-[260px_1fr] md:gap-8 md:px-6"
+                  className="grid gap-3 px-5 py-5 md:grid-cols-[280px_1fr] md:gap-8 md:px-6 hover:bg-red-50/20 transition-colors"
                 >
-                  <div>
-                    <h3 className="text-base font-semibold text-zinc-900">{pkg.title}</h3>
-                    <span className="mt-1.5 inline-block rounded-md bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700">
-                      {pkg.badge}
+                  <div className="flex items-start gap-3">
+                    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded bg-[#E4002B] font-mono text-xs font-black text-white">
+                      0{idx + 1}
                     </span>
+                    <div>
+                      <h3 className="text-base font-bold text-zinc-900">{pkg.title}</h3>
+                      <span className="mt-1 inline-block rounded bg-red-50 border border-red-200/70 px-2 py-0.5 text-[11px] font-bold text-[#C20026]">
+                        {pkg.badge}
+                      </span>
+                    </div>
                   </div>
-                  <ul className="flex flex-wrap gap-x-6 gap-y-2">
+                  <ul className="flex flex-wrap items-center gap-x-6 gap-y-2">
                     {pkg.items.map((item) => (
-                      <li key={item} className="flex items-center gap-2 text-sm text-zinc-700">
-                        <CheckCircle className="w-4 h-4 shrink-0 text-emerald-600" aria-hidden />
+                      <li key={item} className="flex items-center gap-2 text-sm font-medium text-zinc-700">
+                        <CheckCircle className="w-4 h-4 shrink-0 text-[#E4002B]" aria-hidden />
                         {item}
                       </li>
                     ))}
@@ -413,19 +634,23 @@ export default async function Home() {
             </ul>
 
             {/* CTA keluhan khusus */}
-            <div className="mt-6 flex flex-col gap-4 rounded-xl bg-[#E4002B] px-6 py-6 text-white sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h3 className="text-lg font-semibold">Ada keluhan khusus?</h3>
-                <p className="mt-1 text-base text-white max-w-xl">
-                  Ceritakan bunyi aneh, rem kurang pakem, atau masalah lain saat booking. Mekanik
-                  kami analisis sebelum servis dimulai.
+            <div className="mt-6 relative overflow-hidden flex flex-col gap-4 rounded-xl bg-gradient-to-r from-[#E4002B] to-[#B8001F] px-6 py-6 text-white sm:flex-row sm:items-center sm:justify-between shadow-md">
+              <div className="relative z-10">
+                <div className="text-[11px] font-black uppercase tracking-widest text-white/80">
+                  KONSULTASI MEKANIK TERSERTIFIKASI HONDA
+                </div>
+                <h3 className="text-lg sm:text-xl font-extrabold mt-0.5">
+                  Motor terasa kurang bertenaga, bunyi pada CVT, atau indikator menyala?
+                </h3>
+                <p className="mt-1 text-sm sm:text-base text-white/95 max-w-xl">
+                  Tulis keluhan Anda saat booking. Mekanik AHASS kami akan memeriksa dan mengonfirmasi estimasi biaya sebelum pengerjaan dimulai.
                 </p>
               </div>
               <Link
                 href="/booking"
-                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-md bg-white px-5 py-3 text-sm font-semibold text-[#C20026] transition-colors hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+                className="relative z-10 inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-white px-5 py-3 text-sm font-extrabold text-[#E4002B] transition-colors hover:bg-zinc-100 shadow-sm"
               >
-                Booking servis
+                Booking Servis Sekarang
                 <ArrowRight className="w-4 h-4" aria-hidden />
               </Link>
             </div>

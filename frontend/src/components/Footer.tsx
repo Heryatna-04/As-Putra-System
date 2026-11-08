@@ -1,9 +1,32 @@
+import Image from "next/image";
 import { MapPin, Clock, Phone } from "lucide-react";
 import LazyMap from "@/components/LazyMap";
 
 export default function Footer() {
   return (
     <footer className="mt-auto border-t border-zinc-200 bg-white font-sans">
+      {/* Iconic Honda Red Fascia Bar */}
+      <div className="bg-[#E4002B] text-white px-4 py-3.5 sm:px-6 lg:px-8 border-b-2 border-[#B00020]">
+        <div className="mx-auto max-w-6xl flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="relative h-6 w-6 shrink-0">
+              <Image
+                src="/honda-logo.png"
+                alt="Logo Sayap Honda"
+                fill
+                className="object-contain brightness-0 invert"
+              />
+            </div>
+            <span className="text-xs sm:text-sm font-black tracking-wide uppercase">
+              PT AS Putra Rahmat · Dealer &amp; Bengkel Resmi Honda (AHASS 10870)
+            </span>
+          </div>
+          <span className="text-xs font-black italic tracking-widest uppercase bg-white/15 border border-white/25 px-2.5 py-0.5 rounded">
+            Satu Hati. / One Heart.
+          </span>
+        </div>
+      </div>
+
       {/* Top Footer: Info Details & Map */}
       <div className="border-b border-zinc-200/80 bg-zinc-50 px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-10 items-start">
