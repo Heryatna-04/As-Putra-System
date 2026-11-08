@@ -22,7 +22,7 @@ export default function Footer() {
             </span>
           </div>
           <span className="text-xs font-black italic tracking-widest uppercase bg-white/15 border border-white/25 px-2.5 py-0.5 rounded">
-            Satu Hati. / One Heart.
+            One Heart.
           </span>
         </div>
       </div>

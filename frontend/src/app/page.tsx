@@ -287,7 +287,7 @@ export default async function Home() {
                   </span>
                   <span>Dealer &amp; Bengkel Resmi Honda Kuningan</span>
                   <span className="text-white/50">•</span>
-                  <span className="italic font-extrabold tracking-wider">Satu Hati.</span>
+                  <span className="italic font-extrabold tracking-wider">One Heart.</span>
                 </div>
 
                 <h1 className="font-display mt-5 text-4xl sm:text-5xl lg:text-[52px] font-black leading-[1.06] tracking-tight text-balance drop-shadow-xs">
@@ -469,7 +469,7 @@ export default async function Home() {
                     </div>
                   </div>
 
-                  {/* Bottom Satu Hati Strip */}
+                  {/* Bottom One Heart Strip */}
                   <div className="bg-zinc-900 px-5 py-2.5 text-white flex items-center justify-between text-[11px]">
                     <span className="font-semibold text-zinc-300">
                       Jl. Siliwangi 126 Kasturi, Kuningan

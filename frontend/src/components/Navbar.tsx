@@ -92,7 +92,7 @@ function NavbarContent() {
             <span className="rounded bg-[#E4002B] px-1.5 py-0.2 text-[10px] font-black text-white tracking-wider">
               AHASS 10870
             </span>
-            <span>Resmi Honda · Satu Hati</span>
+            <span>Resmi Honda · One Heart</span>
           </span>
 
           {/* Mobile Right Buttons (WA & List & Staff) */}
