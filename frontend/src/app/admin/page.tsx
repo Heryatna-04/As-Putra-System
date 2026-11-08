@@ -39,6 +39,7 @@ interface BookingSummary {
   jam_booking: string;
   jenis_servis: string;
   tipe_motor?: string;
+  tipe_booking?: "SERVIS" | "SPAREPART";
   status: "PENDING" | "CONFIRMED" | "IN_PROGRESS" | "DONE" | "CANCELLED";
 }
 
@@ -56,7 +57,7 @@ export default function AdminDashboardPage() {
     pending: 0,
     cancelled: 0,
   });
-  const [recentBookings, setRecentBookings] = useState<BookingSummary[]>([]);
+  const [allBookings, setAllBookings] = useState<BookingSummary[]>([]);
   const [updatingBookingId, setUpdatingBookingId] = useState<string | null>(null);
 
   // Mini Calendar State
@@ -87,7 +88,7 @@ export default function AdminDashboardPage() {
       const data = await res.json();
       if (res.ok && data.success) {
         toast.success("Booking berhasil dikonfirmasi!");
-        setRecentBookings((prev) =>
+        setAllBookings((prev) =>
           prev.map((b) => (b.id === id ? { ...b, status: "CONFIRMED" } : b))
         );
         setBookingStats((prev) => ({
@@ -116,20 +117,15 @@ export default function AdminDashboardPage() {
         setSummary(dataSummary.data);
       }
 
-      // 2. Bookings Current Month
-      const year = calendarDate.getFullYear();
-      const month = (calendarDate.getMonth() + 1).toString().padStart(2, "0");
-      const lastDay = new Date(year, calendarDate.getMonth() + 1, 0).getDate();
-      const tanggalFrom = `${year}-${month}-01`;
-      const tanggalTo = `${year}-${month}-${lastDay}`;
-
+      // 2. All Bookings (up to 100 for dynamic calendar, weekly chart, and pit status)
       const resBookings = await authFetch(
-        `${API_BASE_URL}/admin/bookings?tanggal_from=${tanggalFrom}&tanggal_to=${tanggalTo}&limit=20`,
+        `${API_BASE_URL}/admin/bookings?limit=100`,
         { cache: "no-store" }
       );
       const dataBookings = await resBookings.json();
       if (resBookings.ok && dataBookings.success) {
         const bList: BookingSummary[] = dataBookings.data.bookings || [];
+        setAllBookings(bList);
         const done = bList.filter((b) => b.status === "DONE").length;
         const pending = bList.filter(
           (b) => b.status === "PENDING" || b.status === "CONFIRMED" || b.status === "IN_PROGRESS"
@@ -141,14 +137,13 @@ export default function AdminDashboardPage() {
           pending,
           cancelled,
         });
-        setRecentBookings(bList.slice(0, 6));
       }
     } catch (err) {
       console.error("[Dashboard] Error fetching data:", err);
     } finally {
       setIsLoading(false);
     }
-  }, [token, authFetch, calendarDate]);
+  }, [token, authFetch]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -171,6 +166,170 @@ export default function AdminDashboardPage() {
   const monthName = calendarDate.toLocaleDateString("id-ID", { month: "long", year: "numeric" });
   const daysInMonth = new Date(yearNum, monthNum + 1, 0).getDate();
   const firstDayIndex = new Date(yearNum, monthNum, 1).getDay(); // 0 is Sunday
+
+  // Month bookings
+  const monthPrefix = `${yearNum}-${(monthNum + 1).toString().padStart(2, "0")}`;
+  const monthBookings = allBookings.filter((b) => b.tanggal_booking?.startsWith(monthPrefix));
+
+  // Set of day numbers that have bookings in this month
+  const daysWithBookings = new Set(
+    monthBookings.map((b) => {
+      const parts = b.tanggal_booking.split("-");
+      return parseInt(parts[2], 10);
+    })
+  );
+
+  // Selected date string (YYYY-MM-DD)
+  const selectedDateStr = `${monthPrefix}-${selectedDay.toString().padStart(2, "0")}`;
+  const selectedDayBookings = allBookings.filter((b) => b.tanggal_booking === selectedDateStr);
+
+  // Recent bookings for bottom table
+  const recentBookings = allBookings.slice(0, 8);
+
+  // Weekly Volume calculation (Monday through Sunday) around the calendar/selected date
+  const baseDate = new Date(yearNum, monthNum, Math.min(selectedDay, daysInMonth));
+  const dayOfWeek = (baseDate.getDay() + 6) % 7; // 0 for Mon, 6 for Sun
+  const mondayDate = new Date(baseDate);
+  mondayDate.setDate(baseDate.getDate() - dayOfWeek);
+
+  const weekLabels = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+  const weeklyData = weekLabels.map((dayLabel, idx) => {
+    const curDate = new Date(mondayDate);
+    curDate.setDate(mondayDate.getDate() + idx);
+    const y = curDate.getFullYear();
+    const m = (curDate.getMonth() + 1).toString().padStart(2, "0");
+    const d = curDate.getDate().toString().padStart(2, "0");
+    const dStr = `${y}-${m}-${d}`;
+    const dayCount = allBookings.filter((b) => b.tanggal_booking === dStr).length;
+    const isSelected = dStr === selectedDateStr;
+    const isToday =
+      curDate.getDate() === today.getDate() &&
+      curDate.getMonth() === today.getMonth() &&
+      curDate.getFullYear() === today.getFullYear();
+
+    return {
+      label: dayLabel,
+      dateNum: curDate.getDate(),
+      fullDate: curDate,
+      dateStr: dStr,
+      count: dayCount,
+      isSelected,
+      isToday,
+    };
+  });
+
+  const weeklyTotal = weeklyData.reduce((acc, d) => acc + d.count, 0);
+  const maxWeeklyCount = Math.max(...weeklyData.map((d) => d.count), 1);
+
+  // 4 Pit Operational Mapping based on selected day bookings (or fallback to latest)
+  const activePool = selectedDayBookings.length > 0 ? selectedDayBookings : allBookings.slice(0, 4);
+
+  // Pit 1: Fast Pit Express (Sparepart / Ganti Oli / Ringan)
+  const pit1Booking = activePool.find(
+    (b) =>
+      b.tipe_booking === "SPAREPART" ||
+      b.ticket_no?.startsWith("PRT") ||
+      b.jenis_servis?.toLowerCase().includes("oli") ||
+      b.jenis_servis?.toLowerCase().includes("ringan")
+  );
+
+  // Pit 2: Servis Berkala & Tune-Up
+  const pit2Booking = activePool.find(
+    (b) =>
+      b.id !== pit1Booking?.id &&
+      (b.jenis_servis?.toLowerCase().includes("berkala") ||
+        b.jenis_servis?.toLowerCase().includes("tune-up") ||
+        b.jenis_servis?.toLowerCase().includes("paket") ||
+        b.tipe_booking === "SERVIS")
+  );
+
+  // Pit 3: Heavy Repair & Keluhan
+  const pit3Booking = activePool.find(
+    (b) =>
+      b.id !== pit1Booking?.id &&
+      b.id !== pit2Booking?.id &&
+      (b.jenis_servis?.toLowerCase().includes("cvt") ||
+        b.jenis_servis?.toLowerCase().includes("mesin") ||
+        b.jenis_servis?.toLowerCase().includes("bongkar") ||
+        b.jenis_servis?.toLowerCase().includes("berat"))
+  );
+
+  // Pit 4: Final Inspection & Cuci
+  const pit4Booking = activePool.find(
+    (b) =>
+      b.id !== pit1Booking?.id &&
+      b.id !== pit2Booking?.id &&
+      b.id !== pit3Booking?.id &&
+      b.status === "DONE"
+  );
+
+  const getPitStatusBadge = (b?: BookingSummary) => {
+    if (!b) {
+      return {
+        label: "Tersedia",
+        color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      };
+    }
+    if (b.status === "DONE") {
+      return {
+        label: "Selesai",
+        color: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      };
+    }
+    if (b.status === "IN_PROGRESS") {
+      return {
+        label: "Sedang Servis",
+        color: "bg-blue-50 text-blue-700 border-blue-200",
+      };
+    }
+    return {
+      label: "Terjadwal",
+      color: "bg-amber-50 text-amber-700 border-amber-200",
+    };
+  };
+
+  const pitList = [
+    {
+      code: "P1",
+      name: "Pit 1 - Fast Pit Express",
+      desc: pit1Booking
+        ? `${pit1Booking.nama_customer} · ${pit1Booking.plat_kendaraan || pit1Booking.tipe_motor || "Motor"} (${pit1Booking.jam_booking} WIB)`
+        : "Ganti Oli, Busi & Part Ringan (Tanpa Antre)",
+      booking: pit1Booking,
+      status: getPitStatusBadge(pit1Booking),
+    },
+    {
+      code: "P2",
+      name: "Pit 2 - Servis Berkala & Tune-Up",
+      desc: pit2Booking
+        ? `${pit2Booking.nama_customer} · ${pit2Booking.plat_kendaraan || pit2Booking.tipe_motor || "Motor"} (${pit2Booking.jam_booking} WIB)`
+        : "Kalibrasi Injeksi Honda HIDS & Pembersihan",
+      booking: pit2Booking,
+      status: getPitStatusBadge(pit2Booking),
+    },
+    {
+      code: "P3",
+      name: "Pit 3 - Heavy Repair & Keluhan",
+      desc: pit3Booking
+        ? `${pit3Booking.nama_customer} · ${pit3Booking.plat_kendaraan || pit3Booking.tipe_motor || "Motor"} (${pit3Booking.jam_booking} WIB)`
+        : "Penanganan Suara CVT, Mesin & Kelistrikan",
+      booking: pit3Booking,
+      status: getPitStatusBadge(pit3Booking),
+    },
+    {
+      code: "P4",
+      name: "Pit 4 - Final Inspection & Cuci",
+      desc: pit4Booking
+        ? `${pit4Booking.nama_customer} · ${pit4Booking.plat_kendaraan || pit4Booking.tipe_motor || "Motor"} (Siap Serah Terima)`
+        : "Uji Jalan & Pemeriksaan Standar Keselamatan",
+      booking: pit4Booking,
+      status: pit4Booking
+        ? { label: "Siap Ambil", color: "bg-emerald-50 text-emerald-700 border-emerald-200" }
+        : { label: "Tersedia", color: "bg-emerald-50 text-emerald-700 border-emerald-200" },
+    },
+  ];
+
+  const occupiedPits = pitList.filter((p) => p.booking).length;
 
   const displayRole = user?.role === "ADMIN" || user?.role === "KEPALA_BENGKEL" ? "Executive Owner" : "Admin Operasional";
   const displayName = user?.nama || "Bpk. H. Rahmat (Kepala Bengkel)";
@@ -436,7 +595,7 @@ export default function AdminDashboardPage() {
                 </h3>
                 <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 mt-0.5">
                   <TrendingUp className="w-3.5 h-3.5" />
-                  <span>+{bookingStats.total} Antrean Minggu Ini</span>
+                  <span>+{weeklyTotal} Antrean Minggu Ini</span>
                 </div>
               </div>
               <span className="text-[10px] font-bold bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-lg">
@@ -447,39 +606,54 @@ export default function AdminDashboardPage() {
             {/* Total Highlight Pill */}
             <div className="my-6 flex justify-end">
               <div className="bg-[#0B111A] text-white px-3 py-1.5 rounded-xl text-xs font-bold font-mono shadow-sm">
-                {bookingStats.total} Servis · Minggu Ini
+                {weeklyTotal} Servis · Minggu Ini
               </div>
             </div>
 
             {/* Weekly Bars Display */}
             <div className="grid grid-cols-7 gap-2 items-end h-28 pt-4 pb-2 border-b border-zinc-100">
-              {[
-                { day: "Sen", count: 2, height: "40%" },
-                { day: "Sel", count: 3, height: "55%" },
-                { day: "Rab", count: 4, height: "70%" },
-                { day: "Kam", count: 2, height: "40%" },
-                { day: "Jum", count: 5, height: "85%" },
-                { day: "Sab", count: 6, height: "95%" },
-                { day: "Min", count: 3, height: "60%", active: true },
-              ].map((b) => (
-                <div key={b.day} className="flex flex-col items-center gap-2 h-full justify-end">
-                  <div
-                    className={`w-full max-w-[20px] rounded-full transition-all duration-500 ${
-                      b.active
-                        ? "bg-[#E4002B] shadow-md shadow-red-900/40"
-                        : "bg-zinc-200 hover:bg-zinc-300"
-                    }`}
-                    style={{ height: b.height }}
-                  />
-                  <span
-                    className={`text-[10px] font-mono ${
-                      b.active ? "font-black text-[#E4002B]" : "text-zinc-400"
-                    }`}
+              {weeklyData.map((b) => {
+                const barHeight =
+                  b.count > 0
+                    ? `${Math.max(25, Math.round((b.count / maxWeeklyCount) * 90))}%`
+                    : "12%";
+
+                return (
+                  <button
+                    key={b.label + b.dateStr}
+                    type="button"
+                    onClick={() => {
+                      setCalendarDate(b.fullDate);
+                      setSelectedDay(b.dateNum);
+                    }}
+                    title={`${b.label} (${b.dateStr}): ${b.count} booking`}
+                    className="flex flex-col items-center gap-2 h-full justify-end group focus:outline-none"
                   >
-                    {b.day}
-                  </span>
-                </div>
-              ))}
+                    <span className="text-[9px] font-mono font-bold text-zinc-400 group-hover:text-zinc-700 transition">
+                      {b.count > 0 ? b.count : ""}
+                    </span>
+                    <div
+                      className={`w-full max-w-[20px] rounded-full transition-all duration-300 ${
+                        b.isSelected
+                          ? "bg-[#E4002B] shadow-md shadow-red-900/40"
+                          : b.count > 0
+                          ? "bg-zinc-700 group-hover:bg-zinc-900"
+                          : "bg-zinc-200 group-hover:bg-zinc-300"
+                      }`}
+                      style={{ height: barHeight }}
+                    />
+                    <span
+                      className={`text-[10px] font-mono transition ${
+                        b.isSelected
+                          ? "font-black text-[#E4002B]"
+                          : "text-zinc-400 group-hover:text-zinc-600"
+                      }`}
+                    >
+                      {b.label}
+                    </span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
@@ -497,49 +671,33 @@ export default function AdminDashboardPage() {
                 <h3 className="text-xs font-black tracking-wider uppercase text-zinc-500">
                   Operasional 4 Pit Servis
                 </h3>
-                <span className="text-[11px] text-zinc-400">Status kesiapan bengkel</span>
+                <span className="text-[11px] text-zinc-400">
+                  {selectedDayBookings.length > 0 ? `Hari ${selectedDay} ${monthName}` : "Kesiapan operasional pit"}
+                </span>
               </div>
-              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                Semua Buka
+              <span
+                className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
+                  occupiedPits > 0
+                    ? "text-blue-700 bg-blue-50 border-blue-200"
+                    : "text-emerald-700 bg-emerald-50 border-emerald-200"
+                }`}
+              >
+                <span
+                  className={`w-1.5 h-1.5 rounded-full ${
+                    occupiedPits > 0 ? "bg-blue-500 animate-pulse" : "bg-emerald-500"
+                  }`}
+                />
+                {occupiedPits > 0 ? `${occupiedPits} Pit Terisi` : "Semua Siap Buka"}
               </span>
             </div>
 
             {/* Pit Items List */}
             <div className="space-y-2.5">
-              {[
-                {
-                  code: "P1",
-                  name: "Pit 1 - Fast Pit Express",
-                  desc: "Ganti Oli, Busi & Part Ringan (Tanpa Antre)",
-                  badge: "Sedang Servis",
-                  badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
-                },
-                {
-                  code: "P2",
-                  name: "Pit 2 - Servis Berkala & Tune-Up",
-                  desc: "Kalibrasi Injeksi Honda HIDS & Pembersihan",
-                  badge: "Tersedia",
-                  badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                },
-                {
-                  code: "P3",
-                  name: "Pit 3 - Heavy Repair & Keluhan",
-                  desc: "Penanganan Suara CVT, Mesin & Kelistrikan",
-                  badge: "Sedang Servis",
-                  badgeColor: "bg-blue-50 text-blue-700 border-blue-200",
-                },
-                {
-                  code: "P4",
-                  name: "Pit 4 - Final Inspection & Cuci",
-                  desc: "Uji Jalan & Pemeriksaan Standar Keselamatan",
-                  badge: "Tersedia",
-                  badgeColor: "bg-emerald-50 text-emerald-700 border-emerald-200",
-                },
-              ].map((pit) => (
-                <div
+              {pitList.map((pit) => (
+                <Link
                   key={pit.code}
-                  className="p-3 rounded-2xl bg-zinc-50/80 border border-zinc-100 flex items-center justify-between gap-3 hover:bg-zinc-100/70 transition group cursor-pointer"
+                  href="/admin/bookings"
+                  className="p-3 rounded-2xl bg-zinc-50/80 border border-zinc-100 flex items-center justify-between gap-3 hover:bg-zinc-100/70 transition group block"
                 >
                   <div className="flex items-center gap-3 min-w-0">
                     <span className="w-8 h-8 rounded-xl bg-white border border-zinc-200 text-xs font-black font-mono flex items-center justify-center text-[#E4002B] shrink-0 shadow-2xs">
@@ -556,11 +714,11 @@ export default function AdminDashboardPage() {
                   </div>
 
                   <span
-                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${pit.badgeColor}`}
+                    className={`text-[10px] font-bold px-2 py-0.5 rounded-full border shrink-0 ${pit.status.color}`}
                   >
-                    {pit.badge}
+                    {pit.status.label}
                   </span>
-                </div>
+                </Link>
               ))}
             </div>
           </div>
@@ -581,9 +739,11 @@ export default function AdminDashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <button
                 type="button"
-                onClick={() =>
-                  setCalendarDate(new Date(yearNum, monthNum - 1, 1))
-                }
+                onClick={() => {
+                  const prevMonth = new Date(yearNum, monthNum - 1, 1);
+                  setCalendarDate(prevMonth);
+                  setSelectedDay(1);
+                }}
                 className="p-1 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition"
                 title="Bulan Sebelumnya"
               >
@@ -596,9 +756,11 @@ export default function AdminDashboardPage() {
 
               <button
                 type="button"
-                onClick={() =>
-                  setCalendarDate(new Date(yearNum, monthNum + 1, 1))
-                }
+                onClick={() => {
+                  const nextMonth = new Date(yearNum, monthNum + 1, 1);
+                  setCalendarDate(nextMonth);
+                  setSelectedDay(1);
+                }}
                 className="p-1 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition"
                 title="Bulan Berikutnya"
               >
@@ -624,23 +786,30 @@ export default function AdminDashboardPage() {
               ))}
               {Array.from({ length: daysInMonth }).map((_, i) => {
                 const day = i + 1;
-                const isCurrentToday =
-                  day === selectedDay &&
+                const isSelected = day === selectedDay;
+                const isToday =
+                  day === today.getDate() &&
                   monthNum === today.getMonth() &&
                   yearNum === today.getFullYear();
+                const hasBooking = daysWithBookings.has(day);
 
                 return (
                   <button
                     key={day}
                     type="button"
                     onClick={() => setSelectedDay(day)}
-                    className={`h-7 w-7 rounded-full text-xs font-semibold mx-auto flex items-center justify-center transition ${
-                      isCurrentToday
+                    className={`relative h-7 w-7 rounded-full text-xs font-semibold mx-auto flex flex-col items-center justify-center transition ${
+                      isSelected
                         ? "bg-[#E4002B] text-white font-black shadow-md shadow-red-950/40"
+                        : isToday
+                        ? "border border-[#E4002B] text-[#E4002B] font-bold hover:bg-red-50"
                         : "text-zinc-700 hover:bg-zinc-100"
                     }`}
                   >
-                    {day}
+                    <span>{day}</span>
+                    {hasBooking && !isSelected && (
+                      <span className="w-1 h-1 rounded-full bg-[#E4002B] absolute bottom-0.5" />
+                    )}
                   </button>
                 );
               })}
@@ -655,39 +824,54 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          {/* Jadwal Servis Masuk Hari Ini (ala Jadwal Kirim Pabrik) */}
+          {/* Jadwal Servis Masuk Hari Ini / Tanggal Terpilih */}
           <div className="bg-white rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 shadow-xs">
             <div className="flex items-center justify-between mb-3">
               <h4 className="text-xs font-black tracking-wider uppercase text-zinc-500">
-                Jadwal Servis Berikutnya
+                Jadwal Servis Terpilih
               </h4>
               <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
-                Hari Ini
+                {selectedDay === today.getDate() &&
+                monthNum === today.getMonth() &&
+                yearNum === today.getFullYear()
+                  ? "Hari Ini"
+                  : `${selectedDay} ${calendarDate.toLocaleDateString("id-ID", { month: "short" })}`}
               </span>
             </div>
 
-            {recentBookings.length > 0 ? (
-              <div className="p-3 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div className="w-8 h-8 rounded-xl bg-red-50 text-[#E4002B] border border-red-100 flex items-center justify-center shrink-0">
-                    <Wrench className="w-4 h-4" />
-                  </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-bold text-zinc-900 truncate">
-                      {recentBookings[0].nama_customer}
+            {selectedDayBookings.length > 0 ? (
+              <div className="space-y-2 max-h-56 overflow-y-auto pr-0.5">
+                {selectedDayBookings.map((b) => (
+                  <div
+                    key={b.id}
+                    className="p-3 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-between gap-3"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-red-50 text-[#E4002B] border border-red-100 flex items-center justify-center shrink-0">
+                        <Wrench className="w-4 h-4" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs font-bold text-zinc-900 truncate">
+                          {b.nama_customer}
+                        </div>
+                        <div className="text-[10px] text-zinc-500 truncate">
+                          {b.tipe_motor || "Honda"} · {b.plat_kendaraan}
+                        </div>
+                      </div>
                     </div>
-                    <div className="text-[10px] text-zinc-500 truncate">
-                      {recentBookings[0].tipe_motor || "Honda Vario 160"} · {recentBookings[0].plat_kendaraan}
-                    </div>
+                    <span className="text-[10px] font-mono font-bold text-zinc-700 bg-white px-2 py-1 rounded-md border border-zinc-200 shrink-0">
+                      {b.jam_booking} WIB
+                    </span>
                   </div>
-                </div>
-                <span className="text-[10px] font-mono font-bold text-zinc-700 bg-white px-2 py-1 rounded-md border border-zinc-200 shrink-0">
-                  {recentBookings[0].jam_booking} WIB
-                </span>
+                ))}
               </div>
             ) : (
-              <div className="text-center py-4 text-xs text-zinc-400">
-                Belum ada antrean terjadwal
+              <div className="text-center py-5 text-xs text-zinc-400">
+                <CalendarDays className="w-6 h-6 mx-auto text-zinc-300 mb-1" />
+                <div>Tidak ada jadwal servis</div>
+                <span className="text-[10px] text-zinc-400">
+                  {selectedDay} {monthName}
+                </span>
               </div>
             )}
           </div>
