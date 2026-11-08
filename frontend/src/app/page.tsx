@@ -230,6 +230,28 @@ export default async function Home() {
 
   return (
     <div className="flex flex-col min-h-screen bg-white text-zinc-900">
+      {/* ── Fermion-Inspired Cinematic Opening Curtain ── */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-[#A3001D] animate-fermion-curtain select-none"
+      >
+        <div className="flex flex-col items-center gap-3 animate-fermion-curtain-content">
+          <div className="relative w-16 h-16 sm:w-20 sm:h-20">
+            <Image
+              src="/honda-logo.png"
+              alt="Logo Honda"
+              fill
+              className="object-contain brightness-0 invert drop-shadow-md"
+              priority
+            />
+          </div>
+          <div className="font-mono text-[11px] sm:text-xs font-black tracking-[0.25em] text-white/95 uppercase">
+            AHASS 10870 • AS PUTRA MOTOR
+          </div>
+          <div className="h-0.5 w-12 bg-white/40 rounded-full" />
+        </div>
+      </div>
+
       {/* JSON-LD Structured Data */}
       <script
         type="application/ld+json"
@@ -266,7 +288,7 @@ export default async function Home() {
           {/* Giant Faint Honda Wing Watermark */}
           <div
             aria-hidden
-            className="pointer-events-none select-none absolute -right-16 -bottom-16 w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] opacity-[0.08] -z-10"
+            className="pointer-events-none select-none absolute -right-16 -bottom-16 w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] opacity-[0.08] -z-10 animate-fermion-wing"
           >
             <Image
               src="/honda-logo.png"
@@ -277,11 +299,11 @@ export default async function Home() {
           </div>
 
           <div className="mx-auto max-w-6xl px-6 sm:px-10 pt-12 pb-14 lg:pt-20 lg:pb-24">
-            <div className="w-full lg:max-w-[580px] xl:max-w-[620px] animate-hero-fade">
+            <div className="w-full lg:max-w-[580px] xl:max-w-[620px]">
               {/* Left Column: Headline & Search */}
               <div>
                 {/* Official Honda Fascia Badge */}
-                <div className="inline-flex flex-wrap items-center gap-2 rounded-full bg-black/25 backdrop-blur-xs border border-white/25 pl-2.5 pr-3.5 py-1 text-xs font-bold tracking-wide text-white">
+                <div className="animate-fermion-badge inline-flex flex-wrap items-center gap-2 rounded-full bg-black/25 backdrop-blur-xs border border-white/25 pl-2.5 pr-3.5 py-1 text-xs font-bold tracking-wide text-white">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-[#E4002B]">
                     AHASS 10870
                   </span>
@@ -290,11 +312,11 @@ export default async function Home() {
                   <span className="italic font-extrabold tracking-wider">One Heart.</span>
                 </div>
 
-                <h1 className="font-display mt-5 text-4xl sm:text-5xl lg:text-[52px] font-black leading-[1.06] tracking-tight text-balance drop-shadow-xs">
+                <h1 className="animate-fermion-title font-display mt-5 text-4xl sm:text-5xl lg:text-[52px] font-black leading-[1.06] tracking-tight text-balance drop-shadow-xs">
                   Suku Cadang Asli Honda &amp; Servis Resmi AHASS.
                 </h1>
 
-                <p className="mt-4 text-base sm:text-lg leading-relaxed text-white/95 max-w-xl">
+                <p className="animate-fermion-desc mt-4 text-base sm:text-lg leading-relaxed text-white/95 max-w-xl">
                   Cek langsung{" "}
                   <strong className="font-extrabold text-white underline decoration-white/50 underline-offset-4">
                     {totalParts > 0
@@ -305,7 +327,7 @@ export default async function Home() {
                 </p>
 
                 {/* Pencarian utama: bergaya Katalog Elektronik Resmi AHM */}
-                <form action="/katalog" method="get" role="search" className="mt-7">
+                <form action="/katalog" method="get" role="search" className="animate-fermion-search mt-7">
                   <label htmlFor="hero-search" className="sr-only">
                     Cari spare part Honda di Kuningan
                   </label>
@@ -332,7 +354,7 @@ export default async function Home() {
                   </div>
 
                   {/* Quick Search Chips */}
-                  <div className="mt-3.5 flex flex-wrap items-center gap-1.5 text-xs text-white">
+                  <div className="animate-fermion-chips mt-3.5 flex flex-wrap items-center gap-1.5 text-xs text-white">
                     <span className="font-bold uppercase tracking-wider text-[11px] text-white/85 mr-1">
                       Pencarian Cepat:
                     </span>
@@ -355,7 +377,7 @@ export default async function Home() {
                 </form>
 
                 {/* Bottom Hero Action & Trust */}
-                <div className="mt-8 pt-6 border-t border-white/20 flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-white">
+                <div className="animate-fermion-actions mt-8 pt-6 border-t border-white/20 flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-white">
                   <Link
                     href="/booking"
                     className="inline-flex items-center gap-2 rounded-lg bg-white px-4 py-2.5 text-xs sm:text-sm font-extrabold text-[#E4002B] shadow-md hover:bg-zinc-100 transition"
