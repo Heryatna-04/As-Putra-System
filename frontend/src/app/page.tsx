@@ -277,7 +277,7 @@ export default async function Home() {
           </div>
 
           <div className="mx-auto max-w-6xl px-6 sm:px-10 pt-12 pb-14 lg:pt-20 lg:pb-24">
-            <div className="max-w-2xl lg:max-w-3xl">
+            <div className="w-full lg:max-w-[580px] xl:max-w-[620px] animate-hero-fade">
               {/* Left Column: Headline & Search */}
               <div>
                 {/* Official Honda Fascia Badge */}
