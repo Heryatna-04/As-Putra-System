@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Lock, Mail, AlertCircle, Loader2, ArrowRight, ArrowLeft } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
+import { API_BASE_URL } from "@/lib/api";
 
 export default function AdminLoginPage() {
   const [email, setEmail] = useState("");
@@ -23,11 +24,10 @@ export default function AdminLoginPage() {
     setIsSubmitting(true);
 
     try {
-      const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
-      const res = await fetch(`${baseUrl}/auth/login`, {
+      const res = await fetch(`${API_BASE_URL}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
       const data = await res.json();
@@ -38,11 +38,9 @@ export default function AdminLoginPage() {
 
       login(data.data.access_token, data.data.user, data.data.refresh_token);
 
-      if (data.data.user?.role === "CRM") {
-        router.push("/crm");
-      } else {
-        router.push("/admin");
-      }
+      const targetPath = data.data.user?.role === "CRM" ? "/crm" : "/admin";
+      // Gunakan window.location.href agar cookie ter-commit penuh ke browser & middleware
+      window.location.href = targetPath;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Terjadi kesalahan saat menghubungi server.");
     } finally {
