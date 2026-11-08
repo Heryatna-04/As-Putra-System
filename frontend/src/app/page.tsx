@@ -243,56 +243,6 @@ export default async function Home() {
         {/* ── Hero: Iconic Honda Red & Wing Fascia (with High-Tech Telemetry Entrance) ── */}
         <HeroSection totalParts={totalParts} />
 
-        {/* ── Official Honda Fascia Stats Strip ────────────────────── */}
-        <section className="bg-zinc-900 text-white border-b border-zinc-800">
-          <div className="mx-auto max-w-6xl px-6 sm:px-10 py-6 grid grid-cols-2 lg:grid-cols-4 gap-6 divide-y sm:divide-y-0 sm:divide-x divide-zinc-800">
-            <div className="pt-3 sm:pt-0 sm:px-4 first:pl-0 first:pt-0">
-              <div className="text-[11px] font-bold uppercase tracking-widest text-[#E4002B]">
-                KODE BENGKEL RESMI
-              </div>
-              <div className="font-display text-xl sm:text-2xl font-black tracking-tight mt-0.5">
-                AHASS 10870
-              </div>
-              <div className="text-xs text-zinc-400 mt-0.5">
-                Terdaftar Resmi PT AHM
-              </div>
-            </div>
-            <div className="pt-3 sm:pt-0 sm:px-4">
-              <div className="text-[11px] font-bold uppercase tracking-widest text-[#E4002B]">
-                DATABASE SUKU CADANG
-              </div>
-              <div className="font-display text-xl sm:text-2xl font-black tracking-tight mt-0.5">
-                {totalParts > 0 ? `${totalParts.toLocaleString("id-ID")}+` : "44.000+"} SKU
-              </div>
-              <div className="text-xs text-zinc-400 mt-0.5">
-                Honda Genuine Parts &amp; Oil
-              </div>
-            </div>
-            <div className="pt-3 sm:pt-0 sm:px-4">
-              <div className="text-[11px] font-bold uppercase tracking-widest text-[#E4002B]">
-                TRANSPARANSI HARGA
-              </div>
-              <div className="font-display text-xl sm:text-2xl font-black tracking-tight mt-0.5">
-                100% HET AHM
-              </div>
-              <div className="text-xs text-zinc-400 mt-0.5">
-                Harga Eceran Tertinggi Resmi
-              </div>
-            </div>
-            <div className="pt-3 sm:pt-0 sm:px-4">
-              <div className="text-[11px] font-bold uppercase tracking-widest text-[#E4002B]">
-                STANDAR TEKNISI
-              </div>
-              <div className="font-display text-xl sm:text-2xl font-black tracking-tight mt-0.5">
-                Tersertifikasi
-              </div>
-              <div className="text-xs text-zinc-400 mt-0.5">
-                Peralatan Standar Pit Honda
-              </div>
-            </div>
-          </div>
-        </section>
-
         {/* ── Keunggulan Standar Honda ─────────────────────────────── */}
         <section className="px-6 sm:px-10 py-20 bg-white">
           <div className="mx-auto max-w-6xl grid gap-12 lg:grid-cols-12">
