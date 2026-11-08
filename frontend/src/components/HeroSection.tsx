@@ -39,6 +39,7 @@ export default function HeroSection({ totalParts }: HeroSectionProps) {
 
   // Animasi aktif hanya pada first-visit sesi browser dan setelah client mounted
   const animActive = mounted && shouldAnimate;
+  const animClass = animActive ? "animate-hero-fade" : "opacity-100";
 
   return (
     <section className="relative isolate overflow-hidden bg-[#E4002B] text-white border-b-4 border-[#A3001D]">
@@ -67,9 +68,10 @@ export default function HeroSection({ totalParts }: HeroSectionProps) {
       {/* Giant Faint Honda Wing Watermark */}
       <div
         aria-hidden
-        className={`pointer-events-none select-none absolute -right-16 -bottom-16 w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] opacity-[0.08] -z-10 transition-transform duration-1000 ease-out ${
-          animActive ? "scale-95 animate-in fade-in zoom-in-95 duration-1000" : ""
+        className={`pointer-events-none select-none absolute -right-16 -bottom-16 w-[340px] h-[340px] sm:w-[460px] sm:h-[460px] opacity-[0.08] -z-10 ${
+          animActive ? "animate-hero-fade" : ""
         }`}
+        style={animActive ? { animationDelay: "50ms" } : undefined}
       >
         <Image
           src="/honda-logo.png"
@@ -82,10 +84,8 @@ export default function HeroSection({ totalParts }: HeroSectionProps) {
       <div className="mx-auto max-w-6xl px-6 sm:px-10 pt-8 pb-14 lg:pt-12 lg:pb-20">
         {/* ── Fermion-Inspired High-Tech Telemetry Status Strip ──────── */}
         <div
-          className={`mb-8 border-y border-white/15 bg-black/20 backdrop-blur-xs py-2 px-3 sm:px-4 rounded-lg transition-all duration-700 ease-out ${
-            animActive ? "opacity-0 -translate-y-2 animate-in fade-in slide-in-from-top-2 duration-700 fill-mode-forwards" : "opacity-100"
-          }`}
-          style={{ animationDelay: "100ms", animationFillMode: "forwards" }}
+          className={`mb-8 border-y border-white/15 bg-black/20 backdrop-blur-xs py-2 px-3 sm:px-4 rounded-lg ${animClass}`}
+          style={animActive ? { animationDelay: "100ms" } : undefined}
         >
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-white">
             <div className="flex items-center gap-2">
@@ -143,10 +143,8 @@ export default function HeroSection({ totalParts }: HeroSectionProps) {
           <div className="lg:col-span-7">
             {/* Official Honda Fascia Badge */}
             <div
-              className={`inline-flex flex-wrap items-center gap-2 rounded-full bg-black/25 backdrop-blur-xs border border-white/25 pl-2.5 pr-3.5 py-1 text-xs font-bold tracking-wide text-white transition-all duration-600 ease-out ${
-                animActive ? "opacity-0 translate-y-3 animate-in fade-in slide-in-from-bottom-2 duration-600 fill-mode-forwards" : "opacity-100"
-              }`}
-              style={{ animationDelay: "200ms", animationFillMode: "forwards" }}
+              className={`inline-flex flex-wrap items-center gap-2 rounded-full bg-black/25 backdrop-blur-xs border border-white/25 pl-2.5 pr-3.5 py-1 text-xs font-bold tracking-wide text-white ${animClass}`}
+              style={animActive ? { animationDelay: "200ms" } : undefined}
             >
               <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-[#E4002B]">
                 AHASS 10870
@@ -157,19 +155,15 @@ export default function HeroSection({ totalParts }: HeroSectionProps) {
             </div>
 
             <h1
-              className={`font-display mt-5 text-4xl sm:text-5xl lg:text-[52px] font-black leading-[1.06] tracking-tight text-balance drop-shadow-xs transition-all duration-700 ease-out ${
-                animActive ? "opacity-0 translate-y-4 animate-in fade-in slide-in-from-bottom-3 duration-700 fill-mode-forwards" : "opacity-100"
-              }`}
-              style={{ animationDelay: "300ms", animationFillMode: "forwards" }}
+              className={`font-display mt-5 text-4xl sm:text-5xl lg:text-[52px] font-black leading-[1.06] tracking-tight text-balance drop-shadow-xs ${animClass}`}
+              style={animActive ? { animationDelay: "300ms" } : undefined}
             >
               Suku Cadang Asli Honda &amp; Servis Resmi AHASS.
             </h1>
 
             <p
-              className={`mt-4 text-base sm:text-lg leading-relaxed text-white/95 max-w-xl transition-all duration-700 ease-out ${
-                animActive ? "opacity-0 translate-y-3 animate-in fade-in slide-in-from-bottom-2 duration-700 fill-mode-forwards" : "opacity-100"
-              }`}
-              style={{ animationDelay: "400ms", animationFillMode: "forwards" }}
+              className={`mt-4 text-base sm:text-lg leading-relaxed text-white/95 max-w-xl ${animClass}`}
+              style={animActive ? { animationDelay: "400ms" } : undefined}
             >
               Cek langsung{" "}
               <strong className="font-extrabold text-white underline decoration-white/50 underline-offset-4">
@@ -185,10 +179,8 @@ export default function HeroSection({ totalParts }: HeroSectionProps) {
               action="/katalog"
               method="get"
               role="search"
-              className={`mt-7 transition-all duration-700 ease-out ${
-                animActive ? "opacity-0 scale-[0.98] animate-in fade-in zoom-in-95 duration-700 fill-mode-forwards" : "opacity-100"
-              }`}
-              style={{ animationDelay: "500ms", animationFillMode: "forwards" }}
+              className={`mt-7 ${animClass}`}
+              style={animActive ? { animationDelay: "500ms" } : undefined}
             >
               <label htmlFor="hero-search" className="sr-only">
                 Cari spare part Honda di Kuningan
@@ -240,10 +232,8 @@ export default function HeroSection({ totalParts }: HeroSectionProps) {
 
             {/* Bottom Hero Action & Trust */}
             <div
-              className={`mt-8 pt-6 border-t border-white/20 flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-white transition-all duration-700 ease-out ${
-                animActive ? "opacity-0 translate-y-3 animate-in fade-in slide-in-from-bottom-2 duration-700 fill-mode-forwards" : "opacity-100"
-              }`}
-              style={{ animationDelay: "600ms", animationFillMode: "forwards" }}
+              className={`mt-8 pt-6 border-t border-white/20 flex flex-wrap items-center gap-4 sm:gap-6 text-sm text-white ${animClass}`}
+              style={animActive ? { animationDelay: "600ms" } : undefined}
             >
               <Link
                 href="/booking"
@@ -268,10 +258,8 @@ export default function HeroSection({ totalParts }: HeroSectionProps) {
 
           {/* Right Column: Iconic Honda Genuine Parts Card */}
           <div
-            className={`lg:col-span-5 transition-all duration-800 ease-out ${
-              animActive ? "opacity-0 translate-y-6 animate-in fade-in slide-in-from-bottom-4 duration-800 fill-mode-forwards" : "opacity-100"
-            }`}
-            style={{ animationDelay: "450ms", animationFillMode: "forwards" }}
+            className={`lg:col-span-5 ${animClass}`}
+            style={animActive ? { animationDelay: "450ms" } : undefined}
           >
             <div className="relative rounded-2xl bg-white text-zinc-900 shadow-2xl border-2 border-white/80 overflow-hidden">
               {/* Top Red Honda Genuine Parts Fascia Header */}
