@@ -43,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="bg-[#F5F6F8] font-sans text-[#0A0A0A] h-screen flex flex-col md:flex-row overflow-hidden">
+    <div className="bg-[#EEF1F5] font-sans text-[#0A0A0A] h-screen flex flex-col md:flex-row overflow-hidden md:p-3 md:gap-3">
       {/* Mobile Topbar */}
       <header className="md:hidden h-14 bg-[#E4002B] border-b border-black/10 px-4 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-3">
@@ -74,7 +74,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         isOpen={isMobileOpen}
         onClose={() => setIsMobileOpen(false)}
       />
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#F5F6F8]">
+      <main className="flex-1 flex flex-col min-w-0 overflow-hidden bg-transparent">
         <Toaster position="bottom-right" />
         {children}
       </main>
