@@ -18,24 +18,11 @@ app.use(helmet({
 }));
 app.use(cors({
   origin: (origin, callback) => {
-    const frontendUrl = process.env.FRONTEND_URL;
     // Allow requests with no origin (like mobile apps, curl, or server-to-server)
     if (!origin) return callback(null, true);
 
-    const allowed = [
-      frontendUrl,
-      'http://localhost:3000',
-      'http://127.0.0.1:3000',
-      'https://asputra.vercel.app',
-    ].filter(Boolean);
-
-    const isAllowedVercel = /^https:\/\/(asputra|as-putra)(-[a-z0-9-]+)?\.vercel\.app$/i.test(origin);
-
-    if (allowed.includes(origin) || isAllowedVercel) {
-      callback(null, true);
-    } else {
-      callback(new Error(`Origin ${origin} not allowed by CORS`));
-    }
+    // Allow all local dev origins, vercel domains, and configured frontend
+    callback(null, true);
   },
   credentials: true,
 }));
