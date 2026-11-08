@@ -15,16 +15,22 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { formatIDR } from "@/lib/utils";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import { ShieldCheck } from "lucide-react";
 
 interface ValidImportRow {
   part_no: string;
   part_name: string;
   category_detail?: string | null;
   het?: number | null;
+  stok?: number | null;
+  hpp?: number | null;
+  uom?: string | null;
 }
 
 interface PreviewData {
   batch_id: string;
+  file_format?: "AHASS_DEALER_MONTHLY" | "STANDARD_CATALOG";
+  periode?: string;
   total_rows: number;
   valid_rows: ValidImportRow[];
   error_rows: { row: number; reason: string }[];
@@ -220,7 +226,7 @@ export default function AdminImportPage() {
                 <div>
                   <h3 className="text-lg font-bold text-gray-900">Upload File Spreadsheet (.xlsx / .xls / .csv)</h3>
                   <p className="text-sm text-gray-500">
-                    Format kolom standar: <code>part_no</code>, <code>part_name</code>, <code>category_detail</code>, <code>het</code>.
+                    Otomatis mendeteksi <strong>Template Resmi AHASS (PERSEDIAAN &lt;BULAN&gt;.xlsx)</strong> atau file katalog standar.
                   </p>
                 </div>
               </div>
@@ -279,16 +285,27 @@ export default function AdminImportPage() {
         {/* Step 2: Preview & Confirm Table */}
         {previewData && (
           <div className="bg-white rounded-2xl border border-gray-200 p-8 shadow-sm mb-8 space-y-6">
-            <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-100 pb-4">
               <div>
-                <h3 className="text-lg font-bold text-gray-900">Preview Data Excel Batch</h3>
+                <div className="flex items-center gap-2 mb-1">
+                  <h3 className="text-lg font-bold text-gray-900">Preview Data Excel Batch</h3>
+                  {previewData.file_format === "AHASS_DEALER_MONTHLY" && (
+                    <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-xs font-bold text-emerald-700">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      Laporan Resmi AHASS {previewData.periode ? `(${previewData.periode})` : ""}
+                    </span>
+                  )}
+                </div>
                 <p className="text-sm text-gray-500 mt-0.5">
                   Total Baris: <strong>{previewData.total_rows}</strong> &nbsp;•&nbsp;
                   Baris Valid: <strong className="text-green-600">{previewData.valid_rows.length}</strong> &nbsp;•&nbsp;
                   Baris Error: <strong className="text-red-600">{previewData.error_rows.length}</strong>
                 </p>
+                <p className="text-xs text-emerald-700 font-semibold mt-1">
+                  ✓ Foto suku cadang yang sudah ada di sistem dijamin 100% aman dan tidak akan terhapus.
+                </p>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 shrink-0">
                 <button
                   onClick={() => setPreviewData(null)}
                   className="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-lg transition"
@@ -330,7 +347,11 @@ export default function AdminImportPage() {
                     <th className="py-3 px-4">Part No</th>
                     <th className="py-3 px-4">Nama Resmi Part</th>
                     <th className="py-3 px-4">Kategori</th>
-                    <th className="py-3 px-4">Harga HET</th>
+                    <th className="py-3 px-4 text-center">Stok Akhir</th>
+                    {previewData.file_format === "AHASS_DEALER_MONTHLY" && (
+                      <th className="py-3 px-4 text-right">HPP</th>
+                    )}
+                    <th className="py-3 px-4 text-right">Harga HET</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
@@ -339,7 +360,17 @@ export default function AdminImportPage() {
                       <td className="py-2.5 px-4 font-mono font-bold text-[#E8272A]">{row.part_no}</td>
                       <td className="py-2.5 px-4 font-semibold text-gray-900">{row.part_name}</td>
                       <td className="py-2.5 px-4 text-gray-600">{row.category_detail || "—"}</td>
-                      <td className="py-2.5 px-4 text-gray-900">{formatIDR(row.het)}</td>
+                      <td className="py-2.5 px-4 text-center font-bold">
+                        <span className={`inline-block px-2 py-0.5 rounded text-xs ${(row.stok ?? 0) > 0 ? "bg-emerald-50 text-emerald-700" : "bg-zinc-100 text-zinc-500"}`}>
+                          {row.stok ?? 0} {row.uom || "Pcs"}
+                        </span>
+                      </td>
+                      {previewData.file_format === "AHASS_DEALER_MONTHLY" && (
+                        <td className="py-2.5 px-4 text-right font-mono text-zinc-600">
+                          {formatIDR(row.hpp ?? 0)}
+                        </td>
+                      )}
+                      <td className="py-2.5 px-4 text-right text-gray-900 font-bold">{formatIDR(row.het)}</td>
                     </tr>
                   ))}
                 </tbody>
