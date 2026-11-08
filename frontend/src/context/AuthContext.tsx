@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Cookies from "js-cookie";
+import { API_BASE_URL } from "@/lib/api";
 
 export interface UserProfile {
   id: string;
@@ -28,8 +29,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
+  const baseUrl = API_BASE_URL;
 
   const getCookieOptions = useCallback((days = 7) => {
     const isSecure = typeof window !== "undefined" && window.location.protocol === "https:";

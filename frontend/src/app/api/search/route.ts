@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { API_BASE_URL } from "@/lib/api";
 
 const CACHE_HEADERS = {
   "Cache-Control": "no-store, no-cache, must-revalidate",
@@ -12,59 +13,21 @@ export async function GET(request: Request) {
     return NextResponse.json({ success: true, data: [] }, { headers: CACHE_HEADERS });
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
-
   try {
-    const res = await fetch(`${baseUrl}/spare-parts?search=${encodeURIComponent(q)}&limit=5`, {
-      signal: AbortSignal.timeout(3000),
+    const res = await fetch(`${API_BASE_URL}/spare-parts?search=${encodeURIComponent(q)}&limit=5`, {
+      signal: AbortSignal.timeout(5000),
       cache: "no-store",
     });
+
     if (res.ok) {
       const json = await res.json();
-      if (json.success && json.data) {
+      if (json.success && Array.isArray(json.data)) {
         return NextResponse.json({ success: true, data: json.data }, { headers: CACHE_HEADERS });
       }
     }
-  } catch {
-    // Fallback
+  } catch (err) {
+    console.error("[Search Route] Backend search error:", err);
   }
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://esvwatrnlqgcnvjtebmr.supabase.co";
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
-
-  if (!supabaseKey) {
-    return NextResponse.json({ success: true, data: [] }, { headers: CACHE_HEADERS });
-  }
-
-  const sanitizedQ = q.replace(/[(),:;"'%_\\]/g, ' ').trim();
-  if (!sanitizedQ) {
-    return NextResponse.json({ success: true, data: [] }, { headers: CACHE_HEADERS });
-  }
-
-  const cleanNoSpace = sanitizedQ.replace(/\s+/g, "");
-  const url = new URL(`${supabaseUrl}/rest/v1/spare_parts`);
-  url.searchParams.append("select", "id,part_no,part_name,nama_umum,het,stok");
-  url.searchParams.append("status", "eq.ACTIVE");
-  url.searchParams.append("or", `(part_no.ilike.%${cleanNoSpace}%,part_name.ilike.%${sanitizedQ}%,nama_umum.ilike.%${sanitizedQ}%)`);
-  url.searchParams.append("limit", "5");
-
-  try {
-    const res = await fetch(url.toString(), {
-      headers: {
-        apikey: supabaseKey,
-        Authorization: `Bearer ${supabaseKey}`,
-      },
-      signal: AbortSignal.timeout(3000),
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      return NextResponse.json({ success: false, data: [] });
-    }
-
-    const data = await res.json();
-    return NextResponse.json({ success: true, data }, { headers: CACHE_HEADERS });
-  } catch {
-    return NextResponse.json({ success: false, data: [] });
-  }
+  return NextResponse.json({ success: false, data: [] }, { headers: CACHE_HEADERS });
 }
