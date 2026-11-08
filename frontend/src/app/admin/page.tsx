@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/context/AuthContext";
+import { useTheme } from "@/hooks/useTheme";
 import { API_BASE_URL } from "@/lib/api";
 
 interface BookingSummary {
@@ -45,6 +46,7 @@ interface BookingSummary {
 
 export default function AdminDashboardPage() {
   const { token, user, authFetch, logout } = useAuth();
+  const { theme, setTheme } = useTheme();
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [summary, setSummary] = useState({
     totalActive: 0,
@@ -335,30 +337,40 @@ export default function AdminDashboardPage() {
   const displayName = user?.nama || "Bpk. H. Rahmat (Kepala Bengkel)";
 
   return (
-    <div className="flex-1 overflow-y-auto space-y-4 md:space-y-5 pb-8 font-sans text-zinc-900">
+    <div className="flex-1 overflow-y-auto space-y-4 md:space-y-5 pb-8 font-sans text-zinc-900 dark:text-zinc-100 transition-colors">
       {/* ── TOP EXECUTIVE BREADCRUMB & ACTION BAR ── */}
-      <header className="bg-white rounded-2xl md:rounded-3xl border border-zinc-200/80 shadow-xs px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3">
+      <header className="bg-white dark:bg-[#0E1522] rounded-2xl md:rounded-3xl border border-zinc-200/80 dark:border-zinc-800 shadow-xs px-4 sm:px-6 py-3.5 flex flex-wrap items-center justify-between gap-3 transition-colors">
         {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400">
+        <div className="flex items-center gap-2 text-xs font-semibold text-zinc-400 dark:text-zinc-500">
           <span>AS Putra Kuningan</span>
-          <span className="text-zinc-300">/</span>
-          <span className="text-zinc-900 font-bold">Ringkasan Eksekutif &amp; Operasional</span>
+          <span className="text-zinc-300 dark:text-zinc-700">/</span>
+          <span className="text-zinc-900 dark:text-zinc-100 font-bold">Ringkasan Eksekutif &amp; Operasional</span>
         </div>
 
         {/* Right Action Tools */}
         <div className="flex items-center gap-2.5 sm:gap-3">
           {/* Light/Dark Toggle Pill */}
-          <div className="flex items-center bg-zinc-100 p-1 rounded-full border border-zinc-200/80 text-zinc-500">
+          <div className="flex items-center bg-zinc-100 dark:bg-zinc-800/80 p-1 rounded-full border border-zinc-200/80 dark:border-zinc-700 text-zinc-500">
             <button
               type="button"
-              className="p-1 rounded-full bg-white shadow-2xs text-amber-500 hover:text-amber-600 transition"
+              onClick={() => setTheme("light")}
+              className={`p-1 rounded-full transition ${
+                theme === "light"
+                  ? "bg-white dark:bg-zinc-700 shadow-2xs text-amber-500"
+                  : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+              }`}
               title="Light Mode"
             >
               <Sun className="w-3.5 h-3.5" />
             </button>
             <button
               type="button"
-              className="p-1 rounded-full text-zinc-400 hover:text-zinc-600 transition"
+              onClick={() => setTheme("dark")}
+              className={`p-1 rounded-full transition ${
+                theme === "dark"
+                  ? "bg-white dark:bg-zinc-700 shadow-2xs text-indigo-400"
+                  : "text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-300"
+              }`}
               title="Dark Mode"
             >
               <Moon className="w-3.5 h-3.5" />
@@ -375,7 +387,7 @@ export default function AdminDashboardPage() {
           <button
             type="button"
             onClick={() => logout()}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-700 transition"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition"
           >
             <LogOut className="w-3.5 h-3.5 text-zinc-500" />
             <span className="hidden sm:inline">Keluar</span>
@@ -386,32 +398,32 @@ export default function AdminDashboardPage() {
       {/* ── ROW 1: WELCOME BANNER (8 COLS) + CLOUD REALTIME SYNC (4 COLS) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 items-stretch">
         {/* Welcome Executive Card */}
-        <div className="lg:col-span-8 bg-white rounded-2xl md:rounded-3xl p-6 sm:p-7 border border-zinc-200/80 shadow-xs flex flex-col justify-between relative overflow-hidden">
+        <div className="lg:col-span-8 bg-white dark:bg-[#0E1522] rounded-2xl md:rounded-3xl p-6 sm:p-7 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex flex-col justify-between relative overflow-hidden transition-colors">
           <div>
             {/* Tag Badges */}
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 bg-red-50 text-[#E4002B] border border-red-200/80 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
+              <span className="inline-flex items-center gap-1.5 bg-red-50 dark:bg-red-950/40 text-[#E4002B] border border-red-200/80 dark:border-red-900/50 px-2.5 py-0.5 rounded-full text-[11px] font-bold">
                 {displayRole}
               </span>
-              <span className="text-zinc-300">•</span>
-              <span className="text-[11px] font-semibold text-zinc-500">
+              <span className="text-zinc-300 dark:text-zinc-700">•</span>
+              <span className="text-[11px] font-semibold text-zinc-500 dark:text-zinc-400">
                 PT AS PUTRA RAHMAT · AHASS 10870
               </span>
             </div>
 
             {/* Title */}
-            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 tracking-tight mt-3">
+            <h1 className="text-2xl sm:text-3xl font-black text-zinc-900 dark:text-white tracking-tight mt-3">
               Selamat Datang, {displayName} 👋
             </h1>
 
             {/* Subtitle */}
-            <p className="text-xs sm:text-sm text-zinc-500 mt-2 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-zinc-500 dark:text-zinc-400 mt-2 max-w-2xl leading-relaxed">
               Pantau ketersediaan master suku cadang asli AHM, efisiensi 4 pit servis bengkel, dan jadwal kedatangan konsumen secara real-time hari ini.
             </p>
           </div>
 
           {/* Action CTAs */}
-          <div className="mt-6 pt-5 border-t border-zinc-100 flex flex-wrap items-center gap-3">
+          <div className="mt-6 pt-5 border-t border-zinc-100 dark:border-zinc-800 flex flex-wrap items-center gap-3">
             <Link
               href="/admin/bookings"
               className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B111A] hover:bg-[#1a2332] text-white text-xs sm:text-sm font-extrabold shadow-md transition active:scale-95"
@@ -422,9 +434,9 @@ export default function AdminDashboardPage() {
 
             <Link
               href="/admin/spare-parts?action=create"
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs sm:text-sm font-bold text-zinc-700 transition"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs sm:text-sm font-bold text-zinc-700 dark:text-zinc-200 transition"
             >
-              <Plus className="w-4 h-4 text-emerald-600" />
+              <Plus className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
               <span>Tambah Spare Part</span>
             </Link>
           </div>
@@ -469,7 +481,7 @@ export default function AdminDashboardPage() {
       {/* ── ROW 2: STATUS OPERASIONAL HARI INI (3 HORIZONTAL METRIC CARDS) ── */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="text-xs font-black tracking-wider uppercase text-zinc-500">
+          <h2 className="text-xs font-black tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
             Status Operasional Hari Ini
           </h2>
           <Link
@@ -485,31 +497,31 @@ export default function AdminDashboardPage() {
           {/* Card 1: Part Tersedia */}
           <Link
             href="/admin/spare-parts?stock_only=true"
-            className="group bg-white rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 shadow-xs hover:border-emerald-300 hover:shadow-md transition-all flex flex-col justify-between"
+            className="group bg-white dark:bg-[#0E1522] rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 dark:border-zinc-800 shadow-xs hover:border-emerald-300 dark:hover:border-emerald-600 hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-sm font-bold text-zinc-900 group-hover:text-emerald-700 transition-colors">
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                   Suku Cadang Siap Jual
                 </h3>
-                <span className="text-[11px] text-zinc-400 font-medium">Stok: &gt; 0 Unit</span>
+                <span className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium">Stok: &gt; 0 Unit</span>
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-100 dark:border-emerald-900/50 flex items-center justify-center text-emerald-600 dark:text-emerald-400 shrink-0">
                 <PackageCheck className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
+            <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">
+                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider font-semibold">
                   Total SKU:
                 </span>
-                <div className="text-lg font-black text-zinc-900 font-mono">
+                <div className="text-lg font-black text-zinc-900 dark:text-white font-mono">
                   {summary.totalActive.toLocaleString("id-ID")}
-                  <span className="text-xs text-zinc-400 font-sans font-medium"> SKU</span>
+                  <span className="text-xs text-zinc-400 dark:text-zinc-500 font-sans font-medium"> SKU</span>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
                 +100% HET Resmi
               </span>
             </div>
@@ -518,31 +530,31 @@ export default function AdminDashboardPage() {
           {/* Card 2: Part Kosong / Perlu Restock */}
           <Link
             href="/admin/spare-parts"
-            className="group bg-white rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 shadow-xs hover:border-amber-300 hover:shadow-md transition-all flex flex-col justify-between"
+            className="group bg-white dark:bg-[#0E1522] rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 dark:border-zinc-800 shadow-xs hover:border-amber-300 dark:hover:border-amber-600 hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-sm font-bold text-zinc-900 group-hover:text-amber-700 transition-colors">
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-amber-700 dark:group-hover:text-amber-400 transition-colors">
                   Stok Kosong / Kritis
                 </h3>
-                <span className="text-[11px] text-zinc-400 font-medium">Stok: 0 Unit</span>
+                <span className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium">Stok: 0 Unit</span>
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-600 shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-100 dark:border-amber-900/50 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
                 <AlertTriangle className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
+            <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">
+                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider font-semibold">
                   Perlu Order:
                 </span>
-                <div className="text-lg font-black text-amber-600 font-mono">
+                <div className="text-lg font-black text-amber-600 dark:text-amber-400 font-mono">
                   {summary.outOfStock.toLocaleString("id-ID")}
-                  <span className="text-xs text-zinc-400 font-sans font-medium"> SKU</span>
+                  <span className="text-xs text-zinc-400 dark:text-zinc-500 font-sans font-medium"> SKU</span>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 px-2.5 py-1 rounded-full border border-amber-200">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/50 px-2.5 py-1 rounded-full border border-amber-200 dark:border-amber-800">
                 Perlu Restock AHM
               </span>
             </div>
@@ -551,31 +563,31 @@ export default function AdminDashboardPage() {
           {/* Card 3: Booking Servis Bulan Ini */}
           <Link
             href="/admin/bookings"
-            className="group bg-white rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 shadow-xs hover:border-red-300 hover:shadow-md transition-all flex flex-col justify-between"
+            className="group bg-white dark:bg-[#0E1522] rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 dark:border-zinc-800 shadow-xs hover:border-red-300 dark:hover:border-red-600 hover:shadow-md transition-all flex flex-col justify-between"
           >
             <div className="flex items-start justify-between">
               <div>
-                <h3 className="text-sm font-bold text-zinc-900 group-hover:text-[#E4002B] transition-colors">
+                <h3 className="text-sm font-bold text-zinc-900 dark:text-zinc-100 group-hover:text-[#E4002B] transition-colors">
                   Booking Servis Terdaftar
                 </h3>
-                <span className="text-[11px] text-zinc-400 font-medium">Reservasi Bulan Ini</span>
+                <span className="text-[11px] text-zinc-400 dark:text-zinc-500 font-medium">Reservasi Bulan Ini</span>
               </div>
-              <div className="w-10 h-10 rounded-2xl bg-red-50 border border-red-100 flex items-center justify-center text-[#E4002B] shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-red-50 dark:bg-red-950/40 border border-red-100 dark:border-red-900/50 flex items-center justify-center text-[#E4002B] shrink-0">
                 <CalendarCheck className="w-5 h-5" />
               </div>
             </div>
 
-            <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between">
+            <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between">
               <div>
-                <span className="text-[10px] text-zinc-400 uppercase tracking-wider font-semibold">
+                <span className="text-[10px] text-zinc-400 dark:text-zinc-500 uppercase tracking-wider font-semibold">
                   Terselesaikan:
                 </span>
                 <div className="text-lg font-black text-[#E4002B] font-mono">
                   {bookingStats.done}
-                  <span className="text-xs text-zinc-400 font-sans font-medium"> / {bookingStats.total}</span>
+                  <span className="text-xs text-zinc-400 dark:text-zinc-500 font-sans font-medium"> / {bookingStats.total}</span>
                 </div>
               </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E4002B] bg-red-50 px-2.5 py-1 rounded-full border border-red-200">
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#E4002B] bg-red-50 dark:bg-red-950/50 px-2.5 py-1 rounded-full border border-red-200 dark:border-red-800">
                 +{bookingStats.pending} Menunggu
               </span>
             </div>
@@ -586,19 +598,19 @@ export default function AdminDashboardPage() {
       {/* ── ROW 3: VOLUME MINGGUAN (4 COLS) | 4 PIT OPERASIONAL (4 COLS) | KALENDER & JADWAL (4 COLS) ── */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 items-stretch">
         {/* Left Column: Volume Booking Mingguan (ala Volume Timbangan di Screenshot) */}
-        <div className="lg:col-span-4 bg-white rounded-2xl md:rounded-3xl p-5 sm:p-6 border border-zinc-200/80 shadow-xs flex flex-col justify-between">
+        <div className="lg:col-span-4 bg-white dark:bg-[#0E1522] rounded-2xl md:rounded-3xl p-5 sm:p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex flex-col justify-between transition-colors">
           <div>
             <div className="flex items-center justify-between">
               <div>
-                <h3 className="text-xs font-black tracking-wider uppercase text-zinc-500">
+                <h3 className="text-xs font-black tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
                   Volume Booking Pit
                 </h3>
-                <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 mt-0.5">
+                <div className="flex items-center gap-1 text-xs font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
                   <TrendingUp className="w-3.5 h-3.5" />
                   <span>+{weeklyTotal} Antrean Minggu Ini</span>
                 </div>
               </div>
-              <span className="text-[10px] font-bold bg-zinc-100 text-zinc-600 px-2.5 py-1 rounded-lg">
+              <span className="text-[10px] font-bold bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-300 px-2.5 py-1 rounded-lg">
                 Mingguan
               </span>
             </div>
@@ -611,7 +623,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Weekly Bars Display */}
-            <div className="grid grid-cols-7 gap-2 items-end h-28 pt-4 pb-2 border-b border-zinc-100">
+            <div className="grid grid-cols-7 gap-2 items-end h-28 pt-4 pb-2 border-b border-zinc-100 dark:border-zinc-800">
               {weeklyData.map((b) => {
                 const barHeight =
                   b.count > 0
@@ -629,7 +641,7 @@ export default function AdminDashboardPage() {
                     title={`${b.label} (${b.dateStr}): ${b.count} booking`}
                     className="flex flex-col items-center gap-2 h-full justify-end group focus:outline-none"
                   >
-                    <span className="text-[9px] font-mono font-bold text-zinc-400 group-hover:text-zinc-700 transition">
+                    <span className="text-[9px] font-mono font-bold text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-700 dark:group-hover:text-zinc-300 transition">
                       {b.count > 0 ? b.count : ""}
                     </span>
                     <div
@@ -637,8 +649,8 @@ export default function AdminDashboardPage() {
                         b.isSelected
                           ? "bg-[#E4002B] shadow-md shadow-red-900/40"
                           : b.count > 0
-                          ? "bg-zinc-700 group-hover:bg-zinc-900"
-                          : "bg-zinc-200 group-hover:bg-zinc-300"
+                          ? "bg-zinc-700 dark:bg-zinc-400 group-hover:bg-zinc-900 dark:group-hover:bg-zinc-200"
+                          : "bg-zinc-200 dark:bg-zinc-800 group-hover:bg-zinc-300 dark:group-hover:bg-zinc-700"
                       }`}
                       style={{ height: barHeight }}
                     />
@@ -646,7 +658,7 @@ export default function AdminDashboardPage() {
                       className={`text-[10px] font-mono transition ${
                         b.isSelected
                           ? "font-black text-[#E4002B]"
-                          : "text-zinc-400 group-hover:text-zinc-600"
+                          : "text-zinc-400 dark:text-zinc-500 group-hover:text-zinc-600 dark:group-hover:text-zinc-300"
                       }`}
                     >
                       {b.label}
@@ -657,29 +669,29 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="pt-3 flex items-center justify-between text-xs text-zinc-500">
+          <div className="pt-3 flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
             <span>Rata-rata 4-6 pit per hari</span>
             <span className="font-bold text-[#E4002B]">Kapasitas Optimum</span>
           </div>
         </div>
 
         {/* Center Column: Operasional 4 Pit AHASS (ala Operasional 4 Gudang di Screenshot) */}
-        <div className="lg:col-span-4 bg-white rounded-2xl md:rounded-3xl p-5 sm:p-6 border border-zinc-200/80 shadow-xs flex flex-col justify-between">
+        <div className="lg:col-span-4 bg-white dark:bg-[#0E1522] rounded-2xl md:rounded-3xl p-5 sm:p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-xs flex flex-col justify-between transition-colors">
           <div>
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-xs font-black tracking-wider uppercase text-zinc-500">
+                <h3 className="text-xs font-black tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
                   Operasional 4 Pit Servis
                 </h3>
-                <span className="text-[11px] text-zinc-400">
+                <span className="text-[11px] text-zinc-400 dark:text-zinc-500">
                   {selectedDayBookings.length > 0 ? `Hari ${selectedDay} ${monthName}` : "Kesiapan operasional pit"}
                 </span>
               </div>
               <span
                 className={`inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
                   occupiedPits > 0
-                    ? "text-blue-700 bg-blue-50 border-blue-200"
-                    : "text-emerald-700 bg-emerald-50 border-emerald-200"
+                    ? "text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800"
+                    : "text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800"
                 }`}
               >
                 <span
@@ -697,17 +709,17 @@ export default function AdminDashboardPage() {
                 <Link
                   key={pit.code}
                   href="/admin/bookings"
-                  className="p-3 rounded-2xl bg-zinc-50/80 border border-zinc-100 flex items-center justify-between gap-3 hover:bg-zinc-100/70 transition group block"
+                  className="p-3 rounded-2xl bg-zinc-50/80 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-3 hover:bg-zinc-100/70 dark:hover:bg-zinc-800/80 transition group block"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <span className="w-8 h-8 rounded-xl bg-white border border-zinc-200 text-xs font-black font-mono flex items-center justify-center text-[#E4002B] shrink-0 shadow-2xs">
+                    <span className="w-8 h-8 rounded-xl bg-white dark:bg-zinc-900 border border-zinc-200 dark:border-zinc-700 text-xs font-black font-mono flex items-center justify-center text-[#E4002B] shrink-0 shadow-2xs">
                       {pit.code}
                     </span>
                     <div className="min-w-0">
-                      <div className="text-xs font-bold text-zinc-900 truncate">
+                      <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
                         {pit.name}
                       </div>
-                      <div className="text-[10px] text-zinc-500 truncate mt-0.5">
+                      <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate mt-0.5">
                         {pit.desc}
                       </div>
                     </div>
@@ -723,8 +735,8 @@ export default function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="pt-3 border-t border-zinc-100 flex items-center justify-between text-xs">
-            <span className="text-zinc-400">4 Teknisi Tersertifikasi AHM</span>
+          <div className="pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs">
+            <span className="text-zinc-400 dark:text-zinc-500">4 Teknisi Tersertifikasi AHM</span>
             <Link href="/admin/bookings" className="font-bold text-[#E4002B] hover:underline">
               Atur Pit →
             </Link>
@@ -734,7 +746,7 @@ export default function AdminDashboardPage() {
         {/* Right Column: Mini Kalender Interaktif & Jadwal (ala Calendar & Jadwal Kirim Pabrik di Screenshot) */}
         <div className="lg:col-span-4 space-y-4">
           {/* Mini Calendar Card */}
-          <div className="bg-white rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 shadow-xs">
+          <div className="bg-white dark:bg-[#0E1522] rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 dark:border-zinc-800 shadow-xs transition-colors">
             {/* Month Header Switcher */}
             <div className="flex items-center justify-between mb-4">
               <button
@@ -744,13 +756,13 @@ export default function AdminDashboardPage() {
                   setCalendarDate(prevMonth);
                   setSelectedDay(1);
                 }}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition"
+                className="p-1 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
                 title="Bulan Sebelumnya"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
 
-              <span className="text-xs font-black uppercase tracking-wider text-zinc-900">
+              <span className="text-xs font-black uppercase tracking-wider text-zinc-900 dark:text-zinc-100">
                 {monthName}
               </span>
 
@@ -761,7 +773,7 @@ export default function AdminDashboardPage() {
                   setCalendarDate(nextMonth);
                   setSelectedDay(1);
                 }}
-                className="p-1 rounded-lg text-zinc-400 hover:text-zinc-700 hover:bg-zinc-100 transition"
+                className="p-1 rounded-lg text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition"
                 title="Bulan Berikutnya"
               >
                 <ChevronRight className="w-4 h-4" />
@@ -769,7 +781,7 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Day Names Header */}
-            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-mono font-bold text-zinc-400 mb-2">
+            <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-mono font-bold text-zinc-400 dark:text-zinc-500 mb-2">
               <span>M</span>
               <span>S</span>
               <span>S</span>
@@ -802,8 +814,8 @@ export default function AdminDashboardPage() {
                       isSelected
                         ? "bg-[#E4002B] text-white font-black shadow-md shadow-red-950/40"
                         : isToday
-                        ? "border border-[#E4002B] text-[#E4002B] font-bold hover:bg-red-50"
-                        : "text-zinc-700 hover:bg-zinc-100"
+                        ? "border border-[#E4002B] text-[#E4002B] font-bold hover:bg-red-50 dark:hover:bg-red-950/30"
+                        : "text-zinc-700 dark:text-zinc-300 hover:bg-zinc-100 dark:hover:bg-zinc-800"
                     }`}
                   >
                     <span>{day}</span>
@@ -816,21 +828,21 @@ export default function AdminDashboardPage() {
             </div>
 
             {/* Bottom Selected Date */}
-            <div className="mt-4 pt-3 border-t border-zinc-100 flex items-center justify-between text-xs text-zinc-400">
+            <div className="mt-4 pt-3 border-t border-zinc-100 dark:border-zinc-800 flex items-center justify-between text-xs text-zinc-400 dark:text-zinc-500">
               <span>Pilihan:</span>
-              <span className="font-bold text-zinc-900 font-mono">
+              <span className="font-bold text-zinc-900 dark:text-zinc-100 font-mono">
                 {selectedDay} {monthName}
               </span>
             </div>
           </div>
 
           {/* Jadwal Servis Masuk Hari Ini / Tanggal Terpilih */}
-          <div className="bg-white rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 shadow-xs">
+          <div className="bg-white dark:bg-[#0E1522] rounded-2xl md:rounded-3xl p-5 border border-zinc-200/80 dark:border-zinc-800 shadow-xs transition-colors">
             <div className="flex items-center justify-between mb-3">
-              <h4 className="text-xs font-black tracking-wider uppercase text-zinc-500">
+              <h4 className="text-xs font-black tracking-wider uppercase text-zinc-500 dark:text-zinc-400">
                 Jadwal Servis Terpilih
               </h4>
-              <span className="text-[10px] font-bold bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full border border-emerald-200">
+              <span className="text-[10px] font-bold bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-200 dark:border-emerald-800">
                 {selectedDay === today.getDate() &&
                 monthNum === today.getMonth() &&
                 yearNum === today.getFullYear()
@@ -844,32 +856,32 @@ export default function AdminDashboardPage() {
                 {selectedDayBookings.map((b) => (
                   <div
                     key={b.id}
-                    className="p-3 rounded-2xl bg-zinc-50 border border-zinc-100 flex items-center justify-between gap-3"
+                    className="p-3 rounded-2xl bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 flex items-center justify-between gap-3"
                   >
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-8 h-8 rounded-xl bg-red-50 text-[#E4002B] border border-red-100 flex items-center justify-center shrink-0">
+                      <div className="w-8 h-8 rounded-xl bg-red-50 dark:bg-red-950/40 text-[#E4002B] border border-red-100 dark:border-red-900/50 flex items-center justify-center shrink-0">
                         <Wrench className="w-4 h-4" />
                       </div>
                       <div className="min-w-0">
-                        <div className="text-xs font-bold text-zinc-900 truncate">
+                        <div className="text-xs font-bold text-zinc-900 dark:text-zinc-100 truncate">
                           {b.nama_customer}
                         </div>
-                        <div className="text-[10px] text-zinc-500 truncate">
+                        <div className="text-[10px] text-zinc-500 dark:text-zinc-400 truncate">
                           {b.tipe_motor || "Honda"} · {b.plat_kendaraan}
                         </div>
                       </div>
                     </div>
-                    <span className="text-[10px] font-mono font-bold text-zinc-700 bg-white px-2 py-1 rounded-md border border-zinc-200 shrink-0">
+                    <span className="text-[10px] font-mono font-bold text-zinc-700 dark:text-zinc-300 bg-white dark:bg-zinc-900 px-2 py-1 rounded-md border border-zinc-200 dark:border-zinc-700 shrink-0">
                       {b.jam_booking} WIB
                     </span>
                   </div>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-5 text-xs text-zinc-400">
-                <CalendarDays className="w-6 h-6 mx-auto text-zinc-300 mb-1" />
+              <div className="text-center py-5 text-xs text-zinc-400 dark:text-zinc-500">
+                <CalendarDays className="w-6 h-6 mx-auto text-zinc-300 dark:text-zinc-600 mb-1" />
                 <div>Tidak ada jadwal servis</div>
-                <span className="text-[10px] text-zinc-400">
+                <span className="text-[10px] text-zinc-400 dark:text-zinc-500">
                   {selectedDay} {monthName}
                 </span>
               </div>
@@ -879,13 +891,13 @@ export default function AdminDashboardPage() {
       </div>
 
       {/* ── ROW 4: TRANSAKSI & TIKET BOOKING TERBARU ── */}
-      <div className="bg-white rounded-2xl md:rounded-3xl p-5 sm:p-6 border border-zinc-200/80 shadow-xs">
+      <div className="bg-white dark:bg-[#0E1522] rounded-2xl md:rounded-3xl p-5 sm:p-6 border border-zinc-200/80 dark:border-zinc-800 shadow-xs transition-colors">
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-sm sm:text-base font-black text-zinc-900">
+            <h2 className="text-sm sm:text-base font-black text-zinc-900 dark:text-white">
               Antrean &amp; Transaksi Servis Terbaru
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 mt-0.5">
               Tiket reservasi pit servis dan pengambilan suku cadang masuk
             </p>
           </div>
@@ -893,7 +905,7 @@ export default function AdminDashboardPage() {
           <div className="flex items-center gap-2">
             <Link
               href="/admin/bookings"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-700 transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800 hover:bg-zinc-50 dark:hover:bg-zinc-700 text-xs font-bold text-zinc-700 dark:text-zinc-300 transition"
             >
               <span>Buka Semua ({bookingStats.total})</span>
               <ChevronRight className="w-3.5 h-3.5" />
@@ -906,33 +918,33 @@ export default function AdminDashboardPage() {
             recentBookings.map((b, idx) => (
               <div
                 key={b.id || idx}
-                className="p-3.5 rounded-2xl bg-zinc-50/70 border border-zinc-100 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 hover:bg-zinc-100/70 transition"
+                className="p-3.5 rounded-2xl bg-zinc-50/70 dark:bg-zinc-800/40 border border-zinc-100 dark:border-zinc-800 flex flex-wrap sm:flex-nowrap items-center justify-between gap-3 hover:bg-zinc-100/70 dark:hover:bg-zinc-800/80 transition"
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-black text-zinc-900 truncate">
+                    <span className="text-xs font-black text-zinc-900 dark:text-zinc-100 truncate">
                       {b.nama_customer}
                     </span>
                     <span
                       className={`text-[9px] font-mono font-black px-1.5 py-0.5 rounded border ${
                         b.ticket_no?.startsWith("PRT")
-                          ? "bg-emerald-50 text-emerald-800 border-emerald-200"
-                          : "bg-red-50 text-red-800 border-red-200"
+                          ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900/50"
+                          : "bg-red-50 dark:bg-red-950/40 text-red-800 dark:text-red-400 border-red-200 dark:border-red-900/50"
                       }`}
                     >
                       {b.ticket_no?.startsWith("PRT") ? "PART" : "PIT SERVIS"}
                     </span>
-                    <span className="text-[10px] font-mono font-bold text-zinc-600 bg-white px-1.5 py-0.5 rounded border border-zinc-200">
+                    <span className="text-[10px] font-mono font-bold text-zinc-600 dark:text-zinc-300 bg-white dark:bg-zinc-900 px-1.5 py-0.5 rounded border border-zinc-200 dark:border-zinc-700">
                       {b.plat_kendaraan}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-[10px] text-zinc-400 mt-1 font-medium">
+                  <div className="flex items-center gap-2 text-[10px] text-zinc-400 dark:text-zinc-500 mt-1 font-medium">
                     <span className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-zinc-400" />
+                      <Clock className="w-3 h-3 text-zinc-400 dark:text-zinc-500" />
                       {b.jam_booking || "--:--"} WIB
                     </span>
                     <span>•</span>
-                    <span className="truncate text-zinc-600">{b.jenis_servis}</span>
+                    <span className="truncate text-zinc-600 dark:text-zinc-300">{b.jenis_servis}</span>
                   </div>
                 </div>
 
@@ -943,7 +955,7 @@ export default function AdminDashboardPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       title="Chat WhatsApp Pelanggan"
-                      className="p-2 rounded-xl bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:text-emerald-700 border border-emerald-200 transition"
+                      className="p-2 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-100 dark:hover:bg-emerald-900/50 border border-emerald-200 dark:border-emerald-800 transition"
                     >
                       <MessageSquare className="w-3.5 h-3.5" />
                     </a>
@@ -966,15 +978,15 @@ export default function AdminDashboardPage() {
                   )}
 
                   {b.status === "DONE" ? (
-                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-100">
+                    <span className="text-[11px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-100 dark:border-emerald-900/50">
                       Selesai
                     </span>
                   ) : b.status === "IN_PROGRESS" ? (
-                    <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100">
+                    <span className="text-[11px] font-bold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full border border-blue-100 dark:border-blue-900/50">
                       Dikerjakan
                     </span>
                   ) : b.status === "CONFIRMED" ? (
-                    <span className="text-[11px] font-bold text-teal-700 bg-teal-50 px-2.5 py-1 rounded-full border border-teal-100">
+                    <span className="text-[11px] font-bold text-teal-700 dark:text-teal-400 bg-teal-50 dark:bg-teal-950/40 px-2.5 py-1 rounded-full border border-teal-100 dark:border-teal-900/50">
                       Terjadwal
                     </span>
                   ) : null}
@@ -982,7 +994,7 @@ export default function AdminDashboardPage() {
               </div>
             ))
           ) : (
-            <div className="py-8 text-center text-xs text-zinc-400">
+            <div className="py-8 text-center text-xs text-zinc-400 dark:text-zinc-500">
               Belum ada antrean masuk hari ini
             </div>
           )}

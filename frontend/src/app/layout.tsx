@@ -97,7 +97,14 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${syne.variable} ${inter.variable} h-full antialiased`}
     >
-      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-[#FAFAFA] text-[#0A0A0A] pb-16 md:pb-0">
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem("as_putra_theme");var p=window.matchMedia("(prefers-color-scheme: dark)").matches;if(t==="dark"||(!t&&p)){document.documentElement.classList.add("dark")}else{document.documentElement.classList.remove("dark")}}catch(e){}})()`,
+          }}
+        />
+      </head>
+      <body suppressHydrationWarning className="min-h-full flex flex-col font-sans bg-[#FAFAFA] dark:bg-[#070B10] text-[#0A0A0A] dark:text-zinc-100 pb-16 md:pb-0 transition-colors">
         <AuthProvider>
           <PartInquiryProvider>
             {children}

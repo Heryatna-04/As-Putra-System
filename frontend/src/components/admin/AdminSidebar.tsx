@@ -132,7 +132,7 @@ export default function AdminSidebar({
                     </span>
                   </div>
                   <span className="text-[10px] text-zinc-400 font-medium truncate">
-                    AHASS 10870 · Satu Hati
+                    AHASS 10870 · One Heart
                   </span>
                 </div>
               )}

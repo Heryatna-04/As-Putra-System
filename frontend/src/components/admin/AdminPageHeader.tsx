@@ -28,12 +28,12 @@ export default function AdminPageHeader({
   return (
     <>
       {/* ── SLIM TOPBAR ── */}
-      <div className="h-[52px] bg-white border-b border-zinc-200/80 flex items-center justify-between px-5 shrink-0">
+      <div className="h-[52px] bg-white dark:bg-[#0E1522] border-b border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between px-5 shrink-0 transition-colors">
         {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-400">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 dark:text-zinc-500">
           <span>Admin</span>
-          <span className="text-zinc-200">/</span>
-          <span className="text-zinc-700 font-semibold">{breadcrumb}</span>
+          <span className="text-zinc-200 dark:text-zinc-700">/</span>
+          <span className="text-zinc-700 dark:text-zinc-200 font-semibold">{breadcrumb}</span>
         </div>
 
         {/* Actions slot */}

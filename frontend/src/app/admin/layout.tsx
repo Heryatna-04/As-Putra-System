@@ -43,7 +43,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="bg-[#EEF1F5] font-sans text-[#0A0A0A] h-screen flex flex-col md:flex-row overflow-hidden md:p-3 md:gap-3">
+    <div className="bg-[#EEF1F5] dark:bg-[#070B10] font-sans text-[#0A0A0A] dark:text-zinc-100 h-screen flex flex-col md:flex-row overflow-hidden md:p-3 md:gap-3 transition-colors">
       {/* Mobile Topbar */}
       <header className="md:hidden h-14 bg-[#E4002B] border-b border-black/10 px-4 flex items-center justify-between shrink-0 z-30">
         <div className="flex items-center gap-3">
