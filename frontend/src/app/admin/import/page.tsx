@@ -91,21 +91,12 @@ export default function AdminImportPage() {
   }, [token, fetchHistory]);
 
   const handleDownloadTemplate = () => {
-    const csvContent =
-      "part_no,part_name,category_detail,het\n" +
-      "08232-2MB-K1LN1,AHM OIL MPX 2 0.8L,Oli Mesin,58000\n" +
-      "06455-K59-A71,PAD SET FR (KAMPAS REM DEPAN),Brake System,55000\n" +
-      "23100-K44-V01,BELT DRIVE (V-BELT),Drive Belt,98000\n";
-
-    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "template_import_sparepart_ahass.csv");
+    link.href = "/template_persediaan_ahass.xlsx";
+    link.setAttribute("download", "template_persediaan_ahass.xlsx");
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   const handlePreview = async (e: React.FormEvent) => {

@@ -47,6 +47,7 @@ async function syncInventory() {
   const range = xlsx.utils.decode_range(sheet['!ref']);
 
   let headerRow = -1;
+  let colKode = 2; // Default to column C (index 2)
   let periode = 'OKTOBER 2026';
 
   for (let R = range.s.r; R <= Math.min(range.e.r, 15); ++R) {
@@ -60,6 +61,7 @@ async function syncInventory() {
         }
         if (/kode\s*item|part\s*no/i.test(val)) {
           headerRow = R;
+          colKode = C;
           break;
         }
       }
@@ -72,7 +74,7 @@ async function syncInventory() {
     process.exit(1);
   }
 
-  console.log(`Detected Report Periode: "${periode}" (Header at row ${headerRow + 1})`);
+  console.log(`Detected Report Periode: "${periode}" (Header at row ${headerRow + 1}, Kode Item at col ${colKode + 1})`);
 
   // Scan local image directory
   const imagesDir = path.resolve(__dirname, '../frontend/public/images/parts');
@@ -91,20 +93,20 @@ async function syncInventory() {
   }
   console.log(`Local image library: ${localImageMap.size} unique part numbers indexed.`);
 
-  // Parse items
+  // Parse items using dynamic column offsets relative to colKode
   const validItems = [];
   for (let r = headerRow + 1; r <= range.e.r; ++r) {
-    const cellPartNo = sheet[xlsx.utils.encode_cell({ r, c: 2 })];
-    const cellPartName = sheet[xlsx.utils.encode_cell({ r, c: 3 })];
-    const cellUom = sheet[xlsx.utils.encode_cell({ r, c: 4 })];
-    const cellType = sheet[xlsx.utils.encode_cell({ r, c: 5 })];
-    const cellQtyAwal = sheet[xlsx.utils.encode_cell({ r, c: 6 })];
-    const cellHppAwal = sheet[xlsx.utils.encode_cell({ r, c: 7 })];
-    const cellQtyIn = sheet[xlsx.utils.encode_cell({ r, c: 9 })];
-    const cellQtyOut = sheet[xlsx.utils.encode_cell({ r, c: 12 })];
-    const cellQtyAkhir = sheet[xlsx.utils.encode_cell({ r, c: 15 })];
-    const cellHppAkhir = sheet[xlsx.utils.encode_cell({ r, c: 16 })];
-    const cellSaldoAkhir = sheet[xlsx.utils.encode_cell({ r, c: 17 })];
+    const cellPartNo = sheet[xlsx.utils.encode_cell({ r, c: colKode })];
+    const cellPartName = sheet[xlsx.utils.encode_cell({ r, c: colKode + 1 })];
+    const cellUom = sheet[xlsx.utils.encode_cell({ r, c: colKode + 2 })];
+    const cellType = sheet[xlsx.utils.encode_cell({ r, c: colKode + 3 })];
+    const cellQtyAwal = sheet[xlsx.utils.encode_cell({ r, c: colKode + 4 })];
+    const cellHppAwal = sheet[xlsx.utils.encode_cell({ r, c: colKode + 5 })];
+    const cellQtyIn = sheet[xlsx.utils.encode_cell({ r, c: colKode + 7 })];
+    const cellQtyOut = sheet[xlsx.utils.encode_cell({ r, c: colKode + 10 })];
+    const cellQtyAkhir = sheet[xlsx.utils.encode_cell({ r, c: colKode + 13 })];
+    const cellHppAkhir = sheet[xlsx.utils.encode_cell({ r, c: colKode + 14 })];
+    const cellSaldoAkhir = sheet[xlsx.utils.encode_cell({ r, c: colKode + 15 })];
 
     if (!cellPartNo || !cellPartNo.v) continue;
     const partNo = String(cellPartNo.v).trim();

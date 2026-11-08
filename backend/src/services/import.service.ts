@@ -80,6 +80,7 @@ export const ImportService = {
     // 1. Detect if this is the official AHASS Dealer Monthly Inventory Report
     let isDealerFormat = false;
     let headerRow = -1;
+    let colKode = 2; // Default to index 2 (col C)
     let periode = 'BULANAN';
 
     for (let R = range.s.r; R <= Math.min(range.e.r, 15); ++R) {
@@ -93,6 +94,7 @@ export const ImportService = {
           }
           if (/kode\s*item|part\s*no/i.test(val)) {
             headerRow = R;
+            colKode = C;
             isDealerFormat = true;
             break;
           }
@@ -105,19 +107,19 @@ export const ImportService = {
     const errorRows: { row: number; reason: string }[] = [];
 
     if (isDealerFormat && headerRow !== -1) {
-      // ── AHASS DEALER REPORT FORMAT (e.g. PERSEDIAAN OKTOBER.xlsx) ──
+      // ── AHASS DEALER REPORT FORMAT (supports both clean row 1 and raw row 7) ──
       for (let r = headerRow + 1; r <= range.e.r; ++r) {
-        const cellPartNo = sheet[XLSX.utils.encode_cell({ r, c: 2 })];
-        const cellPartName = sheet[XLSX.utils.encode_cell({ r, c: 3 })];
-        const cellUom = sheet[XLSX.utils.encode_cell({ r, c: 4 })];
-        const cellType = sheet[XLSX.utils.encode_cell({ r, c: 5 })];
-        const cellQtyAwal = sheet[XLSX.utils.encode_cell({ r, c: 6 })];
-        const cellHppAwal = sheet[XLSX.utils.encode_cell({ r, c: 7 })];
-        const cellQtyIn = sheet[XLSX.utils.encode_cell({ r, c: 9 })];
-        const cellQtyOut = sheet[XLSX.utils.encode_cell({ r, c: 12 })];
-        const cellQtyAkhir = sheet[XLSX.utils.encode_cell({ r, c: 15 })];
-        const cellHppAkhir = sheet[XLSX.utils.encode_cell({ r, c: 16 })];
-        const cellSaldoAkhir = sheet[XLSX.utils.encode_cell({ r, c: 17 })];
+        const cellPartNo = sheet[XLSX.utils.encode_cell({ r, c: colKode })];
+        const cellPartName = sheet[XLSX.utils.encode_cell({ r, c: colKode + 1 })];
+        const cellUom = sheet[XLSX.utils.encode_cell({ r, c: colKode + 2 })];
+        const cellType = sheet[XLSX.utils.encode_cell({ r, c: colKode + 3 })];
+        const cellQtyAwal = sheet[XLSX.utils.encode_cell({ r, c: colKode + 4 })];
+        const cellHppAwal = sheet[XLSX.utils.encode_cell({ r, c: colKode + 5 })];
+        const cellQtyIn = sheet[XLSX.utils.encode_cell({ r, c: colKode + 7 })];
+        const cellQtyOut = sheet[XLSX.utils.encode_cell({ r, c: colKode + 10 })];
+        const cellQtyAkhir = sheet[XLSX.utils.encode_cell({ r, c: colKode + 13 })];
+        const cellHppAkhir = sheet[XLSX.utils.encode_cell({ r, c: colKode + 14 })];
+        const cellSaldoAkhir = sheet[XLSX.utils.encode_cell({ r, c: colKode + 15 })];
 
         if (!cellPartNo || !cellPartNo.v) continue;
         const partNo = String(cellPartNo.v).trim();
