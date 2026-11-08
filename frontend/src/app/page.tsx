@@ -277,9 +277,9 @@ export default async function Home() {
           </div>
 
           <div className="mx-auto max-w-6xl px-6 sm:px-10 pt-12 pb-14 lg:pt-20 lg:pb-24">
-            <div className="grid gap-10 lg:grid-cols-12 lg:items-center">
+            <div className="max-w-2xl lg:max-w-3xl">
               {/* Left Column: Headline & Search */}
-              <div className="lg:col-span-7">
+              <div>
                 {/* Official Honda Fascia Badge */}
                 <div className="inline-flex flex-wrap items-center gap-2 rounded-full bg-black/25 backdrop-blur-xs border border-white/25 pl-2.5 pr-3.5 py-1 text-xs font-bold tracking-wide text-white">
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-2 py-0.5 text-[10px] font-black uppercase tracking-widest text-[#E4002B]">
@@ -374,110 +374,6 @@ export default async function Home() {
                     <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" aria-hidden />
                     4,5 Google Review Kuningan
                   </span>
-                </div>
-              </div>
-
-              {/* Right Column: Iconic Honda Genuine Parts & Wing Emblem Card */}
-              <div className="lg:col-span-5">
-                <div className="relative rounded-2xl bg-white text-zinc-900 shadow-2xl border-2 border-white/80 overflow-hidden">
-                  {/* Top Red Honda Genuine Parts Fascia Header */}
-                  <div className="bg-[#E4002B] px-5 py-4 text-white flex items-center justify-between border-b-2 border-[#B00020]">
-                    <div className="flex items-center gap-3">
-                      <div className="relative w-10 h-10 bg-white rounded-lg p-1.5 shrink-0 shadow-xs">
-                        <Image
-                          src="/honda-logo.png"
-                          alt="Logo Sayap Honda"
-                          fill
-                          className="object-contain p-1"
-                        />
-                      </div>
-                      <div>
-                        <div className="text-[10px] font-black tracking-[0.2em] uppercase text-white/85">
-                          HONDA GENUINE PARTS
-                        </div>
-                        <div className="text-base font-black tracking-tight leading-tight">
-                          AS PUTRA MOTOR
-                        </div>
-                      </div>
-                    </div>
-                    <span className="rounded bg-white/15 border border-white/30 px-2 py-1 font-mono text-[11px] font-black tracking-wider">
-                      AHASS 10870
-                    </span>
-                  </div>
-
-                  {/* Body: Authentic HGP Sticker Specification Look */}
-                  <div className="p-5 sm:p-6 space-y-4 bg-gradient-to-b from-white to-zinc-50">
-                    <div className="flex items-center justify-between border-b border-dashed border-zinc-200 pb-3">
-                      <div>
-                        <div className="text-[11px] font-bold uppercase tracking-wider text-zinc-400">
-                          Jaminan Keaslian Suku Cadang
-                        </div>
-                        <div className="text-sm font-extrabold text-zinc-900 mt-0.5">
-                          PT Astra Honda Motor (AHM)
-                        </div>
-                      </div>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700">
-                        <CheckCircle className="w-3.5 h-3.5" /> 100% Original
-                      </span>
-                    </div>
-
-                    {/* Sample Genuine Part Label Preview */}
-                    <div className="rounded-xl border border-zinc-200 bg-white p-3.5 shadow-2xs">
-                      <div className="flex items-center justify-between text-[10px] font-bold text-[#E4002B] uppercase tracking-widest border-b border-zinc-100 pb-1.5 mb-2">
-                        <span>CONTOH LABEL PART AHM</span>
-                        <span className="font-mono text-zinc-500">QTY: 1</span>
-                      </div>
-                      <div className="font-mono text-xs font-black text-zinc-900 tracking-wide">
-                        BELT, DRIVE KIT (V-BELT + ROLLER)
-                      </div>
-                      <div className="mt-1 flex items-center justify-between">
-                        <span className="font-mono text-sm font-black text-[#E4002B]">
-                          23100-KZR-BA0
-                        </span>
-                        <span className="text-[11px] font-bold text-zinc-600 bg-zinc-100 px-2 py-0.5 rounded">
-                          Harga Sesuai HET Resmi
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Quick Links Grid */}
-                    <div className="grid grid-cols-2 gap-2.5 pt-1">
-                      <Link
-                        href="/katalog"
-                        className="group rounded-xl border border-zinc-200 bg-white hover:border-[#E4002B] p-3 transition flex flex-col justify-between"
-                      >
-                        <span className="text-[11px] font-bold text-zinc-400 uppercase">
-                          Katalog Online
-                        </span>
-                        <span className="mt-1 text-xs font-extrabold text-zinc-900 group-hover:text-[#E4002B] flex items-center justify-between">
-                          Cek Stok &amp; HET
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </span>
-                      </Link>
-                      <Link
-                        href="/booking"
-                        className="group rounded-xl border border-zinc-200 bg-white hover:border-[#E4002B] p-3 transition flex flex-col justify-between"
-                      >
-                        <span className="text-[11px] font-bold text-zinc-400 uppercase">
-                          Pit Express
-                        </span>
-                        <span className="mt-1 text-xs font-extrabold text-zinc-900 group-hover:text-[#E4002B] flex items-center justify-between">
-                          Booking Servis
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </span>
-                      </Link>
-                    </div>
-                  </div>
-
-                  {/* Bottom One Heart Strip */}
-                  <div className="bg-zinc-900 px-5 py-2.5 text-white flex items-center justify-between text-[11px]">
-                    <span className="font-semibold text-zinc-300">
-                      Jl. Siliwangi 126 Kasturi, Kuningan
-                    </span>
-                    <span className="font-black tracking-widest uppercase text-[#E4002B]">
-                      ONE HEART.
-                    </span>
-                  </div>
                 </div>
               </div>
             </div>
