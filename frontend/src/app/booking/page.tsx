@@ -400,7 +400,10 @@ function BookingContent() {
     totalEstimate,
     totalCount: inquiryTotalCount,
     isInInquiry,
+    generateWaUrl,
   } = usePartInquiry();
+
+  const hasOutOfStockItems = inquiryItems.some((it) => (it.stok ?? 0) < it.quantity || (it.stok ?? 0) <= 0);
 
   // Load part detail if partNo is passed in query
   useEffect(() => {
@@ -999,8 +1002,23 @@ function BookingContent() {
                                 <div className="text-xs font-mono font-medium text-zinc-500">
                                   {item.part_no}
                                 </div>
-                                <div className="text-xs font-bold text-emerald-700 mt-0.5">
-                                  {formatIDR(item.het)} / pcs
+                                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                                  <span className="text-xs font-bold text-emerald-700">
+                                    {formatIDR(item.het)} / pcs
+                                  </span>
+                                  {item.stok === 0 ? (
+                                    <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
+                                      Stok Habis (0)
+                                    </span>
+                                  ) : item.stok < item.quantity ? (
+                                    <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                                      Sisa {item.stok} unit
+                                    </span>
+                                  ) : (
+                                    <span className="text-[10px] font-medium text-zinc-500">
+                                      (Tersedia: {item.stok})
+                                    </span>
+                                  )}
                                 </div>
                               </div>
                             </div>
@@ -1021,7 +1039,9 @@ function BookingContent() {
                                 <button
                                   type="button"
                                   onClick={() => updateQuantity(item.part_no, 1)}
-                                  className="p-1.5 px-2.5 text-zinc-600 hover:bg-zinc-200 transition-colors"
+                                  disabled={item.stok > 0 && item.quantity >= item.stok}
+                                  className="p-1.5 px-2.5 text-zinc-600 hover:bg-zinc-200 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                  title={item.stok > 0 && item.quantity >= item.stok ? `Maksimal kuantitas adalah sisa stok (${item.stok})` : "Tambah jumlah"}
                                   aria-label="Tambah jumlah"
                                 >
                                   <Plus className="w-3.5 h-3.5" />
@@ -1229,6 +1249,27 @@ function BookingContent() {
                     </div>
                   </Step>
 
+                  {hasOutOfStockItems && (
+                    <div className="rounded-2xl border border-amber-300 bg-amber-50/80 p-4 text-xs text-amber-950 space-y-2.5 shadow-2xs">
+                      <div className="flex items-center gap-2 font-bold text-amber-900">
+                        <AlertCircle className="w-4 h-4 shrink-0 text-amber-600" />
+                        <span>Suku Cadang Sedang Habis di Bengkel</span>
+                      </div>
+                      <p className="leading-relaxed">
+                        Ada item di daftar Anda yang stoknya saat ini <strong>0 (habis)</strong> atau melebihi persediaan fisik bengkel. Anda tetap bisa memesan secara <strong>Inden Resmi AHM</strong> melalui CS WhatsApp kami.
+                      </p>
+                      <a
+                        href={generateWaUrl()}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-sm"
+                      >
+                        <MessageSquare className="w-3.5 h-3.5" />
+                        <span>Pesan Inden Resmi via WhatsApp Sekarang &rarr;</span>
+                      </a>
+                    </div>
+                  )}
+
                   {sparePartError && (
                     <div ref={sparePartErrorRef} className="rounded-xl border border-red-200 bg-red-50 p-4 text-xs font-semibold text-red-700 flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
@@ -1238,13 +1279,18 @@ function BookingContent() {
 
                   <button
                     type="submit"
-                    disabled={sparePartLoading || inquiryItems.length === 0}
-                    className="w-full rounded-xl bg-[#E4002B] py-4 text-sm font-bold text-white shadow-lg shadow-red-600/20 hover:bg-[#b00020] transition active:scale-[0.99] disabled:opacity-50 flex items-center justify-center gap-2"
+                    disabled={sparePartLoading || inquiryItems.length === 0 || hasOutOfStockItems}
+                    className="w-full rounded-xl bg-[#E4002B] py-4 text-sm font-bold text-white shadow-lg shadow-red-600/20 hover:bg-[#b00020] transition active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                   >
                     {sparePartLoading ? (
                       <>
                         <Loader2 className="w-4 h-4 animate-spin" />
                         <span>Memproses Reservasi Suku Cadang...</span>
+                      </>
+                    ) : hasOutOfStockItems ? (
+                      <>
+                        <AlertCircle className="w-4 h-4" />
+                        <span>Stok Tidak Mencukupi (Gunakan Opsi Inden WA di Atas)</span>
                       </>
                     ) : (
                       <>

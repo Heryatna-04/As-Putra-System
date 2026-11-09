@@ -13,10 +13,11 @@ import {
   HelpCircle,
   Award,
   ChevronDown,
-  ShoppingBag
+  ShoppingBag,
+  MessageSquare,
 } from "lucide-react";
 import { fetchSparePartDetail, fetchCatalog } from "@/lib/api";
-import { formatIDR } from "@/lib/utils";
+import { formatIDR, buildWaUrl } from "@/lib/utils";
 import DetailImageGallery from "@/components/katalog/DetailImageGallery";
 import ProductCard from "@/components/katalog/ProductCard";
 import CopyPartNoButton from "@/components/katalog/CopyPartNoButton";
@@ -221,19 +222,39 @@ export default async function SparePartDetailPage({ params }: DetailPageProps) {
 
           {/* Action CTAs: Booking Part */}
           <div className="space-y-2.5 pt-2">
-            <Link
-              href={`/booking?type=sparepart&partNo=${encodeURIComponent(part.part_no)}`}
-              className="w-full bg-[#E4002B] hover:bg-[#b00020] text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-red-600/20 active:scale-[0.99]"
-            >
-              <ShoppingBag className="w-4 h-4" />
-              <span>Booking Suku Cadang Ini</span>
-            </Link>
+            {isAvailable ? (
+              <Link
+                href={`/booking?type=sparepart&partNo=${encodeURIComponent(part.part_no)}`}
+                className="w-full bg-[#E4002B] hover:bg-[#b00020] text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-red-600/20 active:scale-[0.99]"
+              >
+                <ShoppingBag className="w-4 h-4" />
+                <span>Booking Suku Cadang Ini</span>
+              </Link>
+            ) : (
+              <div className="space-y-2">
+                <div className="w-full bg-zinc-100 text-zinc-500 py-3 px-4 rounded-xl font-semibold text-xs flex items-center justify-center gap-2 border border-zinc-200 cursor-not-allowed select-none">
+                  <XCircle className="w-4 h-4 text-zinc-400 shrink-0" />
+                  <span>Stok Bengkel Habis (0 Unit) &bull; Inden Tersedia</span>
+                </div>
+                <a
+                  href={buildWaUrl(part.part_no, part.nama_umum || part.part_name)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3.5 px-4 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all shadow-md shadow-emerald-600/20 active:scale-[0.99]"
+                >
+                  <MessageSquare className="w-4 h-4" />
+                  <span>Pesan Inden Resmi via WhatsApp</span>
+                </a>
+              </div>
+            )}
           </div>
 
           {/* Multi-item Inquiry CTA */}
-          <div className="pt-2">
-            <AddToInquiryButton part={part} />
-          </div>
+          {isAvailable && (
+            <div className="pt-2">
+              <AddToInquiryButton part={part} />
+            </div>
+          )}
         </div>
       </div>
 

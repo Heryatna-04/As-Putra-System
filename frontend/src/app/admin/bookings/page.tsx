@@ -226,7 +226,11 @@ function AdminBookingsContent() {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        toast.success(`Status diubah menjadi ${newStatus}`);
+        if (newStatus === "CANCELLED") {
+          toast.success("Status diubah ke Dibatalkan. Stok suku cadang otomatis dikembalikan ke katalog.");
+        } else {
+          toast.success(`Status diubah menjadi ${newStatus}`);
+        }
         fetchBookings();
       } else {
         toast.error(data.message || "Gagal mengubah status booking");
@@ -810,6 +814,19 @@ function AdminBookingsContent() {
                       </span>
                     </div>
                   ) : null}
+
+                  {/* Stock Guarantee Notice */}
+                  <div className="px-4 py-2.5 bg-zinc-50 border-t border-zinc-200 text-[11px] text-zinc-600 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5 font-medium">
+                      <CheckCircle2 size={13} className="text-emerald-600 shrink-0" />
+                      <span>Stok dipotong otomatis oleh sistem</span>
+                    </span>
+                    {selectedBooking.status === "CANCELLED" && (
+                      <span className="font-bold text-red-600 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded">
+                        Stok dikembalikan ke katalog
+                      </span>
+                    )}
+                  </div>
                 </div>
               ) : (
                 <div className="bg-zinc-50 rounded-2xl p-4 border border-zinc-200">
