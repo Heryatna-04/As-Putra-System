@@ -22,9 +22,10 @@ export const CatalogQuerySchema = z.object({
   category: z.string().optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(20),
-  sort: z.enum(['relevance', 'name_asc', 'name_desc', 'a_z', 'z_a', 'price_asc', 'price_desc', 'newest']).default('relevance'),
+  sort: z.enum(['relevance', 'name_asc', 'name_desc', 'a_z', 'z_a', 'price_asc', 'price_desc', 'newest', 'stock_asc', 'stock_desc', 'part_no_asc', 'part_no_desc']).default('relevance'),
   status: z.enum(['ACTIVE', 'DISCONTINUE', 'UNKNOWN']).optional(),
   stock_only: z.coerce.boolean().optional(),
+  stock_status: z.enum(['all', 'ready', 'empty', 'critical']).optional(),
 });
 
 export const ImportConfirmSchema = z.object({

@@ -187,7 +187,7 @@ export const SparePartService = {
   // ─── ADMIN ───────────────────────────────────────────────────────────────
 
   async getAllAdmin(params: CatalogQueryInput) {
-    const { search, category, page, limit, sort, status, stock_only } = params;
+    const { search, category, page, limit, sort, status, stock_only, stock_status } = params;
     const offset = (page - 1) * limit;
 
     let query = supabase
@@ -210,8 +210,12 @@ export const SparePartService = {
       query = query.eq('category_detail', category);
     }
 
-    if (stock_only) {
+    if (stock_status === 'ready' || stock_only) {
       query = query.gt('stok', 0);
+    } else if (stock_status === 'empty') {
+      query = query.eq('stok', 0);
+    } else if (stock_status === 'critical') {
+      query = query.gt('stok', 0).lte('stok', 3);
     }
 
     switch (sort) {
@@ -220,6 +224,22 @@ export const SparePartService = {
         break;
       case 'price_desc':
         query = query.order('het', { ascending: false, nullsFirst: false });
+        break;
+      case 'stock_asc':
+        query = query.order('stok', { ascending: true });
+        break;
+      case 'stock_desc':
+        query = query.order('stok', { ascending: false });
+        break;
+      case 'part_no_asc':
+        query = query.order('part_no', { ascending: true });
+        break;
+      case 'part_no_desc':
+        query = query.order('part_no', { ascending: false });
+        break;
+      case 'name_desc':
+      case 'z_a':
+        query = query.order('part_name', { ascending: false });
         break;
       case 'newest':
         query = query.order('created_at', { ascending: false });

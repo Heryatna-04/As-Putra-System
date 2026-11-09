@@ -18,6 +18,12 @@ import {
   RotateCcw,
   RefreshCw,
   Wrench,
+  ChevronDown,
+  Filter,
+  ArrowUp,
+  ArrowDown,
+  ArrowUpDown,
+  Check,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { SparePart } from "@/types/spare-part";
@@ -33,10 +39,23 @@ export default function AdminSparePartsPage() {
   const [search, setSearch] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<string>("");
-  const [stockFilter, setStockFilter] = useState<"all" | "ready" | "restock">("all");
+  const [stockStatusFilter, setStockStatusFilter] = useState<"all" | "ready" | "empty" | "critical">("all");
   const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [sort, setSort] = useState<string>("name_asc");
+  const [openFilterCol, setOpenFilterCol] = useState<string | null>(null);
   const [categories, setCategories] = useState<{ name: string; count?: number }[]>([]);
   const [page, setPage] = useState<number>(1);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    function handleClickOutside() {
+      setOpenFilterCol(null);
+    }
+    if (openFilterCol) {
+      window.addEventListener("click", handleClickOutside);
+      return () => window.removeEventListener("click", handleClickOutside);
+    }
+  }, [openFilterCol]);
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
@@ -83,16 +102,15 @@ export default function AdminSparePartsPage() {
     setIsLoading(true);
     try {
       const baseUrl = process.env.NEXT_PUBLIC_API_URL || "https://backend-beta-murex-36.vercel.app/api/v1";
-      const isRestockFilter = stockFilter === "restock";
-      const limit = isRestockFilter ? "100" : "15";
       const params = new URLSearchParams({
         page: page.toString(),
-        limit,
+        limit: "15",
       });
       if (debouncedSearch) params.set("search", debouncedSearch);
       if (statusFilter) params.set("status", statusFilter);
       if (categoryFilter) params.set("category", categoryFilter);
-      if (stockFilter === "ready") params.set("stock_only", "true");
+      if (stockStatusFilter !== "all") params.set("stock_status", stockStatusFilter);
+      if (sort) params.set("sort", sort);
 
       const res = await authFetch(`${baseUrl}/admin/spare-parts?${params.toString()}`, {
         cache: "no-store",
@@ -100,15 +118,8 @@ export default function AdminSparePartsPage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        let items: SparePart[] = data.data || [];
-        if (isRestockFilter) {
-          items = items.filter((p) => p.stok <= 3);
-          setParts(items.slice(0, 15));
-          setTotal(items.length);
-        } else {
-          setParts(items);
-          setTotal(data.meta.total);
-        }
+        setParts(data.data || []);
+        setTotal(data.meta.total);
       } else {
         toast.error(data.message || "Gagal memuat data suku cadang");
       }
@@ -118,7 +129,7 @@ export default function AdminSparePartsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [token, page, debouncedSearch, statusFilter, categoryFilter, stockFilter, authFetch]);
+  }, [token, page, debouncedSearch, statusFilter, categoryFilter, stockStatusFilter, sort, authFetch]);
 
   const searchParams = useSearchParams();
 
@@ -399,11 +410,11 @@ export default function AdminSparePartsPage() {
                   <button
                     onClick={() => {
                       setStatusFilter("");
-                      setStockFilter("all");
+                      setStockStatusFilter("all");
                       setPage(1);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-                      statusFilter === "" && stockFilter === "all"
+                      statusFilter === "" && stockStatusFilter === "all"
                         ? "bg-red-50 border-red-200 text-red-600 font-bold"
                         : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
                     }`}
@@ -412,12 +423,12 @@ export default function AdminSparePartsPage() {
                   </button>
                   <button
                     onClick={() => {
-                      setStockFilter(stockFilter === "ready" ? "all" : "ready");
+                      setStockStatusFilter(stockStatusFilter === "ready" ? "all" : "ready");
                       setStatusFilter("");
                       setPage(1);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-                      stockFilter === "ready"
+                      stockStatusFilter === "ready"
                         ? "bg-emerald-600 border-emerald-600 text-white font-bold shadow-sm"
                         : "bg-white border-zinc-200 text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"
                     }`}
@@ -426,13 +437,27 @@ export default function AdminSparePartsPage() {
                   </button>
                   <button
                     onClick={() => {
-                      setStockFilter(stockFilter === "restock" ? "all" : "restock");
+                      setStockStatusFilter(stockStatusFilter === "empty" ? "all" : "empty");
+                      setStatusFilter("");
+                      setPage(1);
+                    }}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                      stockStatusFilter === "empty"
+                        ? "bg-red-600 border-red-600 text-white font-bold shadow-sm"
+                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+                    }`}
+                  >
+                    Stok Kosong (0)
+                  </button>
+                  <button
+                    onClick={() => {
+                      setStockStatusFilter(stockStatusFilter === "critical" ? "all" : "critical");
                       setStatusFilter("");
                       setPage(1);
                     }}
                     title="Sparepart dengan stok habis atau menipis (≤ 3)"
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-                      stockFilter === "restock"
+                      stockStatusFilter === "critical"
                         ? "bg-amber-500 border-amber-500 text-white font-bold shadow-sm"
                         : "bg-white border-zinc-200 text-zinc-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200"
                     }`}
@@ -443,7 +468,7 @@ export default function AdminSparePartsPage() {
                   <button
                     onClick={() => {
                       setStatusFilter(statusFilter === "DISCONTINUE" ? "" : "DISCONTINUE");
-                      setStockFilter("all");
+                      setStockStatusFilter("all");
                       setPage(1);
                     }}
                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
@@ -456,14 +481,15 @@ export default function AdminSparePartsPage() {
                   </button>
 
                   {/* Reset All Filters button if any active */}
-                  {(search || categoryFilter || statusFilter || stockFilter !== "all") && (
+                  {(search || categoryFilter || statusFilter || stockStatusFilter !== "all" || sort !== "name_asc") && (
                     <button
                       onClick={() => {
                         setSearch("");
                         setDebouncedSearch("");
                         setCategoryFilter("");
                         setStatusFilter("");
-                        setStockFilter("all");
+                        setStockStatusFilter("all");
+                        setSort("name_asc");
                         setPage(1);
                       }}
                       title="Reset semua filter dan pencarian"
@@ -509,30 +535,496 @@ export default function AdminSparePartsPage() {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto min-h-[500px]">
-              <table className="w-full border-collapse text-left table-fixed min-w-[850px]">
+            <div className="overflow-x-auto min-h-[500px] border border-zinc-300 rounded-lg shadow-sm bg-white pb-20">
+              <table className="w-full border-collapse text-left table-fixed min-w-[980px]">
                 <colgroup>
-                  <col className="w-[38%] min-w-[280px]" />
-                  <col className="w-[18%] min-w-[130px]" />
-                  <col className="w-[14%] min-w-[110px]" />
-                  <col className="w-[14%] min-w-[120px]" />
-                  <col className="w-[8%] min-w-[80px]" />
-                  <col className="w-[8%] min-w-[80px]" />
+                  <col className="w-[50px]" />
+                  <col className="w-[160px]" />
+                  <col className="w-[280px]" />
+                  <col className="w-[140px]" />
+                  <col className="w-[130px]" />
+                  <col className="w-[140px]" />
+                  <col className="w-[100px]" />
+                  <col className="w-[80px]" />
                 </colgroup>
-                <thead className="bg-[#FAFAFA] border-b border-zinc-200">
-                  <tr>
-                    <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Produk</th>
-                    <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Harga HET</th>
-                    <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Kategori</th>
-                    <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wide text-center">Stok</th>
-                    <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wide">Status</th>
-                    <th className="py-3 px-4 text-xs font-semibold text-zinc-500 uppercase tracking-wide text-right">Aksi</th>
+                <thead>
+                  <tr className="bg-[#F2F2F2] border-b border-zinc-300 text-zinc-800 text-xs font-bold divide-x divide-zinc-300 select-none">
+                    {/* No */}
+                    <th className="py-2.5 px-2.5 text-center relative">
+                      <div className="flex items-center justify-center gap-1">
+                        <span>No</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenFilterCol(openFilterCol === "no" ? null : "no");
+                          }}
+                          className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
+                            sort === "newest"
+                              ? "bg-red-600 text-white border-red-600"
+                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                          }`}
+                          title="Filter Urutan No"
+                        >
+                          <ChevronDown size={11} className="stroke-[2.5]" />
+                        </button>
+                      </div>
+                      {openFilterCol === "no" && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                        >
+                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Urutan Data</div>
+                          <button
+                            onClick={() => {
+                              setSort("name_asc");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              sort === "name_asc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span>Standar (A-Z)</span>
+                            {sort === "name_asc" && <Check size={13} />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSort("newest");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              sort === "newest" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span>Terbaru Dibuat</span>
+                            {sort === "newest" && <Check size={13} />}
+                          </button>
+                        </div>
+                      )}
+                    </th>
+
+                    {/* Kode Item */}
+                    <th className="py-2.5 px-3 relative">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="truncate">Kode Item</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenFilterCol(openFilterCol === "part_no" ? null : "part_no");
+                          }}
+                          className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
+                            sort === "part_no_asc" || sort === "part_no_desc"
+                              ? "bg-red-600 text-white border-red-600 shadow-sm"
+                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                          }`}
+                          title="Filter / Sort Kode Item"
+                        >
+                          <ChevronDown size={11} className="stroke-[2.5]" />
+                        </button>
+                      </div>
+                      {openFilterCol === "part_no" && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute left-0 top-full mt-1 w-52 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                        >
+                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Urutkan Kode</div>
+                          <button
+                            onClick={() => {
+                              setSort("part_no_asc");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              sort === "part_no_asc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5"><ArrowUp size={12} /> Sort A → Z</span>
+                            {sort === "part_no_asc" && <Check size={13} />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSort("part_no_desc");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              sort === "part_no_desc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5"><ArrowDown size={12} /> Sort Z → A</span>
+                            {sort === "part_no_desc" && <Check size={13} />}
+                          </button>
+                        </div>
+                      )}
+                    </th>
+
+                    {/* Nama Produk */}
+                    <th className="py-2.5 px-3 relative">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="truncate">Nama Produk</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenFilterCol(openFilterCol === "name" ? null : "name");
+                          }}
+                          className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
+                            sort === "name_asc" || sort === "name_desc"
+                              ? "bg-red-600 text-white border-red-600 shadow-sm"
+                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                          }`}
+                          title="Filter / Sort Nama Produk"
+                        >
+                          <ChevronDown size={11} className="stroke-[2.5]" />
+                        </button>
+                      </div>
+                      {openFilterCol === "name" && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute left-0 top-full mt-1 w-52 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                        >
+                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Urutkan Nama</div>
+                          <button
+                            onClick={() => {
+                              setSort("name_asc");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              sort === "name_asc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5"><ArrowUp size={12} /> Sort A → Z</span>
+                            {sort === "name_asc" && <Check size={13} />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSort("name_desc");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              sort === "name_desc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5"><ArrowDown size={12} /> Sort Z → A</span>
+                            {sort === "name_desc" && <Check size={13} />}
+                          </button>
+                        </div>
+                      )}
+                    </th>
+
+                    {/* Kategori */}
+                    <th className="py-2.5 px-3 relative">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="truncate">Kategori</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenFilterCol(openFilterCol === "category" ? null : "category");
+                          }}
+                          className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
+                            categoryFilter
+                              ? "bg-red-600 text-white border-red-600 shadow-sm"
+                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                          }`}
+                          title="Filter Kategori"
+                        >
+                          <ChevronDown size={11} className="stroke-[2.5]" />
+                        </button>
+                      </div>
+                      {openFilterCol === "category" && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute left-0 top-full mt-1 w-64 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                        >
+                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Pilih Kategori</div>
+                          <div className="max-h-56 overflow-y-auto space-y-0.5 mt-1 pr-1">
+                            <button
+                              onClick={() => {
+                                setCategoryFilter("");
+                                setOpenFilterCol(null);
+                                setPage(1);
+                              }}
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                                categoryFilter === "" ? "bg-red-50 text-red-600 font-bold" : ""
+                              }`}
+                            >
+                              <span>Semua Kategori</span>
+                              {categoryFilter === "" && <Check size={13} />}
+                            </button>
+                            {categories.map((cat) => (
+                              <button
+                                key={cat.name}
+                                onClick={() => {
+                                  setCategoryFilter(cat.name);
+                                  setOpenFilterCol(null);
+                                  setPage(1);
+                                }}
+                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                                  categoryFilter === cat.name ? "bg-red-50 text-red-600 font-bold" : ""
+                                }`}
+                              >
+                                <span className="truncate pr-2">{cat.name}</span>
+                                {categoryFilter === cat.name && <Check size={13} className="shrink-0" />}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </th>
+
+                    {/* Stok */}
+                    <th className="py-2.5 px-3 relative">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="truncate">Stok</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenFilterCol(openFilterCol === "stock" ? null : "stock");
+                          }}
+                          className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
+                            stockStatusFilter !== "all" || sort === "stock_desc" || sort === "stock_asc"
+                              ? "bg-red-600 text-white border-red-600 shadow-sm"
+                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                          }`}
+                          title="Filter / Sort Stok"
+                        >
+                          <ChevronDown size={11} className="stroke-[2.5]" />
+                        </button>
+                      </div>
+                      {openFilterCol === "stock" && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute left-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                        >
+                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Urutkan Stok</div>
+                          <button
+                            onClick={() => {
+                              setSort("stock_desc");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              sort === "stock_desc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5"><ArrowDown size={12} /> Terbanyak → Terkecil</span>
+                            {sort === "stock_desc" && <Check size={13} />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSort("stock_asc");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              sort === "stock_asc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5"><ArrowUp size={12} /> Terkecil → Terbanyak</span>
+                            {sort === "stock_asc" && <Check size={13} />}
+                          </button>
+
+                          <div className="border-t border-zinc-200 my-1"></div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Kondisi Stok</div>
+
+                          <button
+                            onClick={() => {
+                              setStockStatusFilter("all");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              stockStatusFilter === "all" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span>Semua Stok</span>
+                            {stockStatusFilter === "all" && <Check size={13} />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setStockStatusFilter("ready");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              stockStatusFilter === "ready" ? "bg-emerald-50 text-emerald-700 font-bold" : ""
+                            }`}
+                          >
+                            <span>Ready Stock (&gt; 0)</span>
+                            {stockStatusFilter === "ready" && <Check size={13} />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setStockStatusFilter("empty");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              stockStatusFilter === "empty" ? "bg-red-50 text-red-700 font-bold" : ""
+                            }`}
+                          >
+                            <span>Stok Kosong (= 0)</span>
+                            {stockStatusFilter === "empty" && <Check size={13} />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setStockStatusFilter("critical");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              stockStatusFilter === "critical" ? "bg-amber-50 text-amber-700 font-bold" : ""
+                            }`}
+                          >
+                            <span>Perlu Restock (≤ 3)</span>
+                            {stockStatusFilter === "critical" && <Check size={13} />}
+                          </button>
+                        </div>
+                      )}
+                    </th>
+
+                    {/* Harga HET */}
+                    <th className="py-2.5 px-3 relative">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="truncate">Harga HET</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenFilterCol(openFilterCol === "het" ? null : "het");
+                          }}
+                          className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
+                            sort === "price_asc" || sort === "price_desc"
+                              ? "bg-red-600 text-white border-red-600 shadow-sm"
+                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                          }`}
+                          title="Filter / Sort Harga HET"
+                        >
+                          <ChevronDown size={11} className="stroke-[2.5]" />
+                        </button>
+                      </div>
+                      {openFilterCol === "het" && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute left-0 top-full mt-1 w-52 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                        >
+                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Urutkan Harga</div>
+                          <button
+                            onClick={() => {
+                              setSort("price_asc");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              sort === "price_asc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5"><ArrowUp size={12} /> Termurah → Termahal</span>
+                            {sort === "price_asc" && <Check size={13} />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setSort("price_desc");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              sort === "price_desc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span className="flex items-center gap-1.5"><ArrowDown size={12} /> Termahal → Termurah</span>
+                            {sort === "price_desc" && <Check size={13} />}
+                          </button>
+                        </div>
+                      )}
+                    </th>
+
+                    {/* Status */}
+                    <th className="py-2.5 px-3 relative">
+                      <div className="flex items-center justify-between gap-1.5">
+                        <span className="truncate">Status</span>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenFilterCol(openFilterCol === "status" ? null : "status");
+                          }}
+                          className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
+                            statusFilter
+                              ? "bg-red-600 text-white border-red-600 shadow-sm"
+                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                          }`}
+                          title="Filter Status Produk"
+                        >
+                          <ChevronDown size={11} className="stroke-[2.5]" />
+                        </button>
+                      </div>
+                      {openFilterCol === "status" && (
+                        <div
+                          onClick={(e) => e.stopPropagation()}
+                          className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                        >
+                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Status Produk</div>
+                          <button
+                            onClick={() => {
+                              setStatusFilter("");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              statusFilter === "" ? "bg-red-50 text-red-600 font-bold" : ""
+                            }`}
+                          >
+                            <span>Semua Status</span>
+                            {statusFilter === "" && <Check size={13} />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setStatusFilter("ACTIVE");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              statusFilter === "ACTIVE" ? "bg-emerald-50 text-emerald-700 font-bold" : ""
+                            }`}
+                          >
+                            <span>Active</span>
+                            {statusFilter === "ACTIVE" && <Check size={13} />}
+                          </button>
+                          <button
+                            onClick={() => {
+                              setStatusFilter("DISCONTINUE");
+                              setOpenFilterCol(null);
+                              setPage(1);
+                            }}
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
+                              statusFilter === "DISCONTINUE" ? "bg-zinc-100 text-zinc-800 font-bold" : ""
+                            }`}
+                          >
+                            <span>Discontinue</span>
+                            {statusFilter === "DISCONTINUE" && <Check size={13} />}
+                          </button>
+                        </div>
+                      )}
+                    </th>
+
+                    {/* Aksi */}
+                    <th className="py-2.5 px-3 text-right">
+                      <span>Aksi</span>
+                    </th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="divide-y divide-zinc-200">
                   {isLoading ? (
                     <tr>
-                      <td colSpan={6} className="py-24 text-center">
+                      <td colSpan={8} className="py-24 text-center">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <Loader2 className="w-6 h-6 animate-spin text-[#E4002B]" />
                           <span className="text-xs font-medium text-zinc-500">Memuat data suku cadang...</span>
@@ -541,53 +1033,64 @@ export default function AdminSparePartsPage() {
                     </tr>
                   ) : parts.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-20 text-center text-sm text-zinc-400">
+                      <td colSpan={8} className="py-20 text-center text-sm text-zinc-400">
                         Tidak ada data suku cadang yang ditemukan.
                       </td>
                     </tr>
                   ) : (
-                    parts.map((part) => (
-                      <tr key={part.id} className="group hover:bg-[#FAFAFA] transition-colors border-b border-zinc-100 last:border-b-0 h-[68px]">
-                        <td className="py-3 px-4">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded bg-white border border-zinc-200 flex items-center justify-center shrink-0 overflow-hidden relative">
+                    parts.map((part, idx) => (
+                      <tr key={part.id} className="group hover:bg-zinc-50/80 transition-colors divide-x divide-zinc-200/60 h-[64px]">
+                        {/* No */}
+                        <td className="py-2 px-2.5 text-center font-mono text-xs text-zinc-500 bg-zinc-50/40">
+                          {(page - 1) * 15 + idx + 1}
+                        </td>
+
+                        {/* Kode Item */}
+                        <td className="py-2.5 px-3 font-mono">
+                          <span className="text-[11px] font-bold text-[#E4002B] bg-red-50 border border-red-200/60 px-2 py-0.5 rounded inline-block">
+                            {part.part_no}
+                          </span>
+                        </td>
+
+                        {/* Nama Produk */}
+                        <td className="py-2.5 px-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-9 h-9 rounded bg-white border border-zinc-200 flex items-center justify-center shrink-0 overflow-hidden relative">
                               {part.gambar_url ? (
-                                <Image src={part.gambar_url} alt={part.part_name} width={40} height={40} unoptimized className="w-full h-full object-contain" />
+                                <Image src={part.gambar_url} alt={part.part_name} width={36} height={36} unoptimized className="w-full h-full object-contain" />
                               ) : (
-                                <ImageIcon className="w-5 h-5 text-zinc-300" />
+                                <ImageIcon className="w-4 h-4 text-zinc-300" />
                               )}
                             </div>
                             <div className="min-w-0">
-                              <span className="text-[11px] font-mono font-bold text-[#E4002B] bg-red-50 border border-red-200/60 px-2 py-0.5 rounded inline-block mb-1">
-                                {part.part_no}
-                              </span>
-                              <span className="text-sm font-bold text-zinc-900 block leading-tight truncate">{part.part_name}</span>
+                              <span className="text-xs font-bold text-zinc-900 block leading-tight truncate">{part.part_name}</span>
                               {part.nama_umum && (
-                                <span className="text-xs text-zinc-500 font-medium block mt-0.5 truncate">{part.nama_umum}</span>
+                                <span className="text-[11px] text-zinc-500 font-medium block mt-0.5 truncate">{part.nama_umum}</span>
                               )}
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 align-middle">
-                          <div className="text-base font-bold text-zinc-900">{formatIDR(part.het)}</div>
-                        </td>
-                        <td className="py-3 px-4 align-middle">
-                          <span className="inline-flex px-2 py-0.5 rounded-md text-xs font-semibold bg-zinc-100 text-zinc-600 border border-zinc-200/50">
+
+                        {/* Kategori */}
+                        <td className="py-2.5 px-3 align-middle">
+                          <span className="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-100 text-zinc-700 border border-zinc-200/60 truncate max-w-full">
                             {part.category_detail || "UMUM"}
                           </span>
                         </td>
-                        <td className="py-3 px-4 align-middle text-center">
-                          <div className="flex flex-col items-center gap-1.5">
-                            <div className="flex items-center justify-center gap-2 opacity-100 md:opacity-80 group-hover:opacity-100 transition-opacity">
+
+                        {/* Stok */}
+                        <td className="py-2.5 px-3 align-middle">
+                          <div className="flex items-center justify-between gap-1">
+                            <div className="flex items-center gap-1">
                               <button
                                 onClick={() => handleUpdateStock(part.id, part.stok - 1)}
                                 disabled={part.stok <= 0}
-                                className="w-6 h-6 flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-500 rounded disabled:opacity-40 transition-colors font-bold"
+                                className="w-5 h-5 flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded disabled:opacity-30 transition-colors text-xs font-bold"
                               >
                                 -
                               </button>
                               <span
-                                className={`w-8 text-sm font-bold font-mono ${
+                                className={`w-8 text-center text-xs font-bold font-mono ${
                                   part.stok === 0
                                     ? "text-red-600"
                                     : part.stok <= 3
@@ -599,55 +1102,64 @@ export default function AdminSparePartsPage() {
                               </span>
                               <button
                                 onClick={() => handleUpdateStock(part.id, part.stok + 1)}
-                                className="w-6 h-6 flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-500 rounded transition-colors font-bold"
+                                className="w-5 h-5 flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded transition-colors text-xs font-bold"
                               >
                                 +
                               </button>
                             </div>
 
-                            {/* Stock Status Badge */}
+                            {/* Badge */}
                             {part.stok === 0 ? (
-                              <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200/60 px-2 py-0.5 rounded-full">
+                              <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200/60 px-1.5 py-0.5 rounded">
                                 Habis
                               </span>
                             ) : part.stok <= 3 ? (
-                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-2 py-0.5 rounded-full">
+                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-1.5 py-0.5 rounded">
                                 Menipis
                               </span>
                             ) : (
-                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full">
+                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded">
                                 Aman
                               </span>
                             )}
                           </div>
                         </td>
-                        <td className="py-3 px-4 align-middle">
+
+                        {/* Harga HET */}
+                        <td className="py-2.5 px-3 align-middle">
+                          <span className="text-xs font-bold text-zinc-900 font-mono">{formatIDR(part.het)}</span>
+                        </td>
+
+                        {/* Status */}
+                        <td className="py-2.5 px-3 align-middle">
                           {part.status === "ACTIVE" ? (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-green-50 text-green-700 border border-green-200/50">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-green-50 text-green-700 border border-green-200/60">
                               <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-zinc-100 text-zinc-600 border border-zinc-200/50">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-100 text-zinc-600 border border-zinc-200/60">
                               <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Disc.
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4 align-middle text-right">
+
+                        {/* Aksi */}
+                        <td className="py-2.5 px-3 align-middle text-right">
                           <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                             <button
                               onClick={() => handleOpenEditModal(part)}
-                              className="w-8 h-8 flex items-center justify-center rounded-md text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+                              className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
                               title="Edit"
                             >
-                              <Edit2 size={16} />
+                              <Edit2 size={14} />
                             </button>
                             {part.status === "ACTIVE" && (
                               <button
                                 onClick={() => handleDeletePart(part.id)}
-                                className="w-8 h-8 flex items-center justify-center rounded-md text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors"
                                 title="Discontinue"
                               >
-                                <Trash2 size={16} />
+                                <Trash2 size={14} />
                               </button>
                             )}
                           </div>
