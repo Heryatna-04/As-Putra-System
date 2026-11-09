@@ -91,6 +91,121 @@ export class BookingService {
   }
 
   /**
+   * Concurrency-safe atomic deduction of spare parts using Compare-And-Swap (CAS).
+   * Prevents overselling when multiple customers attempt to purchase the same limited stock item simultaneously.
+   */
+  private static async deductSparePartsStock(items: BookingSparePartItem[]): Promise<{
+    decremented: { id: string; part_no: string; quantity: number }[];
+  }> {
+    const decremented: { id: string; part_no: string; quantity: number }[] = [];
+
+    // Sort items by part_no to avoid deadlocks across multiple concurrent transactions
+    const sortedItems = [...items].sort((a, b) => a.part_no.localeCompare(b.part_no));
+
+    for (const item of sortedItems) {
+      const requestedQty = Math.max(1, Math.round(Number(item.quantity) || 1));
+      let success = false;
+      let lastKnownStock = 0;
+      let partRecord: { id: string; part_name: string; stok: number; status: string } | null = null;
+
+      // Retry loop up to 3 times for high concurrency contention
+      for (let attempt = 0; attempt < 3; attempt++) {
+        // 1. Fetch current stock and status
+        const { data: part, error: fetchErr } = await supabase
+          .from('spare_parts')
+          .select('id, part_no, part_name, stok, status')
+          .eq('part_no', item.part_no)
+          .maybeSingle();
+
+        if (fetchErr || !part) {
+          throw new Error(`Suku cadang "${item.part_name || item.part_no}" (${item.part_no}) tidak ditemukan.`);
+        }
+
+        partRecord = part;
+        lastKnownStock = Number(part.stok) || 0;
+
+        if (part.status === 'DISCONTINUE') {
+          throw new Error(`Suku cadang "${part.part_name}" sudah tidak aktif (Discontinue).`);
+        }
+
+        if (lastKnownStock < requestedQty) {
+          throw new Error(
+            `Maaf, stok untuk "${part.part_name}" tidak mencukupi (Tersisa: ${lastKnownStock}, Dipesan: ${requestedQty}).`
+          );
+        }
+
+        const newStock = lastKnownStock - requestedQty;
+
+        // 2. Atomic Compare-And-Swap (CAS) Update
+        // Ensures the row is only updated IF the stock is still equal to the read stock and >= requestedQty
+        const { data: updated, error: updateErr } = await supabase
+          .from('spare_parts')
+          .update({ stok: newStock })
+          .eq('id', part.id)
+          .eq('stok', lastKnownStock)
+          .gte('stok', requestedQty)
+          .select('id, part_no, stok');
+
+        if (!updateErr && updated && updated.length > 0) {
+          // Success!
+          decremented.push({
+            id: part.id,
+            part_no: item.part_no,
+            quantity: requestedQty,
+          });
+          success = true;
+          break;
+        }
+
+        // Collision occurred! Another concurrent user modified the stock just now.
+        // Wait 30ms-60ms with slight jitter and retry
+        await new Promise((resolve) => setTimeout(resolve, 30 + Math.random() * 30));
+      }
+
+      if (!success) {
+        // If 3 attempts failed due to contention, check the final stock to give accurate error
+        const { data: fresh } = await supabase
+          .from('spare_parts')
+          .select('stok')
+          .eq('part_no', item.part_no)
+          .maybeSingle();
+        const currentRemaining = fresh ? Number(fresh.stok) || 0 : 0;
+
+        throw new Error(
+          `Maaf, stok "${partRecord?.part_name || item.part_name}" baru saja habis atau dibeli pembeli lain (Sisa saat ini: ${currentRemaining}).`
+        );
+      }
+    }
+
+    return { decremented };
+  }
+
+  /**
+   * Rollback decremented stock if booking creation or transaction fails
+   */
+  private static async rollbackStock(decremented: { id: string; quantity: number }[]): Promise<void> {
+    for (const item of decremented) {
+      try {
+        const { data: current } = await supabase
+          .from('spare_parts')
+          .select('stok')
+          .eq('id', item.id)
+          .single();
+
+        if (current) {
+          const restoredStock = (Number(current.stok) || 0) + item.quantity;
+          await supabase
+            .from('spare_parts')
+            .update({ stok: restoredStock })
+            .eq('id', item.id);
+        }
+      } catch (err) {
+        console.error(`[BookingService] Failed to rollback stock for part id ${item.id}:`, err);
+      }
+    }
+  }
+
+  /**
    * Public Customer Booking creation (Servis & Spare Part)
    */
   public static async createBooking(dto: CreateBookingDTO) {
@@ -127,50 +242,66 @@ export class BookingService {
       metode_layanan: dto.metode_layanan || 'AMBIL',
     };
 
-    let data: any = null;
-    let insertError: any = null;
-
-    for (let attempt = 0; attempt < 3; attempt++) {
-      const ticketNo = await this.generateTicketNo(dto.tanggal_booking, bookingPayload.tipe_booking, attempt);
-      const res = await supabase
-        .from('bookings')
-        .insert({ ...bookingPayload, ticket_no: ticketNo })
-        .select()
-        .single();
-
-      if (!res.error) {
-        data = res.data;
-        insertError = null;
-        break;
-      }
-
-      insertError = res.error;
-      const isDuplicate = res.error.message?.includes('duplicate key') || res.error.message?.includes('ticket_no');
-      if (!isDuplicate) {
-        break;
-      }
+    // 1. If spare part booking, deduct stock atomically with concurrency lock first
+    let decrementedList: { id: string; quantity: number }[] = [];
+    if (isSparepart && dto.items && dto.items.length > 0) {
+      const deductResult = await this.deductSparePartsStock(dto.items);
+      decrementedList = deductResult.decremented;
     }
 
-    if (insertError || !data) {
-      throw new Error(`Gagal menyimpan booking: ${insertError?.message || 'Terjadi kesalahan sistem'}`);
+    try {
+      // 2. Insert booking record
+      let data: any = null;
+      let insertError: any = null;
+
+      for (let attempt = 0; attempt < 3; attempt++) {
+        const ticketNo = await this.generateTicketNo(dto.tanggal_booking, bookingPayload.tipe_booking, attempt);
+        const res = await supabase
+          .from('bookings')
+          .insert({ ...bookingPayload, ticket_no: ticketNo })
+          .select()
+          .single();
+
+        if (!res.error) {
+          data = res.data;
+          insertError = null;
+          break;
+        }
+
+        insertError = res.error;
+        const isDuplicate = res.error.message?.includes('duplicate key') || res.error.message?.includes('ticket_no');
+        if (!isDuplicate) {
+          break;
+        }
+      }
+
+      if (insertError || !data) {
+        throw new Error(`Gagal menyimpan booking: ${insertError?.message || 'Terjadi kesalahan sistem'}`);
+      }
+
+      // Dispatch automated confirmation email
+      EmailService.sendBookingTicketEmail({
+        ticket_no: data.ticket_no,
+        nama_customer: data.nama_customer,
+        email: data.email,
+        plat_kendaraan: data.plat_kendaraan,
+        tanggal_booking: data.tanggal_booking,
+        jam_booking: data.jam_booking,
+        jenis_servis: data.jenis_servis,
+        tipe_booking: data.tipe_booking,
+        items: data.items_json || undefined,
+        total_harga: data.total_harga || undefined,
+        metode_layanan: data.metode_layanan || undefined,
+      }).catch((err) => console.error('[BookingService] Failed sending confirmation email:', err));
+
+      return data;
+    } catch (bookingErr) {
+      // If booking creation fails, rollback any decremented stock to prevent stock leaks
+      if (decrementedList.length > 0) {
+        await this.rollbackStock(decrementedList);
+      }
+      throw bookingErr;
     }
-
-    // Dispatch automated confirmation email
-    EmailService.sendBookingTicketEmail({
-      ticket_no: data.ticket_no,
-      nama_customer: data.nama_customer,
-      email: data.email,
-      plat_kendaraan: data.plat_kendaraan,
-      tanggal_booking: data.tanggal_booking,
-      jam_booking: data.jam_booking,
-      jenis_servis: data.jenis_servis,
-      tipe_booking: data.tipe_booking,
-      items: data.items_json || undefined,
-      total_harga: data.total_harga || undefined,
-      metode_layanan: data.metode_layanan || undefined,
-    }).catch((err) => console.error('[BookingService] Failed sending confirmation email:', err));
-
-    return data;
   }
 
   /**
@@ -292,6 +423,20 @@ export class BookingService {
    * Update booking status (Admin only)
    */
   public static async updateStatus(id: string, status: string, catatan_admin?: string) {
+    // 1. Fetch current booking to inspect previous status and items
+    const { data: currentBooking, error: fetchError } = await supabase
+      .from('bookings')
+      .select('*')
+      .eq('id', id)
+      .single();
+
+    if (fetchError || !currentBooking) {
+      throw new Error('Data booking tidak ditemukan');
+    }
+
+    const previousStatus = currentBooking.status;
+    const isSparepart = currentBooking.tipe_booking === 'SPAREPART';
+
     const updatePayload: Record<string, any> = { status };
     if (catatan_admin !== undefined) {
       updatePayload.catatan_admin = catatan_admin;
@@ -306,6 +451,28 @@ export class BookingService {
 
     if (error) {
       throw new Error(`Gagal memperbarui status booking: ${error.message}`);
+    }
+
+    // 2. If status was changed to CANCELLED from non-cancelled status, restore stock automatically
+    if (isSparepart && previousStatus !== 'CANCELLED' && status === 'CANCELLED') {
+      const items = currentBooking.items_json as BookingSparePartItem[] | null;
+      if (items && Array.isArray(items)) {
+        for (const item of items) {
+          const qty = Math.max(1, Math.round(Number(item.quantity) || 1));
+          const { data: part } = await supabase
+            .from('spare_parts')
+            .select('id, stok')
+            .eq('part_no', item.part_no)
+            .maybeSingle();
+
+          if (part) {
+            await supabase
+              .from('spare_parts')
+              .update({ stok: (Number(part.stok) || 0) + qty })
+              .eq('id', part.id);
+          }
+        }
+      }
     }
 
     return data;
