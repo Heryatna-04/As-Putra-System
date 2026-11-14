@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, type CSSProperties } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSearchParams } from "next/navigation";
@@ -19,10 +19,8 @@ import {
   RefreshCw,
   Wrench,
   ChevronDown,
-  Filter,
   ArrowUp,
   ArrowDown,
-  ArrowUpDown,
   Check,
 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
@@ -30,11 +28,29 @@ import { SparePart } from "@/types/spare-part";
 import { formatIDR } from "@/lib/utils";
 import { toast } from "sonner";
 import AdminPageHeader from "@/components/admin/AdminPageHeader";
+import ProgressRing from "@/components/admin/ProgressRing";
+import {
+  computeStockHealth,
+  type SparePartSummary,
+} from "@/lib/admin-metrics";
+
+type StaggerStyle = CSSProperties & {
+  "--stagger-index": number;
+};
+
+const staggerStyle = (index: number): StaggerStyle => ({
+  "--stagger-index": index,
+});
 
 export default function AdminSparePartsPage() {
   const { token, authFetch } = useAuth();
   const [parts, setParts] = useState<SparePart[]>([]);
   const [total, setTotal] = useState<number>(0);
+  const [summary, setSummary] = useState<SparePartSummary>({
+    totalActive: 0,
+    outOfStock: 0,
+    totalDiscontinue: 0,
+  });
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
@@ -131,11 +147,33 @@ export default function AdminSparePartsPage() {
     }
   }, [token, page, debouncedSearch, statusFilter, categoryFilter, stockStatusFilter, sort, authFetch]);
 
+  const fetchSummary = useCallback(async () => {
+    if (!token) return;
+    try {
+      const baseUrl =
+        process.env.NEXT_PUBLIC_API_URL ||
+        "https://backend-beta-murex-36.vercel.app/api/v1";
+      const res = await authFetch(`${baseUrl}/admin/summary`, {
+        cache: "no-store",
+      });
+      const data = await res.json();
+      if (res.ok && data.success && data.data) {
+        setSummary(data.data);
+      }
+    } catch {
+      // ignore non-blocking summary failure
+    }
+  }, [token, authFetch]);
+
   const searchParams = useSearchParams();
 
   useEffect(() => {
     fetchParts();
   }, [fetchParts]);
+
+  useEffect(() => {
+    fetchSummary();
+  }, [fetchSummary]);
 
   const handleOpenCreateModal = useCallback(() => {
     setEditingPart(null);
@@ -229,6 +267,7 @@ export default function AdminSparePartsPage() {
       toast.success(editingPart ? "Suku cadang berhasil diperbarui" : "Suku cadang berhasil ditambahkan");
       setIsModalOpen(false);
       fetchParts();
+      fetchSummary();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Terjadi kesalahan saat menyimpan.");
     } finally {
@@ -253,6 +292,7 @@ export default function AdminSparePartsPage() {
           prev.map((p) => (p.id === id ? { ...p, stok: newStok } : p))
         );
         toast.success("Stok berhasil diperbarui");
+        fetchSummary();
       } else {
         toast.error(data.message || "Gagal mengupdate stok");
       }
@@ -273,6 +313,7 @@ export default function AdminSparePartsPage() {
       if (res.ok) {
         toast.success("Suku cadang berhasil dinonaktifkan");
         fetchParts();
+        fetchSummary();
       } else {
         toast.error("Gagal menonaktifkan suku cadang");
       }
@@ -307,6 +348,11 @@ export default function AdminSparePartsPage() {
     }
   };
 
+  const stockHealth = computeStockHealth(summary);
+  const isActiveSkuCard = statusFilter === "ACTIVE" && stockStatusFilter === "all";
+  const isReadyStockCard = stockStatusFilter === "ready";
+  const isEmptyStockCard = stockStatusFilter === "empty";
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <AdminPageHeader
@@ -317,56 +363,173 @@ export default function AdminSparePartsPage() {
         actions={
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { setEditingPart(null); setIsModalOpen(true); }}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 border border-white/25 text-white text-xs font-semibold transition"
+              type="button"
+              onClick={handleOpenCreateModal}
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[#E4002B] hover:bg-[#C40024] text-white text-xs font-bold shadow-xs transition cursor-pointer"
             >
-              <Plus size={13} /> Tambah Part
+              <Plus size={14} /> Tambah Part
             </button>
             <button
-              onClick={() => fetchParts()}
+              type="button"
+              onClick={() => {
+                fetchParts();
+                fetchSummary();
+              }}
               disabled={isLoading}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 border border-white/15 text-white text-xs font-semibold transition disabled:opacity-50"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition disabled:opacity-50 cursor-pointer"
             >
-              <RefreshCw size={12} className={isLoading ? "animate-spin" : ""} /> Refresh
+              <RefreshCw size={13} className={isLoading ? "animate-spin" : ""} /> Refresh
             </button>
           </div>
         }
       />
 
-      <div className="flex-1 overflow-y-auto p-5 space-y-5">
+      <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
         <div className="max-w-[1400px] mx-auto space-y-5">
-          <div className="bg-white border border-zinc-200 rounded-xl overflow-hidden">
+          {/* Stock Summary & Readiness Strip */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <button
+              type="button"
+              aria-pressed={isActiveSkuCard}
+              onClick={() => {
+                setStatusFilter("ACTIVE");
+                setStockStatusFilter("all");
+                setPage(1);
+              }}
+              style={staggerStyle(0)}
+              className={`relative overflow-hidden text-left bg-white dark:bg-[#111827] border rounded-2xl p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] admin-stagger-item admin-card-interactive cursor-pointer ${
+                isActiveSkuCard
+                  ? "border-[#E4002B] ring-2 ring-[#E4002B]/15"
+                  : "border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+              }`}
+            >
+              <span className="absolute top-0 left-0 right-0 h-1 bg-[#E4002B]" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Total SKU Aktif
+              </span>
+              <div className="mt-1.5 text-2xl font-black text-slate-900 dark:text-white tabular-nums">
+                {summary.totalActive.toLocaleString("id-ID")}
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
+                {summary.totalDiscontinue.toLocaleString("id-ID")} discontinue
+              </span>
+            </button>
+
+            <button
+              type="button"
+              aria-pressed={isReadyStockCard}
+              onClick={() => {
+                setStockStatusFilter("ready");
+                setStatusFilter("");
+                setPage(1);
+              }}
+              style={staggerStyle(1)}
+              className={`relative overflow-hidden text-left bg-white dark:bg-[#111827] border rounded-2xl p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] admin-stagger-item admin-card-interactive cursor-pointer ${
+                isReadyStockCard
+                  ? "border-emerald-500 ring-2 ring-emerald-500/15"
+                  : "border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+              }`}
+            >
+              <span className="absolute top-0 left-0 right-0 h-1 bg-emerald-500" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Siap Jual (&gt; 0)
+              </span>
+              <div className="mt-1.5 text-2xl font-black text-emerald-600 dark:text-emerald-400 tabular-nums">
+                {stockHealth.readyCount.toLocaleString("id-ID")}
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
+                Klik untuk filter Ready Stock
+              </span>
+            </button>
+
+            <button
+              type="button"
+              aria-pressed={isEmptyStockCard}
+              onClick={() => {
+                setStockStatusFilter("empty");
+                setStatusFilter("");
+                setPage(1);
+              }}
+              style={staggerStyle(2)}
+              className={`relative overflow-hidden text-left bg-white dark:bg-[#111827] border rounded-2xl p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] admin-stagger-item admin-card-interactive cursor-pointer ${
+                isEmptyStockCard
+                  ? "border-amber-500 ring-2 ring-amber-500/15"
+                  : "border-slate-200/80 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700"
+              }`}
+            >
+              <span className="absolute top-0 left-0 right-0 h-1 bg-amber-500" />
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                Stok Kosong (0)
+              </span>
+              <div className="mt-1.5 text-2xl font-black text-amber-600 dark:text-amber-400 tabular-nums">
+                {stockHealth.emptyCount.toLocaleString("id-ID")}
+              </div>
+              <span className="text-[11px] text-slate-500 dark:text-slate-400 mt-1 block">
+                Klik untuk filter Stok Kosong
+              </span>
+            </button>
+
+            <div
+              style={staggerStyle(3)}
+              className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl p-4 shadow-[0_1px_2px_rgba(15,23,42,0.04)] flex items-center justify-between gap-3 admin-stagger-item"
+            >
+              <div className="min-w-0">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                  Kesiapan Stok
+                </span>
+                <div className="text-sm font-extrabold text-slate-900 dark:text-white mt-1 tabular-nums">
+                  {stockHealth.readyPct}% Tersedia
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5 truncate">
+                  Dari total SKU aktif
+                </p>
+              </div>
+              <ProgressRing
+                percentage={stockHealth.readyPct}
+                size={58}
+                strokeWidth={6}
+                color="#10B981"
+                label="Kesiapan Stok"
+              />
+            </div>
+          </div>
+
+          <div
+            style={staggerStyle(4)}
+            className="bg-white dark:bg-[#111827] border border-slate-200/80 dark:border-slate-800 rounded-2xl overflow-hidden shadow-[0_1px_2px_rgba(15,23,42,0.04)] admin-stagger-item"
+          >
             
             {/* Toolbar */}
-            <div className="p-4 border-b border-zinc-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white">
+            <div className="p-4 border-b border-slate-200/80 dark:border-slate-800 flex flex-col lg:flex-row lg:items-center justify-between gap-3 bg-white dark:bg-[#111827]">
               {/* Left Section: Title & Controls */}
               <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
                 <div className="flex items-center gap-2 shrink-0">
-                  <h3 className="text-sm sm:text-base font-semibold text-zinc-900">Suku Cadang</h3>
-                  <span className="text-xs font-semibold text-zinc-500 bg-zinc-100 px-2 py-0.5 rounded-full tabular-nums">
+                  <h3 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white">Suku Cadang</h3>
+                  <span className="text-xs font-semibold text-slate-500 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full tabular-nums">
                     {total.toLocaleString("id-ID")}
                   </span>
                 </div>
 
                 {/* Search */}
-                <div className="flex items-center gap-2 border border-zinc-200 rounded-lg px-3 py-1.5 text-zinc-500 bg-white w-full sm:w-[220px] md:w-[260px] shrink-0">
-                  <Search size={15} className="shrink-0 text-zinc-400" />
+                <div className="flex items-center gap-2 border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-1.5 text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900/60 w-full sm:w-[220px] md:w-[260px] shrink-0">
+                  <Search size={15} className="shrink-0 text-slate-400 dark:text-slate-500" />
                   <input
                     type="text"
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Cari kode part / nama..."
-                    className="w-full text-xs sm:text-sm bg-transparent outline-none text-zinc-900 placeholder:text-zinc-400"
+                    className="w-full text-xs sm:text-sm bg-transparent outline-none text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                   {search && (
                     <button
+                      type="button"
                       onClick={() => {
                         setSearch("");
                         setDebouncedSearch("");
                         setPage(1);
                       }}
                       title="Hapus pencarian"
-                      className="text-zinc-400 hover:text-zinc-600 p-0.5 shrink-0"
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 shrink-0 cursor-pointer"
                     >
                       <X size={14} />
                     </button>
@@ -374,15 +537,15 @@ export default function AdminSparePartsPage() {
                 </div>
 
                 {/* Category Select Dropdown */}
-                <div className="flex items-center gap-1.5 border border-zinc-200 rounded-lg px-2.5 py-1.5 bg-white text-zinc-700 shrink-0">
-                  <span className="text-[10px] font-semibold text-zinc-400 uppercase tracking-wider">Kategori:</span>
+                <div className="flex items-center gap-1.5 border border-slate-200 dark:border-slate-700 rounded-xl px-2.5 py-1.5 bg-white dark:bg-slate-900/60 text-slate-700 dark:text-slate-200 shrink-0">
+                  <span className="text-[10px] font-semibold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Kategori:</span>
                   <select
                     value={categoryFilter}
                     onChange={(e) => {
                       setCategoryFilter(e.target.value);
                       setPage(1);
                     }}
-                    className="bg-transparent text-xs font-semibold text-zinc-800 outline-none cursor-pointer w-[130px] sm:w-[150px] truncate"
+                    className="bg-transparent text-xs font-semibold text-slate-800 dark:text-slate-100 outline-none cursor-pointer w-[130px] sm:w-[150px] truncate [&>option]:bg-white dark:[&>option]:bg-slate-900 dark:[&>option]:text-slate-100"
                   >
                     <option value="">Semua Kategori</option>
                     {categories.map((c) => (
@@ -393,12 +556,13 @@ export default function AdminSparePartsPage() {
                   </select>
                   {categoryFilter && (
                     <button
+                      type="button"
                       onClick={() => {
                         setCategoryFilter("");
                         setPage(1);
                       }}
                       title="Reset kategori"
-                      className="text-zinc-400 hover:text-zinc-600 shrink-0"
+                      className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 shrink-0 cursor-pointer"
                     >
                       <X size={12} />
                     </button>
@@ -408,73 +572,78 @@ export default function AdminSparePartsPage() {
                 {/* Filter Tabs / Buttons */}
                 <div className="flex flex-wrap items-center gap-1.5 shrink-0">
                   <button
+                    type="button"
                     onClick={() => {
                       setStatusFilter("");
                       setStockStatusFilter("all");
                       setPage(1);
                     }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors border cursor-pointer ${
                       statusFilter === "" && stockStatusFilter === "all"
-                        ? "bg-red-50 border-red-200 text-red-600 font-bold"
-                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-50"
+                        ? "bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-900/60 text-red-600 dark:text-red-400 font-bold"
+                        : "bg-white dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800"
                     }`}
                   >
                     Semua
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       setStockStatusFilter(stockStatusFilter === "ready" ? "all" : "ready");
                       setStatusFilter("");
                       setPage(1);
                     }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors border cursor-pointer ${
                       stockStatusFilter === "ready"
                         ? "bg-emerald-600 border-emerald-600 text-white font-bold shadow-sm"
-                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200"
+                        : "bg-white dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 hover:text-emerald-700 dark:hover:text-emerald-400 hover:border-emerald-200 dark:hover:border-emerald-800"
                     }`}
                   >
                     Ready Stock
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       setStockStatusFilter(stockStatusFilter === "empty" ? "all" : "empty");
                       setStatusFilter("");
                       setPage(1);
                     }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors border cursor-pointer ${
                       stockStatusFilter === "empty"
                         ? "bg-red-600 border-red-600 text-white font-bold shadow-sm"
-                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+                        : "bg-white dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-red-50 dark:hover:bg-red-950/40 hover:text-red-700 dark:hover:text-red-400 hover:border-red-200 dark:hover:border-red-800"
                     }`}
                   >
                     Stok Kosong (0)
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       setStockStatusFilter(stockStatusFilter === "critical" ? "all" : "critical");
                       setStatusFilter("");
                       setPage(1);
                     }}
                     title="Sparepart dengan stok habis atau menipis (≤ 3)"
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors border cursor-pointer ${
                       stockStatusFilter === "critical"
                         ? "bg-amber-500 border-amber-500 text-white font-bold shadow-sm"
-                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-amber-50 hover:text-amber-700 hover:border-amber-200"
+                        : "bg-white dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-amber-50 dark:hover:bg-amber-950/40 hover:text-amber-700 dark:hover:text-amber-400 hover:border-amber-200 dark:hover:border-amber-800"
                     }`}
                   >
                     <AlertTriangle className="w-3.5 h-3.5" />
                     <span>Perlu Restock</span>
                   </button>
                   <button
+                    type="button"
                     onClick={() => {
                       setStatusFilter(statusFilter === "DISCONTINUE" ? "" : "DISCONTINUE");
                       setStockStatusFilter("all");
                       setPage(1);
                     }}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                    className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors border cursor-pointer ${
                       statusFilter === "DISCONTINUE"
-                        ? "bg-zinc-800 border-zinc-800 text-white font-bold shadow-sm"
-                        : "bg-white border-zinc-200 text-zinc-600 hover:bg-zinc-100"
+                        ? "bg-slate-800 dark:bg-slate-200 border-slate-800 dark:border-slate-200 text-white dark:text-slate-900 font-bold shadow-sm"
+                        : "bg-white dark:bg-slate-800/70 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
                     }`}
                   >
                     Discontinue
@@ -483,6 +652,7 @@ export default function AdminSparePartsPage() {
                   {/* Reset All Filters button if any active */}
                   {(search || categoryFilter || statusFilter || stockStatusFilter !== "all" || sort !== "name_asc") && (
                     <button
+                      type="button"
                       onClick={() => {
                         setSearch("");
                         setDebouncedSearch("");
@@ -493,7 +663,7 @@ export default function AdminSparePartsPage() {
                         setPage(1);
                       }}
                       title="Reset semua filter dan pencarian"
-                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 transition-colors"
+                      className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/40 hover:bg-red-100 dark:hover:bg-red-950/60 border border-red-200 dark:border-red-900/50 transition-colors cursor-pointer"
                     >
                       <RotateCcw size={12} />
                       <span>Reset</span>
@@ -505,29 +675,35 @@ export default function AdminSparePartsPage() {
               {/* Right Section: Actions */}
               <div className="flex items-center gap-2 shrink-0 self-end lg:self-center">
                 <button
-                  onClick={() => fetchParts()}
+                  type="button"
+                  onClick={() => {
+                    fetchParts();
+                    fetchSummary();
+                  }}
                   disabled={isLoading}
                   title="Segarkan data tabel"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 transition-colors disabled:opacity-50"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors disabled:opacity-50 cursor-pointer"
                 >
-                  <RefreshCw size={14} className={isLoading ? "animate-spin text-red-600" : ""} />
+                  <RefreshCw size={14} className={isLoading ? "animate-spin text-[#E4002B]" : ""} />
                   <span>Refresh</span>
                 </button>
                 <button
+                  type="button"
                   onClick={handleExport}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-white border border-green-600/30 text-green-600 hover:bg-green-50 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-white dark:bg-slate-800 border border-emerald-600/30 dark:border-emerald-500/40 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/40 transition-colors cursor-pointer"
                 >
                   <Download size={15} /> Export Excel
                 </button>
                 <button
+                  type="button"
                   onClick={handleOpenCreateModal}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
                 >
                   <Plus size={15} /> Tambah Manual
                 </button>
                 <Link
                   href="/admin/import"
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs sm:text-sm font-semibold bg-zinc-900 text-white hover:bg-zinc-800 transition-colors"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs sm:text-sm font-semibold bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-white transition-colors"
                 >
                   <Upload size={15} /> Import Excel
                 </Link>
@@ -535,7 +711,7 @@ export default function AdminSparePartsPage() {
             </div>
 
             {/* Table */}
-            <div className="overflow-x-auto min-h-[500px] border border-zinc-300 rounded-lg shadow-sm bg-white pb-20">
+            <div className="overflow-x-auto min-h-[500px] bg-white dark:bg-[#111827] pb-20">
               <table className="w-full border-collapse text-left table-fixed min-w-[980px]">
                 <colgroup>
                   <col className="w-[50px]" />
@@ -548,7 +724,7 @@ export default function AdminSparePartsPage() {
                   <col className="w-[80px]" />
                 </colgroup>
                 <thead>
-                  <tr className="bg-[#F2F2F2] border-b border-zinc-300 text-zinc-800 text-xs font-bold divide-x divide-zinc-300 select-none">
+                  <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-200 text-xs font-bold divide-x divide-slate-200/80 dark:divide-slate-800 select-none">
                     {/* No */}
                     <th className="py-2.5 px-2.5 text-center relative">
                       <div className="flex items-center justify-center gap-1">
@@ -561,8 +737,8 @@ export default function AdminSparePartsPage() {
                           }}
                           className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
                             sort === "newest"
-                              ? "bg-red-600 text-white border-red-600"
-                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                              ? "bg-[#E4002B] text-white border-[#E4002B]"
+                              : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                           }`}
                           title="Filter Urutan No"
                         >
@@ -572,30 +748,32 @@ export default function AdminSparePartsPage() {
                       {openFilterCol === "no" && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute left-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                          className="absolute left-0 top-full mt-1 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 text-left font-normal text-slate-700 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-100"
                         >
-                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Urutan Data</div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Urutan Data</div>
                           <button
+                            type="button"
                             onClick={() => {
                               setSort("name_asc");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              sort === "name_asc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              sort === "name_asc" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span>Standar (A-Z)</span>
                             {sort === "name_asc" && <Check size={13} />}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setSort("newest");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              sort === "newest" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              sort === "newest" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span>Terbaru Dibuat</span>
@@ -617,8 +795,8 @@ export default function AdminSparePartsPage() {
                           }}
                           className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
                             sort === "part_no_asc" || sort === "part_no_desc"
-                              ? "bg-red-600 text-white border-red-600 shadow-sm"
-                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                              ? "bg-[#E4002B] text-white border-[#E4002B] shadow-sm"
+                              : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                           }`}
                           title="Filter / Sort Kode Item"
                         >
@@ -628,30 +806,32 @@ export default function AdminSparePartsPage() {
                       {openFilterCol === "part_no" && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute left-0 top-full mt-1 w-52 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                          className="absolute left-0 top-full mt-1 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 text-left font-normal text-slate-700 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-100"
                         >
-                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Urutkan Kode</div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Urutkan Kode</div>
                           <button
+                            type="button"
                             onClick={() => {
                               setSort("part_no_asc");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              sort === "part_no_asc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              sort === "part_no_asc" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span className="flex items-center gap-1.5"><ArrowUp size={12} /> Sort A → Z</span>
                             {sort === "part_no_asc" && <Check size={13} />}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setSort("part_no_desc");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              sort === "part_no_desc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              sort === "part_no_desc" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span className="flex items-center gap-1.5"><ArrowDown size={12} /> Sort Z → A</span>
@@ -673,8 +853,8 @@ export default function AdminSparePartsPage() {
                           }}
                           className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
                             sort === "name_asc" || sort === "name_desc"
-                              ? "bg-red-600 text-white border-red-600 shadow-sm"
-                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                              ? "bg-[#E4002B] text-white border-[#E4002B] shadow-sm"
+                              : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                           }`}
                           title="Filter / Sort Nama Produk"
                         >
@@ -684,30 +864,32 @@ export default function AdminSparePartsPage() {
                       {openFilterCol === "name" && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute left-0 top-full mt-1 w-52 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                          className="absolute left-0 top-full mt-1 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 text-left font-normal text-slate-700 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-100"
                         >
-                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Urutkan Nama</div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Urutkan Nama</div>
                           <button
+                            type="button"
                             onClick={() => {
                               setSort("name_asc");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              sort === "name_asc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              sort === "name_asc" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span className="flex items-center gap-1.5"><ArrowUp size={12} /> Sort A → Z</span>
                             {sort === "name_asc" && <Check size={13} />}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setSort("name_desc");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              sort === "name_desc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              sort === "name_desc" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span className="flex items-center gap-1.5"><ArrowDown size={12} /> Sort Z → A</span>
@@ -729,8 +911,8 @@ export default function AdminSparePartsPage() {
                           }}
                           className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
                             categoryFilter
-                              ? "bg-red-600 text-white border-red-600 shadow-sm"
-                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                              ? "bg-[#E4002B] text-white border-[#E4002B] shadow-sm"
+                              : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                           }`}
                           title="Filter Kategori"
                         >
@@ -740,18 +922,19 @@ export default function AdminSparePartsPage() {
                       {openFilterCol === "category" && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute left-0 top-full mt-1 w-64 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                          className="absolute left-0 top-full mt-1 w-64 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 text-left font-normal text-slate-700 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-100"
                         >
-                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Pilih Kategori</div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Pilih Kategori</div>
                           <div className="max-h-56 overflow-y-auto space-y-0.5 mt-1 pr-1">
                             <button
+                              type="button"
                               onClick={() => {
                                 setCategoryFilter("");
                                 setOpenFilterCol(null);
                                 setPage(1);
                               }}
-                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                                categoryFilter === "" ? "bg-red-50 text-red-600 font-bold" : ""
+                              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                                categoryFilter === "" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                               }`}
                             >
                               <span>Semua Kategori</span>
@@ -760,13 +943,14 @@ export default function AdminSparePartsPage() {
                             {categories.map((cat) => (
                               <button
                                 key={cat.name}
+                                type="button"
                                 onClick={() => {
                                   setCategoryFilter(cat.name);
                                   setOpenFilterCol(null);
                                   setPage(1);
                                 }}
-                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                                  categoryFilter === cat.name ? "bg-red-50 text-red-600 font-bold" : ""
+                                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                                  categoryFilter === cat.name ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                                 }`}
                               >
                                 <span className="truncate pr-2">{cat.name}</span>
@@ -790,8 +974,8 @@ export default function AdminSparePartsPage() {
                           }}
                           className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
                             stockStatusFilter !== "all" || sort === "stock_desc" || sort === "stock_asc"
-                              ? "bg-red-600 text-white border-red-600 shadow-sm"
-                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                              ? "bg-[#E4002B] text-white border-[#E4002B] shadow-sm"
+                              : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                           }`}
                           title="Filter / Sort Stok"
                         >
@@ -801,86 +985,92 @@ export default function AdminSparePartsPage() {
                       {openFilterCol === "stock" && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute left-0 top-full mt-1 w-56 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                          className="absolute left-0 top-full mt-1 w-56 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 text-left font-normal text-slate-700 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-100"
                         >
-                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Urutkan Stok</div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Urutkan Stok</div>
                           <button
+                            type="button"
                             onClick={() => {
                               setSort("stock_desc");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              sort === "stock_desc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              sort === "stock_desc" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span className="flex items-center gap-1.5"><ArrowDown size={12} /> Terbanyak → Terkecil</span>
                             {sort === "stock_desc" && <Check size={13} />}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setSort("stock_asc");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              sort === "stock_asc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              sort === "stock_asc" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span className="flex items-center gap-1.5"><ArrowUp size={12} /> Terkecil → Terbanyak</span>
                             {sort === "stock_asc" && <Check size={13} />}
                           </button>
 
-                          <div className="border-t border-zinc-200 my-1"></div>
-                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Kondisi Stok</div>
+                          <div className="border-t border-slate-200 dark:border-slate-800 my-1"></div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Kondisi Stok</div>
 
                           <button
+                            type="button"
                             onClick={() => {
                               setStockStatusFilter("all");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              stockStatusFilter === "all" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              stockStatusFilter === "all" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span>Semua Stok</span>
                             {stockStatusFilter === "all" && <Check size={13} />}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setStockStatusFilter("ready");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              stockStatusFilter === "ready" ? "bg-emerald-50 text-emerald-700 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              stockStatusFilter === "ready" ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold" : ""
                             }`}
                           >
                             <span>Ready Stock (&gt; 0)</span>
                             {stockStatusFilter === "ready" && <Check size={13} />}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setStockStatusFilter("empty");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              stockStatusFilter === "empty" ? "bg-red-50 text-red-700 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              stockStatusFilter === "empty" ? "bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span>Stok Kosong (= 0)</span>
                             {stockStatusFilter === "empty" && <Check size={13} />}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setStockStatusFilter("critical");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              stockStatusFilter === "critical" ? "bg-amber-50 text-amber-700 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              stockStatusFilter === "critical" ? "bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 font-bold" : ""
                             }`}
                           >
                             <span>Perlu Restock (≤ 3)</span>
@@ -902,8 +1092,8 @@ export default function AdminSparePartsPage() {
                           }}
                           className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
                             sort === "price_asc" || sort === "price_desc"
-                              ? "bg-red-600 text-white border-red-600 shadow-sm"
-                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                              ? "bg-[#E4002B] text-white border-[#E4002B] shadow-sm"
+                              : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                           }`}
                           title="Filter / Sort Harga HET"
                         >
@@ -913,30 +1103,32 @@ export default function AdminSparePartsPage() {
                       {openFilterCol === "het" && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute left-0 top-full mt-1 w-52 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                          className="absolute left-0 top-full mt-1 w-52 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 text-left font-normal text-slate-700 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-100"
                         >
-                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Urutkan Harga</div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Urutkan Harga</div>
                           <button
+                            type="button"
                             onClick={() => {
                               setSort("price_asc");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              sort === "price_asc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              sort === "price_asc" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span className="flex items-center gap-1.5"><ArrowUp size={12} /> Termurah → Termahal</span>
                             {sort === "price_asc" && <Check size={13} />}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setSort("price_desc");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              sort === "price_desc" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              sort === "price_desc" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span className="flex items-center gap-1.5"><ArrowDown size={12} /> Termahal → Termurah</span>
@@ -958,8 +1150,8 @@ export default function AdminSparePartsPage() {
                           }}
                           className={`w-4 h-4 flex items-center justify-center rounded border transition-colors ${
                             statusFilter
-                              ? "bg-red-600 text-white border-red-600 shadow-sm"
-                              : "bg-white text-zinc-600 border-zinc-400 hover:bg-zinc-100"
+                              ? "bg-[#E4002B] text-white border-[#E4002B] shadow-sm"
+                              : "bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700"
                           }`}
                           title="Filter Status Produk"
                         >
@@ -969,43 +1161,46 @@ export default function AdminSparePartsPage() {
                       {openFilterCol === "status" && (
                         <div
                           onClick={(e) => e.stopPropagation()}
-                          className="absolute right-0 top-full mt-1 w-48 bg-white rounded-lg shadow-xl border border-zinc-200 p-1.5 z-50 text-left font-normal text-zinc-700 animate-in fade-in zoom-in-95 duration-100"
+                          className="absolute right-0 top-full mt-1 w-48 bg-white dark:bg-slate-900 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 p-1.5 z-50 text-left font-normal text-slate-700 dark:text-slate-200 animate-in fade-in zoom-in-95 duration-100"
                         >
-                          <div className="px-2 py-1 text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Status Produk</div>
+                          <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Status Produk</div>
                           <button
+                            type="button"
                             onClick={() => {
                               setStatusFilter("");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              statusFilter === "" ? "bg-red-50 text-red-600 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              statusFilter === "" ? "bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 font-bold" : ""
                             }`}
                           >
                             <span>Semua Status</span>
                             {statusFilter === "" && <Check size={13} />}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setStatusFilter("ACTIVE");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              statusFilter === "ACTIVE" ? "bg-emerald-50 text-emerald-700 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              statusFilter === "ACTIVE" ? "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold" : ""
                             }`}
                           >
                             <span>Active</span>
                             {statusFilter === "ACTIVE" && <Check size={13} />}
                           </button>
                           <button
+                            type="button"
                             onClick={() => {
                               setStatusFilter("DISCONTINUE");
                               setOpenFilterCol(null);
                               setPage(1);
                             }}
-                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs hover:bg-zinc-100 ${
-                              statusFilter === "DISCONTINUE" ? "bg-zinc-100 text-zinc-800 font-bold" : ""
+                            className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs hover:bg-slate-100 dark:hover:bg-slate-800 ${
+                              statusFilter === "DISCONTINUE" ? "bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-200 font-bold" : ""
                             }`}
                           >
                             <span>Discontinue</span>
@@ -1021,33 +1216,33 @@ export default function AdminSparePartsPage() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-zinc-200">
+                <tbody className="divide-y divide-slate-200/80 dark:divide-slate-800">
                   {isLoading ? (
                     <tr>
                       <td colSpan={8} className="py-24 text-center">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <Loader2 className="w-6 h-6 animate-spin text-[#E4002B]" />
-                          <span className="text-xs font-medium text-zinc-500">Memuat data suku cadang...</span>
+                          <span className="text-xs font-medium text-slate-500 dark:text-slate-400">Memuat data suku cadang...</span>
                         </div>
                       </td>
                     </tr>
                   ) : parts.length === 0 ? (
                     <tr>
-                      <td colSpan={8} className="py-20 text-center text-sm text-zinc-400">
+                      <td colSpan={8} className="py-20 text-center text-sm text-slate-400 dark:text-slate-500">
                         Tidak ada data suku cadang yang ditemukan.
                       </td>
                     </tr>
                   ) : (
                     parts.map((part, idx) => (
-                      <tr key={part.id} className="group hover:bg-zinc-50/80 transition-colors divide-x divide-zinc-200/60 h-[64px]">
+                      <tr key={part.id} className="group hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors divide-x divide-slate-200/60 dark:divide-slate-800/70 h-[64px]">
                         {/* No */}
-                        <td className="py-2 px-2.5 text-center font-mono text-xs text-zinc-500 bg-zinc-50/40">
+                        <td className="py-2 px-2.5 text-center font-mono text-xs text-slate-500 dark:text-slate-400 bg-slate-50/40 dark:bg-slate-900/30">
                           {(page - 1) * 15 + idx + 1}
                         </td>
 
                         {/* Kode Item */}
                         <td className="py-2.5 px-3 font-mono">
-                          <span className="text-[11px] font-bold text-[#E4002B] bg-red-50 border border-red-200/60 px-2 py-0.5 rounded inline-block">
+                          <span className="text-[11px] font-bold text-[#E4002B] dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200/60 dark:border-red-900/50 px-2 py-0.5 rounded inline-block">
                             {part.part_no}
                           </span>
                         </td>
@@ -1055,17 +1250,17 @@ export default function AdminSparePartsPage() {
                         {/* Nama Produk */}
                         <td className="py-2.5 px-3">
                           <div className="flex items-center gap-2.5">
-                            <div className="w-9 h-9 rounded bg-white border border-zinc-200 flex items-center justify-center shrink-0 overflow-hidden relative">
+                            <div className="w-9 h-9 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center shrink-0 overflow-hidden relative">
                               {part.gambar_url ? (
                                 <Image src={part.gambar_url} alt={part.part_name} width={36} height={36} unoptimized className="w-full h-full object-contain" />
                               ) : (
-                                <ImageIcon className="w-4 h-4 text-zinc-300" />
+                                <ImageIcon className="w-4 h-4 text-slate-300 dark:text-slate-600" />
                               )}
                             </div>
                             <div className="min-w-0">
-                              <span className="text-xs font-bold text-zinc-900 block leading-tight truncate">{part.part_name}</span>
+                              <span className="text-xs font-bold text-slate-900 dark:text-white block leading-tight truncate">{part.part_name}</span>
                               {part.nama_umum && (
-                                <span className="text-[11px] text-zinc-500 font-medium block mt-0.5 truncate">{part.nama_umum}</span>
+                                <span className="text-[11px] text-slate-500 dark:text-slate-400 font-medium block mt-0.5 truncate">{part.nama_umum}</span>
                               )}
                             </div>
                           </div>
@@ -1073,7 +1268,7 @@ export default function AdminSparePartsPage() {
 
                         {/* Kategori */}
                         <td className="py-2.5 px-3 align-middle">
-                          <span className="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-zinc-100 text-zinc-700 border border-zinc-200/60 truncate max-w-full">
+                          <span className="inline-flex px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700 truncate max-w-full">
                             {part.category_detail || "UMUM"}
                           </span>
                         </td>
@@ -1083,26 +1278,28 @@ export default function AdminSparePartsPage() {
                           <div className="flex items-center justify-between gap-1">
                             <div className="flex items-center gap-1">
                               <button
+                                type="button"
                                 onClick={() => handleUpdateStock(part.id, part.stok - 1)}
                                 disabled={part.stok <= 0}
-                                className="w-5 h-5 flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded disabled:opacity-30 transition-colors text-xs font-bold"
+                                className="w-5 h-5 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded disabled:opacity-30 transition-colors text-xs font-bold cursor-pointer"
                               >
                                 -
                               </button>
                               <span
-                                className={`w-8 text-center text-xs font-bold font-mono ${
+                                className={`w-8 text-center text-xs font-bold font-mono tabular-nums ${
                                   part.stok === 0
-                                    ? "text-red-600"
+                                    ? "text-red-600 dark:text-red-400"
                                     : part.stok <= 3
-                                    ? "text-amber-600"
-                                    : "text-emerald-700"
+                                    ? "text-amber-600 dark:text-amber-400"
+                                    : "text-emerald-700 dark:text-emerald-400"
                                 }`}
                               >
                                 {part.stok}
                               </span>
                               <button
+                                type="button"
                                 onClick={() => handleUpdateStock(part.id, part.stok + 1)}
-                                className="w-5 h-5 flex items-center justify-center bg-zinc-100 hover:bg-zinc-200 text-zinc-600 rounded transition-colors text-xs font-bold"
+                                className="w-5 h-5 flex items-center justify-center bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 rounded transition-colors text-xs font-bold cursor-pointer"
                               >
                                 +
                               </button>
@@ -1110,15 +1307,15 @@ export default function AdminSparePartsPage() {
 
                             {/* Badge */}
                             {part.stok === 0 ? (
-                              <span className="text-[10px] font-bold text-red-700 bg-red-50 border border-red-200/60 px-1.5 py-0.5 rounded">
+                              <span className="text-[10px] font-bold text-red-700 dark:text-red-400 bg-red-50 dark:bg-red-950/40 border border-red-200/60 dark:border-red-900/50 px-1.5 py-0.5 rounded">
                                 Habis
                               </span>
                             ) : part.stok <= 3 ? (
-                              <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200/60 px-1.5 py-0.5 rounded">
+                              <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-900/50 px-1.5 py-0.5 rounded">
                                 Menipis
                               </span>
                             ) : (
-                              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-1.5 py-0.5 rounded">
+                              <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-900/50 px-1.5 py-0.5 rounded">
                                 Aman
                               </span>
                             )}
@@ -1127,36 +1324,38 @@ export default function AdminSparePartsPage() {
 
                         {/* Harga HET */}
                         <td className="py-2.5 px-3 align-middle">
-                          <span className="text-xs font-bold text-zinc-900 font-mono">{formatIDR(part.het)}</span>
+                          <span className="text-xs font-bold text-slate-900 dark:text-white font-mono tabular-nums">{formatIDR(part.het)}</span>
                         </td>
 
                         {/* Status */}
                         <td className="py-2.5 px-3 align-middle">
                           {part.status === "ACTIVE" ? (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-green-50 text-green-700 border border-green-200/60">
-                              <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span> Active
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-900/50">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
                             </span>
                           ) : (
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-zinc-100 text-zinc-600 border border-zinc-200/60">
-                              <span className="w-1.5 h-1.5 rounded-full bg-zinc-400"></span> Disc.
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Disc.
                             </span>
                           )}
                         </td>
 
                         {/* Aksi */}
                         <td className="py-2.5 px-3 align-middle text-right">
-                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-opacity">
                             <button
+                              type="button"
                               onClick={() => handleOpenEditModal(part)}
-                              className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100 transition-colors"
+                              className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
                               title="Edit"
                             >
                               <Edit2 size={14} />
                             </button>
                             {part.status === "ACTIVE" && (
                               <button
+                                type="button"
                                 onClick={() => handleDeletePart(part.id)}
-                                className="w-7 h-7 flex items-center justify-center rounded text-zinc-400 hover:text-red-600 hover:bg-red-50 transition-colors"
+                                className="w-7 h-7 flex items-center justify-center rounded-lg text-slate-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors cursor-pointer"
                                 title="Discontinue"
                               >
                                 <Trash2 size={14} />
@@ -1172,22 +1371,24 @@ export default function AdminSparePartsPage() {
             </div>
 
             {/* Table Footer */}
-            <div className="px-5 py-4 border-t border-zinc-200 bg-[#FAFAFA] flex items-center justify-between">
-              <span className="text-base text-zinc-500">
-                Menampilkan halaman <strong className="text-zinc-900 font-semibold">{page}</strong> dari total {total} item
+            <div className="px-5 py-3.5 border-t border-slate-200/80 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-3">
+              <span className="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+                Menampilkan halaman <strong className="text-slate-900 dark:text-white font-semibold">{page}</strong> dari total {total.toLocaleString("id-ID")} item
               </span>
               <div className="flex gap-2">
                 <button
+                  type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="px-4 py-2 border border-zinc-200 rounded-md text-base font-medium text-zinc-600 bg-white hover:bg-zinc-50 transition-colors disabled:opacity-40"
+                  className="px-3.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
                 >
                   Sebelumnya
                 </button>
                 <button
+                  type="button"
                   onClick={() => setPage((p) => p + 1)}
                   disabled={parts.length < 15}
-                  className="px-4 py-2 border border-zinc-200 rounded-md text-base font-medium text-zinc-600 bg-white hover:bg-zinc-50 transition-colors disabled:opacity-40"
+                  className="px-3.5 py-1.5 border border-slate-200 dark:border-slate-700 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
                 >
                   Selanjutnya
                 </button>
@@ -1199,15 +1400,16 @@ export default function AdminSparePartsPage() {
 
       {/* Create / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-[2px] p-4">
-          <div className="bg-white rounded-xl max-w-lg w-full p-5 shadow-xl relative border border-zinc-200 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between border-b border-zinc-100 pb-3 mb-4">
-              <h3 className="text-[15px] font-bold text-zinc-900 tracking-tight">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-[2px] p-4">
+          <div className="bg-white dark:bg-[#111827] rounded-2xl max-w-lg w-full p-5 shadow-xl relative border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3 mb-4">
+              <h3 className="text-[15px] font-bold text-slate-900 dark:text-white tracking-tight">
                 {editingPart ? "Edit Suku Cadang" : "Tambah Suku Cadang"}
               </h3>
               <button
+                type="button"
                 onClick={() => setIsModalOpen(false)}
-                className="text-zinc-400 hover:text-zinc-600 p-1 rounded-md hover:bg-zinc-100 transition-colors"
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               >
                 <X size={16} />
               </button>
@@ -1215,7 +1417,7 @@ export default function AdminSparePartsPage() {
 
             <form onSubmit={handleSavePart} className="space-y-4">
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-600 mb-1.5">
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 mb-1.5">
                   Part Number (Kode Part) *
                 </label>
                 <input
@@ -1225,12 +1427,12 @@ export default function AdminSparePartsPage() {
                   value={formData.part_no}
                   onChange={(e) => setFormData({ ...formData, part_no: e.target.value })}
                   placeholder="Contoh: 06455-K56-N01"
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900 disabled:bg-zinc-100 disabled:text-zinc-500 font-mono"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl text-[13px] focus:outline-none focus:ring-1 focus:ring-[#E4002B] focus:border-[#E4002B] disabled:bg-slate-100 dark:disabled:bg-slate-800 disabled:text-slate-500 font-mono"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-600 mb-1.5">
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 mb-1.5">
                   Nama Resmi Part *
                 </label>
                 <input
@@ -1239,12 +1441,12 @@ export default function AdminSparePartsPage() {
                   value={formData.part_name}
                   onChange={(e) => setFormData({ ...formData, part_name: e.target.value })}
                   placeholder="Contoh: PAD SET, FR BRAKE"
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl text-[13px] focus:outline-none focus:ring-1 focus:ring-[#E4002B] focus:border-[#E4002B]"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-600 mb-1.5">
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 mb-1.5">
                   Nama Umum / Alias
                 </label>
                 <input
@@ -1252,13 +1454,13 @@ export default function AdminSparePartsPage() {
                   value={formData.nama_umum}
                   onChange={(e) => setFormData({ ...formData, nama_umum: e.target.value })}
                   placeholder="Contoh: Kampas Rem Depan"
-                  className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900"
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl text-[13px] focus:outline-none focus:ring-1 focus:ring-[#E4002B] focus:border-[#E4002B]"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-600 mb-1.5">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 mb-1.5">
                     Kategori
                   </label>
                   <input
@@ -1266,11 +1468,11 @@ export default function AdminSparePartsPage() {
                     value={formData.category_detail}
                     onChange={(e) => setFormData({ ...formData, category_detail: e.target.value })}
                     placeholder="MAINTENANCE"
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl text-[13px] focus:outline-none focus:ring-1 focus:ring-[#E4002B] focus:border-[#E4002B]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-600 mb-1.5">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 mb-1.5">
                     Harga HET (Rp)
                   </label>
                   <input
@@ -1278,31 +1480,31 @@ export default function AdminSparePartsPage() {
                     value={formData.het}
                     onChange={(e) => setFormData({ ...formData, het: e.target.value })}
                     placeholder="56500"
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl text-[13px] focus:outline-none focus:ring-1 focus:ring-[#E4002B] focus:border-[#E4002B]"
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-600 mb-1.5">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 mb-1.5">
                     Stok
                   </label>
                   <input
                     type="number"
                     value={formData.stok}
                     onChange={(e) => setFormData({ ...formData, stok: parseInt(e.target.value) || 0 })}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl text-[13px] focus:outline-none focus:ring-1 focus:ring-[#E4002B] focus:border-[#E4002B]"
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-600 mb-1.5">
+                  <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 mb-1.5">
                     Status
                   </label>
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full px-3 py-2 border border-zinc-300 rounded-lg text-[13px] focus:outline-none focus:ring-1 focus:ring-zinc-900 focus:border-zinc-900 bg-white"
+                    className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white rounded-xl text-[13px] focus:outline-none focus:ring-1 focus:ring-[#E4002B] focus:border-[#E4002B]"
                   >
                     <option value="ACTIVE">ACTIVE</option>
                     <option value="DISCONTINUE">DISCONTINUE</option>
@@ -1311,29 +1513,29 @@ export default function AdminSparePartsPage() {
               </div>
 
               <div>
-                <label className="block text-[11px] font-semibold uppercase tracking-wide text-zinc-600 mb-1.5">
+                <label className="block text-[11px] font-semibold uppercase tracking-wide text-slate-600 dark:text-slate-300 mb-1.5">
                   Upload Gambar
                 </label>
                 <input
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                  className="w-full text-xs text-zinc-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-[11px] file:font-semibold file:bg-zinc-100 file:text-zinc-700 hover:file:bg-zinc-200 cursor-pointer"
+                  className="w-full text-xs text-slate-500 dark:text-slate-400 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-[11px] file:font-semibold file:bg-slate-100 dark:file:bg-slate-800 file:text-slate-700 dark:file:text-slate-200 hover:file:bg-slate-200 dark:hover:file:bg-slate-700 cursor-pointer"
                 />
               </div>
 
-              <div className="pt-4 border-t border-zinc-100 flex justify-end gap-2">
+              <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex justify-end gap-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-1.5 text-xs font-semibold text-zinc-600 bg-white border border-zinc-200 hover:bg-zinc-50 rounded-lg transition-colors"
+                  className="px-4 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-700 rounded-xl transition-colors cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-5 py-1.5 text-xs font-semibold text-white bg-zinc-900 hover:bg-zinc-800 rounded-lg shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50"
+                  className="px-5 py-1.5 text-xs font-semibold text-white bg-[#E4002B] hover:bg-[#C40024] rounded-xl shadow-sm transition-colors flex items-center gap-1.5 disabled:opacity-50 cursor-pointer"
                 >
                   {isSubmitting && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>Simpan</span>

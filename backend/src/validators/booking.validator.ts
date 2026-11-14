@@ -1,44 +1,66 @@
 import { Request, Response, NextFunction } from 'express';
 
-export const validateCreateBooking = (req: Request, res: Response, next: NextFunction): void => {
-  const {
-    tipe_booking = 'SERVIS',
-    nama_customer,
-    email,
-    no_hp,
-    no_mesin,
-    plat_kendaraan,
-    tanggal_booking,
-    jam_booking,
-    jenis_servis,
-    detail_lainnya,
-    items,
-  } = req.body;
-  const errors: string[] = [];
+const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const PHONE_REGEX = /^(0|62|\+62)[0-9]{8,13}$/;
+const ADMIN_CREATE_STATUSES = ['PENDING', 'CONFIRMED', 'IN_PROGRESS'] as const;
 
-  const isSparepart = tipe_booking === 'SPAREPART';
+function parseSelectedServices(jenisServis: unknown): string[] {
+  if (Array.isArray(jenisServis)) {
+    return jenisServis.map((s) => String(s).trim()).filter(Boolean);
+  }
+  if (typeof jenisServis === 'string' && jenisServis.trim().length > 0) {
+    return jenisServis.split(',').map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+}
+
+function validateCommonCustomerFields(
+  body: Record<string, unknown>,
+  requireEmail: boolean
+): string[] {
+  const { nama_customer, email, no_hp, tanggal_booking, jam_booking } = body;
+  const errors: string[] = [];
 
   if (!nama_customer || typeof nama_customer !== 'string' || nama_customer.trim().length < 2) {
     errors.push('Nama customer wajib diisi minimal 2 karakter');
   }
 
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!email || typeof email !== 'string' || !emailRegex.test(email.trim())) {
-    errors.push('Email / Gmail valid wajib diisi sebagai bukti akun pemesan');
+  const trimmedEmail = typeof email === 'string' ? email.trim() : '';
+  if (requireEmail) {
+    if (!trimmedEmail || !EMAIL_REGEX.test(trimmedEmail)) {
+      errors.push('Email / Gmail valid wajib diisi sebagai bukti akun pemesan');
+    }
+  } else if (trimmedEmail.length > 0 && !EMAIL_REGEX.test(trimmedEmail)) {
+    errors.push('Format Email tidak valid');
   }
 
-  const phoneRegex = /^(0|62|\+62)[0-9]{8,13}$/;
-  if (!no_hp || !phoneRegex.test(String(no_hp).replace(/\s|-/g, ''))) {
+  if (!no_hp || !PHONE_REGEX.test(String(no_hp).replace(/\s|-/g, ''))) {
     errors.push('Nomor WhatsApp/HP tidak valid (contoh: 081234567890)');
   }
 
-  if (!tanggal_booking || isNaN(Date.parse(tanggal_booking))) {
+  if (!tanggal_booking || typeof tanggal_booking !== 'string' || isNaN(Date.parse(tanggal_booking))) {
     errors.push('Tanggal booking wajib valid');
   }
 
   if (!jam_booking || typeof jam_booking !== 'string' || jam_booking.trim().length === 0) {
     errors.push('Jam booking wajib dipilih');
   }
+
+  return errors;
+}
+
+export const validateCreateBooking = (req: Request, res: Response, next: NextFunction): void => {
+  const {
+    tipe_booking = 'SERVIS',
+    no_mesin,
+    plat_kendaraan,
+    jenis_servis,
+    detail_lainnya,
+    items,
+  } = req.body;
+  const errors = validateCommonCustomerFields(req.body, true);
+
+  const isSparepart = tipe_booking === 'SPAREPART';
 
   if (isSparepart) {
     // Validasi khusus booking suku cadang
@@ -91,12 +113,7 @@ export const validateCreateBooking = (req: Request, res: Response, next: NextFun
       'Lainnya',
     ];
 
-    let selectedServices: string[] = [];
-    if (Array.isArray(jenis_servis)) {
-      selectedServices = jenis_servis;
-    } else if (typeof jenis_servis === 'string' && jenis_servis.trim().length > 0) {
-      selectedServices = jenis_servis.split(',').map((s) => s.trim());
-    }
+    let selectedServices = parseSelectedServices(jenis_servis);
 
     if (selectedServices.length === 0) {
       errors.push(`Pilih minimal satu jenis servis`);
@@ -116,6 +133,50 @@ export const validateCreateBooking = (req: Request, res: Response, next: NextFun
     res.status(400).json({
       success: false,
       message: 'Validasi form booking gagal',
+      errors,
+    });
+    return;
+  }
+
+  next();
+};
+
+export const validateCreateAdminBooking = (req: Request, res: Response, next: NextFunction): void => {
+  const {
+    no_mesin,
+    plat_kendaraan,
+    jenis_servis,
+    detail_lainnya,
+    status,
+  } = req.body;
+  const errors = validateCommonCustomerFields(req.body, false);
+
+  if (typeof no_mesin === 'string' && no_mesin.trim().length > 0 && no_mesin.trim().length < 4) {
+    errors.push('Nomor mesin minimal 4 karakter jika diisi');
+  }
+
+  if (typeof plat_kendaraan === 'string' && plat_kendaraan.trim().length > 0 && plat_kendaraan.trim().length < 3) {
+    errors.push('Plat nomor minimal 3 karakter jika diisi');
+  }
+
+  const selectedServices = parseSelectedServices(jenis_servis);
+  if (selectedServices.length === 0) {
+    errors.push('Pilih atau isi minimal satu jenis servis');
+  } else if (
+    selectedServices.includes('Lainnya') &&
+    (!detail_lainnya || typeof detail_lainnya !== 'string' || detail_lainnya.trim().length < 3)
+  ) {
+    errors.push('Untuk opsi "Lainnya", isi rincian servis minimal 3 karakter');
+  }
+
+  if (status !== undefined && (typeof status !== 'string' || !(ADMIN_CREATE_STATUSES as readonly string[]).includes(status))) {
+    errors.push(`Status awal tidak valid. Harus salah satu dari: ${ADMIN_CREATE_STATUSES.join(', ')}`);
+  }
+
+  if (errors.length > 0) {
+    res.status(400).json({
+      success: false,
+      message: 'Validasi input booking admin gagal',
       errors,
     });
     return;

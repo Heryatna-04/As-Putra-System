@@ -3,7 +3,7 @@ import multer from 'multer';
 import { SparePartController } from '../controllers/sparePart.controller';
 import { ImportController } from '../controllers/import.controller';
 import { BookingController } from '../controllers/booking.controller';
-import { validateUpdateBookingStatus } from '../validators/booking.validator';
+import { validateCreateAdminBooking, validateUpdateBookingStatus } from '../validators/booking.validator';
 import { rbac } from '../middleware/rbac.middleware';
 
 const router = Router();
@@ -82,6 +82,9 @@ router.get('/bookings/export', rbac(['ADMIN', 'KEPALA_BENGKEL']), BookingControl
 
 // GET /api/v1/admin/bookings
 router.get('/bookings', rbac(['ADMIN', 'KEPALA_BENGKEL']), BookingController.getListAdmin);
+
+// POST /api/v1/admin/bookings
+router.post('/bookings', rbac(['ADMIN', 'KEPALA_BENGKEL']), validateCreateAdminBooking, BookingController.createAdmin);
 
 // PATCH /api/v1/admin/bookings/:id/status
 router.patch('/bookings/:id/status', rbac(['ADMIN', 'KEPALA_BENGKEL']), validateUpdateBookingStatus, BookingController.updateStatus);

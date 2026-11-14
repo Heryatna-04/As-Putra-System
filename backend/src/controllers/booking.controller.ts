@@ -8,7 +8,12 @@ export class BookingController {
    */
   public static async create(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
-      const data = await BookingService.createBooking(req.body);
+      // Security: public submission must always start as PENDING without admin notes
+      const data = await BookingService.createBooking({
+        ...req.body,
+        status: 'PENDING',
+        catatan_admin: undefined,
+      });
       res.status(201).json({
         success: true,
         message: 'Booking servis berhasil didaftarkan!',
@@ -19,6 +24,53 @@ export class BookingController {
           tanggal_booking: data.tanggal_booking,
           status: data.status,
         },
+      });
+    } catch (err) {
+      next(err);
+    }
+  }
+
+  /**
+   * POST /api/v1/admin/bookings
+   * Admin / Kepala Bengkel manual service booking creation (walk-in, phone, or WhatsApp)
+   */
+  public static async createAdmin(req: Request, res: Response, next: NextFunction): Promise<void> {
+    try {
+      const {
+        nama_customer,
+        email,
+        no_hp,
+        no_mesin,
+        plat_kendaraan,
+        tipe_motor,
+        tanggal_booking,
+        jam_booking,
+        jenis_servis,
+        detail_lainnya,
+        status,
+        catatan_admin,
+      } = req.body;
+
+      const data = await BookingService.createBooking({
+        nama_customer,
+        email,
+        no_hp,
+        no_mesin,
+        plat_kendaraan,
+        tipe_motor,
+        tanggal_booking,
+        jam_booking,
+        jenis_servis,
+        detail_lainnya,
+        tipe_booking: 'SERVIS',
+        status: status || 'CONFIRMED',
+        catatan_admin,
+      });
+
+      res.status(201).json({
+        success: true,
+        message: 'Booking servis pelanggan berhasil dibuat!',
+        data,
       });
     } catch (err) {
       next(err);

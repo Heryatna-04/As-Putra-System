@@ -13,7 +13,7 @@ export interface BookingSparePartItem {
 
 export interface CreateBookingDTO {
   nama_customer: string;
-  email: string;
+  email?: string | null;
   no_hp: string;
   no_mesin?: string;
   plat_kendaraan?: string;
@@ -26,6 +26,8 @@ export interface CreateBookingDTO {
   items?: BookingSparePartItem[];
   total_harga?: number;
   metode_layanan?: 'AMBIL' | 'PASANG';
+  status?: 'PENDING' | 'CONFIRMED' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
+  catatan_admin?: string;
 }
 
 export interface BookingQueryFilters {
@@ -224,9 +226,14 @@ export class BookingService {
       ? (Array.isArray(dto.jenis_servis) ? dto.jenis_servis.join(', ') : String(dto.jenis_servis))
       : defaultServiceTitle;
 
+    const cleanEmail =
+      typeof dto.email === 'string' && dto.email.trim().length > 0
+        ? dto.email.trim().toLowerCase()
+        : null;
+
     const bookingPayload = {
       nama_customer: dto.nama_customer.trim(),
-      email: dto.email.trim().toLowerCase(),
+      email: cleanEmail,
       no_hp: dto.no_hp.trim(),
       no_mesin: dto.no_mesin?.trim() ? dto.no_mesin.trim().toUpperCase() : '-',
       plat_kendaraan: dto.plat_kendaraan?.trim() ? dto.plat_kendaraan.trim().toUpperCase() : '-',
@@ -235,7 +242,8 @@ export class BookingService {
       jam_booking: dto.jam_booking,
       jenis_servis: jenisServisString,
       detail_lainnya: dto.detail_lainnya?.trim() || null,
-      status: 'PENDING' as const,
+      status: dto.status ?? ('PENDING' as const),
+      catatan_admin: dto.catatan_admin?.trim() || null,
       tipe_booking: isSparepart ? 'SPAREPART' : 'SERVIS',
       items_json: isSparepart && dto.items ? dto.items : null,
       total_harga: calculatedTotal,
@@ -279,20 +287,22 @@ export class BookingService {
         throw new Error(`Gagal menyimpan booking: ${insertError?.message || 'Terjadi kesalahan sistem'}`);
       }
 
-      // Dispatch automated confirmation email
-      EmailService.sendBookingTicketEmail({
-        ticket_no: data.ticket_no,
-        nama_customer: data.nama_customer,
-        email: data.email,
-        plat_kendaraan: data.plat_kendaraan,
-        tanggal_booking: data.tanggal_booking,
-        jam_booking: data.jam_booking,
-        jenis_servis: data.jenis_servis,
-        tipe_booking: data.tipe_booking,
-        items: data.items_json || undefined,
-        total_harga: data.total_harga || undefined,
-        metode_layanan: data.metode_layanan || undefined,
-      }).catch((err) => console.error('[BookingService] Failed sending confirmation email:', err));
+      // Dispatch automated confirmation email when customer email is provided
+      if (data.email) {
+        EmailService.sendBookingTicketEmail({
+          ticket_no: data.ticket_no,
+          nama_customer: data.nama_customer,
+          email: data.email,
+          plat_kendaraan: data.plat_kendaraan,
+          tanggal_booking: data.tanggal_booking,
+          jam_booking: data.jam_booking,
+          jenis_servis: data.jenis_servis,
+          tipe_booking: data.tipe_booking,
+          items: data.items_json || undefined,
+          total_harga: data.total_harga || undefined,
+          metode_layanan: data.metode_layanan || undefined,
+        }).catch((err) => console.error('[BookingService] Failed sending confirmation email:', err));
+      }
 
       return data;
     } catch (bookingErr) {

@@ -1,7 +1,7 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
 import { Request, Response } from 'express';
-import { validateCreateBooking, validateUpdateBookingStatus } from './booking.validator';
+import { validateCreateBooking, validateCreateAdminBooking, validateUpdateBookingStatus } from './booking.validator';
 
 // Helper to create mock Express req, res, next
 function createMockReqRes(body: Record<string, unknown> = {}) {
@@ -179,6 +179,64 @@ describe('Booking Validator Tests', () => {
       assert.strictEqual(isNextCalled(), false);
       assert.strictEqual(getStatus(), 400);
       assert.strictEqual(getData().success, false);
+    });
+  });
+
+  describe('validateCreateAdminBooking', () => {
+    const minimalAdminPayload = {
+      nama_customer: 'Dedi Kurniawan',
+      no_hp: '081298765432',
+      tanggal_booking: '2026-11-16',
+      jam_booking: '10:00',
+      jenis_servis: 'Paket Servis Ringan',
+    };
+
+    it('should accept minimal admin booking without email, plat_kendaraan, or no_mesin', () => {
+      const { req, res, next, isNextCalled } = createMockReqRes({ ...minimalAdminPayload });
+      validateCreateAdminBooking(req, res, next);
+      assert.strictEqual(isNextCalled(), true);
+    });
+
+    it('should accept custom service label, optional email, and CONFIRMED/IN_PROGRESS status', () => {
+      const { req, res, next, isNextCalled } = createMockReqRes({
+        ...minimalAdminPayload,
+        email: 'dedi@example.com',
+        plat_kendaraan: 'E 4321 AB',
+        no_mesin: 'JM12345',
+        jenis_servis: ['Ganti Oli Mesin Saja', 'Servis & Bongkar CVT'],
+        status: 'IN_PROGRESS',
+      });
+      validateCreateAdminBooking(req, res, next);
+      assert.strictEqual(isNextCalled(), true);
+    });
+
+    it('should reject malformed optional email or invalid initial status', () => {
+      const badEmail = createMockReqRes({
+        ...minimalAdminPayload,
+        email: 'bukan-email',
+      });
+      validateCreateAdminBooking(badEmail.req, badEmail.res, badEmail.next);
+      assert.strictEqual(badEmail.isNextCalled(), false);
+      assert.strictEqual(badEmail.getStatus(), 400);
+
+      const badStatus = createMockReqRes({
+        ...minimalAdminPayload,
+        status: 'DONE',
+      });
+      validateCreateAdminBooking(badStatus.req, badStatus.res, badStatus.next);
+      assert.strictEqual(badStatus.isNextCalled(), false);
+      assert.strictEqual(badStatus.getStatus(), 400);
+    });
+
+    it('should require detail_lainnya when only Lainnya is selected', () => {
+      const missingDetail = createMockReqRes({
+        ...minimalAdminPayload,
+        jenis_servis: 'Lainnya',
+        detail_lainnya: '',
+      });
+      validateCreateAdminBooking(missingDetail.req, missingDetail.res, missingDetail.next);
+      assert.strictEqual(missingDetail.isNextCalled(), false);
+      assert.strictEqual(missingDetail.getStatus(), 400);
     });
   });
 });

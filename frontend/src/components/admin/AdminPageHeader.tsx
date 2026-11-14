@@ -1,22 +1,28 @@
-import Image from "next/image";
-import { type LucideIcon } from "lucide-react";
+"use client";
 
-interface AdminPageHeaderProps {
-  /** Page title */
+import type { ReactNode } from "react";
+import { type LucideIcon, Sun, Moon } from "lucide-react";
+import { useTheme } from "@/hooks/useTheme";
+
+export interface AdminPageHeaderProps {
+  /** Page heading title. */
   title: string;
-  /** Short subtitle / description */
+  /** Optional supporting subtitle displayed below the title. */
   subtitle?: string;
-  /** Breadcrumb label, e.g. "Booking" */
+  /** Breadcrumb label for the current workspace route, e.g. "Booking Servis". */
   breadcrumb: string;
-  /** Lucide icon for this page */
+  /** Lucide icon rendered in the header badge. */
   icon: LucideIcon;
-  /** Optional right-side action slot (buttons, selects, etc.) */
-  actions?: React.ReactNode;
+  /** Optional right-side action slot (buttons, links, filters). */
+  actions?: ReactNode;
+  /** Controls visibility of the built-in Light/Dark theme toggle. */
+  showThemeToggle?: boolean;
 }
 
 /**
- * Shared admin page header with Honda branding.
- * Renders a slim topbar (breadcrumb + actions) and a Honda-branded hero banner.
+ * Shared admin workspace header bar rendered at the top of the floating sheet.
+ * Provides breadcrumb context, title/subtitle, a high-contrast actions slot,
+ * and a Light/Dark mode switcher backed by `useTheme`.
  */
 export default function AdminPageHeader({
   title,
@@ -24,90 +30,78 @@ export default function AdminPageHeader({
   breadcrumb,
   icon: Icon,
   actions,
+  showThemeToggle = true,
 }: AdminPageHeaderProps) {
+  const { theme, setTheme } = useTheme();
+
   return (
-    <>
-      {/* ── SLIM TOPBAR ── */}
-      <div className="h-[52px] bg-white dark:bg-[#0E1522] border-b border-zinc-200/80 dark:border-zinc-800 flex items-center justify-between px-5 shrink-0 transition-colors">
-        {/* Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-xs font-medium text-zinc-400 dark:text-zinc-500">
-          <span>Admin</span>
-          <span className="text-zinc-200 dark:text-zinc-700">/</span>
-          <span className="text-zinc-700 dark:text-zinc-200 font-semibold">{breadcrumb}</span>
-        </div>
-
-        {/* Actions slot */}
-        {actions && (
-          <div className="flex items-center gap-2">{actions}</div>
-        )}
-      </div>
-
-      {/* ── HONDA BRAND BANNER ── */}
-      <div className="relative overflow-hidden bg-[#E4002B] shrink-0">
-        {/* Background: subtle wing pattern via logo */}
-        <div className="absolute inset-0 pointer-events-none select-none">
-          {/* Faint dealer photo overlay */}
-          <Image
-            src="/as-putra-dealer.png"
-            alt=""
-            fill
-            aria-hidden
-            className="object-cover object-center opacity-[0.08]"
-            priority={false}
-          />
-          {/* Large faint Honda wing — decorative */}
-          <div className="absolute -right-8 -top-6 w-48 h-48 opacity-[0.07]">
-            <Image
-              src="/honda-logo.png"
-              alt=""
-              fill
-              aria-hidden
-              className="object-contain brightness-0 invert"
-            />
-          </div>
-          {/* Gradient fade left */}
-          <div className="absolute inset-0 bg-gradient-to-r from-[#C8001F] via-[#E4002B]/80 to-transparent" />
-        </div>
-
-        {/* Content */}
-        <div className="relative z-10 flex items-center justify-between gap-4 px-5 py-4">
-          <div className="flex items-center gap-3.5 min-w-0">
-            {/* Icon circle */}
-            <div className="w-9 h-9 rounded-xl bg-white/15 border border-white/20 flex items-center justify-center shrink-0">
-              <Icon className="w-[18px] h-[18px] text-white" strokeWidth={2} />
-            </div>
-
-            {/* Title + subtitle */}
-            <div className="min-w-0">
-              <h1 className="text-[15px] font-bold text-white tracking-tight leading-tight truncate">
-                {title}
-              </h1>
-              {subtitle && (
-                <p className="text-[11px] text-white/65 font-medium mt-0.5 truncate">
-                  {subtitle}
-                </p>
-              )}
-            </div>
+    <header className="bg-white/95 dark:bg-[#111827]/95 backdrop-blur-xs border-b border-slate-200/80 dark:border-slate-800 px-5 sm:px-6 py-3.5 shrink-0 transition-colors">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3.5 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-red-50 dark:bg-red-950/50 border border-red-100 dark:border-red-900/50 text-[#E4002B] flex items-center justify-center shrink-0">
+            <Icon className="w-5 h-5" strokeWidth={2} />
           </div>
 
-          {/* Honda badge */}
-          <div className="flex items-center gap-2 shrink-0">
-            <div className="hidden sm:flex items-center gap-1.5 bg-white/10 border border-white/15 rounded-lg px-2.5 py-1">
-              <div className="relative w-4 h-4">
-                <Image
-                  src="/honda-logo.png"
-                  alt="Honda"
-                  fill
-                  className="object-contain brightness-0 invert"
-                />
-              </div>
-              <span className="text-[10px] font-black text-white tracking-widest uppercase">
-                AHASS 10870
+          <div className="min-w-0">
+            <div className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 dark:text-slate-500">
+              <span>AHASS 10870</span>
+              <span>/</span>
+              <span className="text-slate-600 dark:text-slate-300 font-semibold">
+                {breadcrumb}
               </span>
             </div>
+            <h1 className="text-base sm:text-lg font-extrabold text-slate-900 dark:text-white tracking-tight leading-snug truncate">
+              {title}
+            </h1>
+            {subtitle && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                {subtitle}
+              </p>
+            )}
           </div>
         </div>
+
+        <div className="flex items-center gap-2.5 flex-wrap text-slate-700 dark:text-slate-200">
+          {actions}
+
+          {showThemeToggle && (
+            <div
+              role="group"
+              aria-label="Pengaturan tema"
+              className="flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-full border border-slate-200/80 dark:border-slate-700"
+            >
+              <button
+                type="button"
+                onClick={() => setTheme("light")}
+                aria-pressed={theme === "light"}
+                className={`p-1.5 rounded-full transition cursor-pointer ${
+                  theme === "light"
+                    ? "bg-white dark:bg-slate-700 shadow-2xs text-amber-500"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                }`}
+                title="Mode Terang"
+                aria-label="Mode Terang"
+              >
+                <Sun className="w-3.5 h-3.5" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme("dark")}
+                aria-pressed={theme === "dark"}
+                className={`p-1.5 rounded-full transition cursor-pointer ${
+                  theme === "dark"
+                    ? "bg-white dark:bg-slate-700 shadow-2xs text-indigo-400"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                }`}
+                title="Mode Gelap"
+                aria-label="Mode Gelap"
+              >
+                <Moon className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
+        </div>
       </div>
-    </>
+    </header>
   );
 }
